@@ -182,11 +182,17 @@
   .loglast.dim{color:var(--dim)}
   .loghint{background:rgba(62,192,122,.1);border:1px solid rgba(62,192,122,.3);border-radius:8px;padding:8px 10px;font-size:12px;color:#cdd6df;margin-bottom:10px}
   .loghint b{color:var(--good)}
-  .lgfields{display:flex;gap:8px;margin-bottom:10px}
+  .lgfields{display:flex;gap:8px;margin-bottom:10px;align-items:flex-end}
   .lgf{flex:1}
   .lgf label{display:block;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
   .lgf input{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:9px;padding:9px 10px;color:var(--txt);font-size:15px}
   .lgf input:focus{outline:none;border-color:var(--accent)}
+  .addset{flex:0 0 auto;padding:9px 12px;border-radius:9px;border:1.5px solid var(--accent);background:rgba(232,80,46,.1);color:var(--accent2);font-size:13px;font-weight:700;cursor:pointer;height:39px}
+  .setrows{margin-bottom:10px}
+  .setrow{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:8px;padding:8px 11px;margin-bottom:5px;font-size:13.5px}
+  .setn{flex:0 0 auto;color:var(--dim);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .setv{flex:1;font-weight:600}
+  .setrm{flex:0 0 auto;width:24px;height:24px;border-radius:6px;background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer}
   .lgfeel{margin-bottom:10px}
   .lgfeel>span{font-size:11px;color:var(--dim);display:block;margin-bottom:6px}
   .feelbtns{display:flex;gap:6px}
@@ -204,6 +210,42 @@
   .lhrow span{flex:1}
   .lhrow span:nth-child(2){text-align:center}
   .lhrow span:last-child{text-align:right;text-transform:capitalize}
+
+  /* PLAN SUBTABS */
+  .subtabs{display:flex;gap:7px;margin-bottom:16px}
+  .subtab{flex:1;padding:10px;border-radius:11px;background:var(--card2);color:var(--dim);font-size:14px;font-weight:700;border:1.5px solid transparent;cursor:pointer}
+  .subtab.on{border-color:var(--accent);color:var(--txt);background:rgba(232,80,46,.1)}
+  .trainstart{width:100%;margin-bottom:12px;background:var(--good)}
+
+  /* TRAIN PLAYER */
+  .trainempty{text-align:center;padding:50px 20px;color:var(--dim)}
+  .teicon{font-size:48px;margin-bottom:10px}
+  .trainempty h3{font-size:18px;color:var(--txt);margin-bottom:8px}
+  .trainempty p{font-size:13.5px;margin-bottom:16px}
+  .trtop{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:10px;text-align:center}
+  .trss{color:var(--accent2)}
+  .trcard{background:var(--card);border:1.5px solid var(--accent);border-radius:18px;padding:16px;text-align:center}
+  .trname{font-size:22px;font-weight:800;margin:6px 0 4px}
+  .trsug{font-size:15px;color:var(--accent2);font-weight:700}
+  .trmus{font-size:12px;color:var(--dim);margin-bottom:8px}
+  .trcard .mmap{margin-bottom:6px}
+  .trcard .loglast{text-align:left}
+  .trcard .loghint{text-align:left}
+  .trnav{display:flex;gap:8px;margin-top:12px}
+  .trnav .btn{flex:1;padding:13px 6px;font-size:13px}
+  .trlist{margin-top:18px}
+  .truphead{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px}
+  .trrow{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;margin-bottom:6px;background:var(--card);border:1px solid var(--line);cursor:pointer;font-size:14px}
+  .trrow.done{opacity:.5}
+  .trrow.done .trrn{text-decoration:line-through}
+  .trrow.now{border-color:var(--accent);background:rgba(232,80,46,.1)}
+  .trmark{flex:0 0 20px;text-align:center;font-weight:800;color:var(--accent2)}
+  .trrow.done .trmark{color:var(--good)}
+  .trssgroup{display:flex;gap:8px;border:1.5px solid var(--accent);border-radius:12px;padding:8px;margin-bottom:6px;background:rgba(232,80,46,.05)}
+  .trsslbl{flex:0 0 30px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--accent2)}
+  .trssitems{flex:1}
+  .trssitems .trrow{margin-bottom:5px}
+  .trssitems .trrow:last-child{margin-bottom:0}
 
   /* media / video */
   .mediaslot:empty{display:none}
@@ -275,8 +317,8 @@
 <div class="wrap">
   <header>
     <div class="kick">Home Gym Trainer</div>
-    <h1 id="hTitle">Build a Session</h1>
-    <div class="sub" id="hSub">Pick 2 areas + your time · get a ready workout</div>
+    <h1 id="hTitle">Plan</h1>
+    <div class="sub" id="hSub">Build a session or manage your week</div>
   </header>
 
   <div class="goalbar">
@@ -293,30 +335,50 @@
     <div class="disc">General guidance, not medical advice. On Mounjaro, keep protein up and stay hydrated. Start lighter than you think and prioritise form.</div>
   </div>
 
-  <!-- BUILD SESSION -->
-  <div class="view on" id="v-build">
-    <div class="bsec">
-      <div class="blab">1 · Pick up to 2 areas to train</div>
-      <div class="bgrid" id="buildParts"></div>
+  <!-- PLAN (Build + My Week combined) -->
+  <div class="view on" id="v-plan">
+    <div class="subtabs">
+      <button class="subtab on" id="sub-build" onclick="setPlanSub('build')">Build</button>
+      <button class="subtab" id="sub-week" onclick="setPlanSub('week')">My Week</button>
     </div>
-    <div class="bsec">
-      <div class="blab">2 · How long have you got?</div>
-      <div class="timerow" id="buildTimes"></div>
+
+    <!-- BUILD sub-panel -->
+    <div id="planBuild">
+      <div class="bsec">
+        <div class="blab">1 · Pick up to 2 areas to train</div>
+        <div class="bgrid" id="buildParts"></div>
+      </div>
+      <div class="bsec">
+        <div class="blab">2 · How long have you got?</div>
+        <div class="timerow" id="buildTimes"></div>
+      </div>
+      <button class="btn primary" style="width:100%;margin-top:4px" onclick="generateSession()">Build my session</button>
+      <div id="buildResult" style="margin-top:16px"></div>
     </div>
-    <button class="btn primary" style="width:100%;margin-top:4px" onclick="generateSession()">Build my session</button>
-    <div id="buildResult" style="margin-top:16px"></div>
+
+    <!-- MY WEEK sub-panel -->
+    <div id="planWeek" style="display:none">
+      <div class="dayselect" id="daySelect"></div>
+      <div class="planhead"><h2 id="planDayName">Monday</h2><span class="n" id="planCount"></span></div>
+      <button class="btn primary trainstart" id="trainDayBtn" style="display:none" onclick="startTrainingFromDay()">▶ Train this day</button>
+      <div class="summary" id="planSummary" style="display:none"></div>
+      <div id="planList"></div>
+      <div class="planactions">
+        <button class="btn ghost" onclick="clearDay()">Clear day</button>
+        <button class="btn primary" onclick="gotoLib()">+ Add exercises</button>
+      </div>
+    </div>
   </div>
 
-  <!-- PLANNER -->
-  <div class="view" id="v-plan">
-    <div class="dayselect" id="daySelect"></div>
-    <div class="planhead"><h2 id="planDayName">Monday</h2><span class="n" id="planCount"></span></div>
-    <div class="summary" id="planSummary" style="display:none"></div>
-    <div id="planList"></div>
-    <div class="planactions">
-      <button class="btn ghost" onclick="clearDay()">Clear day</button>
-      <button class="btn primary" onclick="gotoLib()">+ Add exercises</button>
+  <!-- TRAIN (active workout player) -->
+  <div class="view" id="v-train">
+    <div id="trainEmpty" class="trainempty">
+      <div class="teicon">🏋️</div>
+      <h3>No workout loaded</h3>
+      <p>Start one from a saved day in <b>Plan → My Week</b>, or build a session and tap <b>Train this session</b>.</p>
+      <button class="btn primary" onclick="switchView('plan')">Go to Plan</button>
     </div>
+    <div id="trainActive" style="display:none"></div>
   </div>
 
   <!-- TIMER -->
@@ -394,12 +456,12 @@
 </div>
 
 <div class="nav">
-  <button class="on" id="nav-build" onclick="switchView('build')">
-    <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/></svg>Build</button>
+  <button class="on" id="nav-plan" onclick="switchView('plan')">
+    <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2zm12 8v10H5V10z"/></svg>Plan</button>
+  <button id="nav-train" onclick="switchView('train')">
+    <svg viewBox="0 0 24 24"><path d="M20.6 6.6l-1.2-1.2-2 2-2.8-2.8 1.2-1.2-1.4-1.4-1.2 1.2-1-1-1.4 1.4 1 1L5 9.4l-1-1-1.4 1.4 1 1-1.2 1.2 1.4 1.4 1.2-1.2 2.8 2.8-2 2 1.2 1.2 2-2 2.8 2.8-1.2 1.2 1.4 1.4 1.2-1.2 1 1 1.4-1.4-1-1 4.6-4.6 1 1 1.4-1.4-1-1z"/></svg>Train</button>
   <button id="nav-lib" onclick="switchView('lib')">
     <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg>Library</button>
-  <button id="nav-plan" onclick="switchView('plan')">
-    <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2zm12 8v10H5V10z"/></svg>Planner</button>
   <button id="nav-timer" onclick="switchView('timer')">
     <svg viewBox="0 0 24 24"><path d="M12 6a9 9 0 109 9 9 9 0 00-9-9zm1 10h-2V9h2zM9 1h6v2H9z"/></svg>Timer</button>
   <button id="nav-data" onclick="switchView('data')">
@@ -858,112 +920,167 @@ function daysAgo(iso){
   const d=Math.floor((Date.now()-new Date(iso).getTime())/86400000);
   return d<=0?"today":d===1?"yesterday":`${d} days ago`;
 }
-// build progression hint from last entry
+// normalise an entry to a sets array (handles old single-entry format)
+function entrySets(en){
+  if(en.sets)return en.sets;
+  return [{w:en.weight||null,r:en.reps||null}];   // legacy
+}
+// summarise an entry across its sets, per type
+function logSummary(t,en){
+  const sets=entrySets(en);
+  const fmtSet=s=>{
+    if(t==="weight") return `${s.w||"?"}kg×${s.r||"?"}`;
+    if(t==="bodyweight") return `${s.r||"?"}`;
+    if(t==="timed") return `${s.r||"?"}s`;
+    return `${s.r||"?"}`;
+  };
+  if(sets.length===1) return fmtSet(sets[0])+(t==="bodyweight"?" reps":"");
+  // multiple: "3 sets · 12kg×10, 12kg×9, 12kg×8"
+  return `${sets.length} sets · ${sets.map(fmtSet).join(", ")}`;
+}
+// the "top" set for progression (heaviest weight, else most reps)
+function topSet(en){
+  const sets=entrySets(en);
+  return sets.reduce((best,s)=>{
+    const bw=parseFloat(best.w)||0, sw=parseFloat(s.w)||0;
+    if(sw>bw)return s;
+    if(sw===bw && (parseFloat(s.r)||0)>(parseFloat(best.r)||0))return s;
+    return best;
+  }, sets[0]);
+}
 function progHint(e,last){
   if(!last)return "";
+  const t=logType(e);
+  const top=topSet(last);
   if(last.feel==="easy"){
-    const t=logType(e);
     if(t==="weight"){
       const up = e.grp==="legs"||e.grp==="glutes" ? 2.5 : 1;
-      const nw = last.weight? (parseFloat(last.weight)+up) : null;
-      return nw? `Felt easy last time — try <b>${nw}kg</b> this session.` : `Felt easy — add a little weight this session.`;
+      const nw = top.w? (parseFloat(top.w)+up) : null;
+      return nw? `Felt easy — try <b>${nw}kg</b> this session.` : `Felt easy — add a little weight.`;
     }
     if(t==="bodyweight") return `Felt easy — add 2-3 reps, or try a harder variation.`;
     if(t==="timed") return `Felt easy — add 10-15 seconds to your hold.`;
     if(t==="cardio") return `Felt easy — go a bit longer, faster, or steeper.`;
   }
-  if(last.feel==="hard") return `Was hard last time — repeat the same and aim for it to feel moderate before going up.`;
+  if(last.feel==="hard") return `Was hard last time — repeat and aim for it to feel moderate before going up.`;
   if(last.feel==="moderate") return `Good zone — repeat, and go up once it feels easy.`;
   return "";
 }
-function logBlock(e){
+
+// in-progress sets being entered, keyed by a unique card id
+const _draft={}; // cardId -> {sets:[{w,r}], feel}
+function draftFor(cid){ if(!_draft[cid])_draft[cid]={sets:[],feel:null}; return _draft[cid]; }
+
+function logBlock(e,cardTag){
   const t=logType(e);
   const last=lastLog(e.n);
-  const id=cssId(e.n);
-  // field set by type
-  let fields="";
-  if(t==="weight"){
-    fields=`<div class="lgf"><label>Weight (kg)</label><input type="number" inputmode="decimal" id="lw-${id}" placeholder="${last?last.weight||'':''}"></div>
-            <div class="lgf"><label>Reps</label><input type="number" inputmode="numeric" id="lr-${id}" placeholder="${last?last.reps||'':''}"></div>`;
-  }else if(t==="bodyweight"){
-    fields=`<div class="lgf"><label>Reps</label><input type="number" inputmode="numeric" id="lr-${id}" placeholder="${last?last.reps||'':''}"></div>`;
-  }else if(t==="timed"){
-    fields=`<div class="lgf"><label>Time held (sec)</label><input type="number" inputmode="numeric" id="lr-${id}" placeholder="${last?last.reps||'':''}"></div>`;
-  }else{ // cardio
-    fields=`<div class="lgf"><label>Time / notes</label><input type="text" id="lr-${id}" placeholder="${last?last.reps||'e.g. 20 min, level 6':'e.g. 20 min, level 6'}"></div>`;
-  }
+  const cid=cssId(e.n)+(cardTag||"");
+  const d=draftFor(cid);
+  // field labels
+  const showW = t==="weight";
+  const repLabel = t==="timed"?"Time (sec)": t==="cardio"?"Time / notes":"Reps";
+  const repMode = t==="cardio"?"text":"numeric";
+  // prefill from last set in draft, else last session's last set
+  let pw="", pr="";
+  if(d.sets.length){pw=d.sets[d.sets.length-1].w||"";pr=d.sets[d.sets.length-1].r||"";}
+  else if(last){const ls=entrySets(last);const l=ls[ls.length-1];pw=l.w||"";pr=l.r||"";}
+
   const lastLine = last
     ? `<div class="loglast">Last: <b>${logSummary(t,last)}</b> · <span class="feel-${last.feel}">${last.feel}</span> · ${daysAgo(last.date)}</div>`
-    : `<div class="loglast dim">No entries yet — log your first set below.</div>`;
+    : `<div class="loglast dim">No entries yet — log your sets below.</div>`;
   const hint = progHint(e,last);
   const hintHtml = hint? `<div class="loghint">↗ ${hint}</div>`:"";
-  return `<div class="logbox">
+
+  // rows of sets already added this session
+  const setRows = d.sets.length
+    ? `<div class="setrows">`+d.sets.map((s,i)=>`
+        <div class="setrow"><span class="setn">Set ${i+1}</span>
+          <span class="setv">${showW?`${s.w||"?"}kg × `:""}${s.r||"?"}${t==="timed"?"s":""}</span>
+          <button class="setrm" onclick="rmSet('${cid}',${i},this)">×</button></div>`).join("")+`</div>`
+    : "";
+
+  const inputRow = `<div class="lgfields">
+      ${showW?`<div class="lgf"><label>Weight (kg)</label><input type="number" inputmode="decimal" class="in-w" value="${pw}"></div>`:""}
+      <div class="lgf"><label>${repLabel}</label><input type="${repMode==="text"?"text":"number"}" inputmode="${repMode}" class="in-r" value="${t==="cardio"?"":pr}" ${t==="cardio"?`placeholder="e.g. 20 min"`:""}></div>
+      <button class="addset" onclick="addSet('${cid}','${t}',this)">+ Set</button>
+    </div>`;
+
+  return `<div class="logbox" data-cid="${cid}" data-exn="${enc(e.n)}" data-tag="${cardTag||''}">
     <div class="loghead">Training log</div>
     ${lastLine}
     ${hintHtml}
-    <div class="lgfields">${fields}</div>
+    ${setRows}
+    ${inputRow}
     <div class="lgfeel">
-      <span>How did it feel?</span>
+      <span>How did the exercise feel overall?</span>
       <div class="feelbtns">
-        <button class="feelb easy" onclick="setFeel('${id}','easy',this)">Easy</button>
-        <button class="feelb moderate" onclick="setFeel('${id}','moderate',this)">Moderate</button>
-        <button class="feelb hard" onclick="setFeel('${id}','hard',this)">Hard</button>
+        <button class="feelb easy ${d.feel==="easy"?"on":""}" onclick="setFeel('${cid}','easy',this)">Easy</button>
+        <button class="feelb moderate ${d.feel==="moderate"?"on":""}" onclick="setFeel('${cid}','moderate',this)">Moderate</button>
+        <button class="feelb hard ${d.feel==="hard"?"on":""}" onclick="setFeel('${cid}','hard',this)">Hard</button>
       </div>
     </div>
-    <button class="btn primary lgsave" onclick="saveLog(this,'${enc(e.n)}','${t}')">Save entry</button>
+    <button class="btn primary lgsave" onclick="saveLog(this,'${enc(e.n)}','${t}','${cid}')">Save workout</button>
     ${logHistory(e.n,t)}
   </div>`;
 }
-function logSummary(t,en){
-  if(t==="weight") return `${en.weight||"?"}kg × ${en.reps||"?"}`;
-  if(t==="bodyweight") return `${en.reps||"?"} reps`;
-  if(t==="timed") return `${en.reps||"?"}s`;
-  return `${en.reps||"?"}`;
-}
-function logHistory(name,t){
-  const a=logs[name];if(!a||a.length<2)return "";
-  const recent=a.slice(-5).reverse();
-  return `<details class="loghist"><summary>History (${a.length})</summary>`+
-    recent.map(en=>`<div class="lhrow"><span>${new Date(en.date).toLocaleDateString()}</span><span>${logSummary(t,en)}</span><span class="feel-${en.feel}">${en.feel}</span></div>`).join("")+
-    `</details>`;
-}
-const _feelSel={}; // id -> feel chosen before save
-function setFeel(id,feel,btn){
+
+function addSet(cid,t,btn){
   const box=btn.closest(".logbox");
-  box.dataset.feel=feel;
+  const wEl=box.querySelector(".in-w");
+  const rEl=box.querySelector(".in-r");
+  const w=wEl?wEl.value.trim():null;
+  const r=rEl?rEl.value.trim():"";
+  if(!r && !w){toast("Enter the set first");return;}
+  const d=draftFor(cid);
+  d.sets.push({w:w||null,r:r||null});
+  rerenderLogBox(box,cid);
+}
+function rmSet(cid,i,btn){
+  const d=draftFor(cid);
+  d.sets.splice(i,1);
+  rerenderLogBox(btn.closest(".logbox"),cid);
+}
+function setFeel(cid,feel,btn){
+  const d=draftFor(cid);
+  d.feel=feel;
   const wrap=btn.closest(".feelbtns");
   wrap.querySelectorAll(".feelb").forEach(b=>b.classList.remove("on"));
   btn.classList.add("on");
 }
-function saveLog(btn,name,t){
+// re-render just this log box in place (keeps card open)
+function rerenderLogBox(box,cid){
+  const exn=(box.getAttribute("data-exn")||"").replace(/\\'/g,"'");
+  const tag=box.getAttribute("data-tag")||"";
+  const e=exByName(exn);
+  if(!e)return;
+  const fresh=document.createElement("div");
+  fresh.innerHTML=logBlock(e,tag);
+  box.replaceWith(fresh.firstElementChild);
+}
+function saveLog(btn,name,t,cid){
   name=name.replace(/\\'/g,"'");
-  const box=btn?btn.closest(".logbox"):null;
-  if(!box){toast("Couldn't save");return;}
-  const feel=box.dataset.feel;
-  const rEl=box.querySelector('[id^="lr-"]');
-  const wEl=box.querySelector('[id^="lw-"]');
-  const reps=rEl?rEl.value.trim():"";
-  const weight=wEl?wEl.value.trim():"";
-  if(!feel){toast("Tap how it felt first");return;}
-  if(!reps && !weight){toast("Enter your set first");return;}
+  const box=btn.closest(".logbox");
+  const d=draftFor(cid);
+  // include any not-yet-added set sitting in the inputs
+  const wEl=box.querySelector(".in-w"), rEl=box.querySelector(".in-r");
+  const pendW=wEl?wEl.value.trim():null, pendR=rEl?rEl.value.trim():"";
+  if(pendR||pendW){d.sets.push({w:pendW||null,r:pendR||null});}
+  if(!d.sets.length){toast("Add at least one set");return;}
+  if(!d.feel){toast("Tap how it felt");return;}
   if(!logs[name])logs[name]=[];
-  logs[name].push({date:new Date().toISOString(),weight:weight||null,reps:reps||null,feel});
+  logs[name].push({date:new Date().toISOString(),feel:d.feel,sets:d.sets.slice()});
   save();
-  toast("Logged ✓");
-  const e=exByName(name);
-  const last=lastLog(name);
-  const lastEl=box.querySelector(".loglast");
-  if(lastEl){lastEl.className="loglast";lastEl.innerHTML=`Last: <b>${logSummary(t,last)}</b> · <span class="feel-${last.feel}">${last.feel}</span> · ${daysAgo(last.date)}`;}
-  if(rEl)rEl.value="";if(wEl)wEl.value="";
-  box.querySelectorAll(".feelb").forEach(b=>b.classList.remove("on"));
-  delete box.dataset.feel;
-  let hintEl=box.querySelector(".loghint");
-  const hint=progHint(e,last);
-  if(hint){
-    if(!hintEl){hintEl=document.createElement("div");hintEl.className="loghint";lastEl.after(hintEl);}
-    hintEl.innerHTML="↗ "+hint;
-  }else if(hintEl){hintEl.remove();}
+  toast("Workout logged ✓");
+  delete _draft[cid];
+  rerenderLogBox(box,cid);
   renderDaySelect();
+}
+function logHistory(name,t){
+  const a=logs[name];if(!a||a.length<1)return "";
+  const recent=a.slice(-6).reverse();
+  return `<details class="loghist"><summary>History (${a.length})</summary>`+
+    recent.map(en=>`<div class="lhrow"><span>${new Date(en.date).toLocaleDateString()}</span><span>${logSummary(t,en)}</span><span class="feel-${en.feel}">${en.feel}</span></div>`).join("")+
+    `</details>`;
 }
 function togCard(el){el.closest(".exp").classList.toggle("open");}
 function tog(el){
@@ -1002,6 +1119,8 @@ function renderPlan(){
   document.getElementById("planCount").textContent=arr.length?`${arr.length} exercise${arr.length!==1?"s":""}`:"empty";
   const listEl=document.getElementById("planList");
   const sumEl=document.getElementById("planSummary");
+  const trainBtn=document.getElementById("trainDayBtn");
+  if(trainBtn)trainBtn.style.display = arr.length?"block":"none";
 
   if(!arr.length){
     sumEl.style.display="none";
@@ -1295,6 +1414,7 @@ function renderSession(){
       <button class="btn ghost" onclick="regenSession()">↻ Regenerate</button>
       <button class="btn primary" onclick="saveSessionToDay()">Save to a day</button>
     </div>
+    <button class="btn primary" style="width:100%;margin-top:8px;background:var(--good)" onclick="startTrainingFromSession()">▶ Train this session</button>
     <div class="disc">Times include rest and are estimates. Tap swap to change an exercise, × to remove.</div>`;
 }
 
@@ -1413,7 +1533,7 @@ function saveSessionToDay(){
   panel.innerHTML=`<div class="dplab">Save session to which day?</div>
     <div class="dpgrid">${DAYNAMES.map((d,i)=>`<button class="dpbtn" onclick="commitSessionToDay(${i})">${d.slice(0,3)}</button>`).join("")}</div>
     <button class="dpcancel" onclick="document.getElementById('daypick').remove()">Cancel</button>`;
-  document.querySelector("#v-build .resfoot").after(panel);
+  document.getElementById("buildResult").appendChild(panel);
 }
 function commitSessionToDay(di){
   if(isNaN(di)||di<0||di>6)return;
@@ -1421,7 +1541,9 @@ function commitSessionToDay(di){
   save();
   const p=document.getElementById("daypick");if(p)p.remove();
   toast(`Saved to ${DAYNAMES[di]}`);
-  curDay=di;renderDaySelect();renderPlan();renderLib();
+  curDay=di;
+  setPlanSub('week');
+  renderDaySelect();renderPlan();renderLib();
 }
 
 /* ---------------- TIMER ---------------- */
@@ -1603,14 +1725,108 @@ function timerStep(){
   paintPhase();
 }
 
+/* ---------------- TRAINING PLAYER ---------------- */
+let train={active:false, list:[], idx:0, title:""};
+
+// Build a flat training list from an array of {n, ss?} items, tagging superset groups
+function buildTrainList(arr){
+  return arr.map((x,i)=>({n:x.n, ss:x.ss||null}));
+}
+function startTrainingFromDay(){
+  const arr=plans[curDay]||[];
+  if(!arr.length){toast("This day is empty");return;}
+  train={active:true, list:buildTrainList(arr), idx:0, title:DAYNAMES[curDay]};
+  switchView('train');
+}
+function startTrainingFromSession(){
+  if(!session.length){toast("Build a session first");return;}
+  train={active:true, list:buildTrainList(session), idx:0, title:"Session"};
+  switchView('train');
+}
+
+function renderTrain(){
+  const empty=document.getElementById("trainEmpty");
+  const act=document.getElementById("trainActive");
+  if(!train.active || !train.list.length){
+    empty.style.display="block"; act.style.display="none"; return;
+  }
+  empty.style.display="none"; act.style.display="block";
+
+  const cur=train.list[train.idx];
+  const e=exByName(cur.n);
+  if(!e){act.innerHTML="";return;}
+  const t=logType(e);
+  const done=train.idx;
+  const total=train.list.length;
+
+  // superset context: are we inside a group?
+  const inSS=cur.ss;
+  const ssMates = inSS? train.list.map((x,i)=>({x,i})).filter(o=>o.x.ss===inSS) : [];
+  const ssLabel = inSS? `Superset · ${ssMates.findIndex(o=>o.i===train.idx)+1} of ${ssMates.length}` : "";
+
+  // big current card
+  const bigCard=`
+    <div class="trtop">${train.title} · ${done+1} of ${total}${ssLabel?` · <span class="trss">${ssLabel}</span>`:""}</div>
+    <div class="trcard">
+      ${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n],{h:120}):""}
+      <h2 class="trname">${e.n} <span class="lvl ${e.lvl}" style="font-size:9px">${e.lvl}</span></h2>
+      <div class="trsug">${suggestFor(e)}</div>
+      <div class="trmus">${e.m}</div>
+      ${logBlock(e,"-tr")}
+      <a class="demo" style="margin-top:10px" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' exercise how to form')}" target="_blank" rel="noopener">▶ Watch form demo</a>
+    </div>
+    <div class="trnav">
+      <button class="btn ghost" onclick="trainPrev()" ${train.idx===0?'disabled':''}>‹ Prev</button>
+      <button class="btn ghost" onclick="switchView('timer')">⏱ Rest timer</button>
+      <button class="btn primary" onclick="trainNext()">${train.idx>=total-1?'Finish':'Next ›'}</button>
+    </div>`;
+
+  // up-next list
+  let listHtml=`<div class="truphead">Workout</div>`;
+  let i=0;
+  while(i<train.list.length){
+    const it=train.list[i];
+    if(it.ss){
+      const gid=it.ss;const grp=[];
+      while(i<train.list.length && train.list[i].ss===gid){grp.push(i);i++;}
+      const ids=[];train.list.forEach(a=>{if(a.ss&&!ids.includes(a.ss))ids.push(a.ss);});
+      const letter=String.fromCharCode(65+ids.indexOf(gid));
+      listHtml+=`<div class="trssgroup"><div class="trsslbl">SS ${letter}</div><div class="trssitems">`;
+      grp.forEach(gi=>listHtml+=trRow(gi));
+      listHtml+=`</div></div>`;
+    }else{listHtml+=trRow(i);i++;}
+  }
+
+  act.innerHTML = bigCard + `<div class="trlist">${listHtml}</div>
+    <button class="btn ghost" style="width:100%;margin-top:12px" onclick="endTraining()">End workout</button>`;
+}
+function trRow(i){
+  const it=train.list[i];
+  const e=exByName(it.n);if(!e)return"";
+  const state = i<train.idx?"done":i===train.idx?"now":"todo";
+  const mark = state==="done"?"✓":state==="now"?"▸":"○";
+  return `<div class="trrow ${state}" onclick="trainJump(${i})"><span class="trmark">${mark}</span><span class="trrn">${e.n}</span></div>`;
+}
+function trainNext(){
+  if(train.idx>=train.list.length-1){endTraining(true);return;}
+  train.idx++;renderTrain();window.scrollTo({top:0,behavior:"smooth"});
+}
+function trainPrev(){if(train.idx>0){train.idx--;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}}
+function trainJump(i){train.idx=i;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}
+function endTraining(finished){
+  train.active=false;
+  if(finished)toast("Workout complete 💪");
+  renderTrain();
+}
+
 /* ---------------- NAV ---------------- */
-const TITLES={build:["Build a Session","Pick 2 areas + your time · get a ready workout"],
+const TITLES={plan:["Plan","Build a session or manage your week"],
+ train:["Train","Your active workout, step by step"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
- plan:["My Planner","Build your week · suggestions match your goal"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  data:["Save & Settings","Backup plans · enable demo videos"]};
 function switchView(v){
-  ["build","lib","plan","timer","data"].forEach(x=>{
+  ["plan","train","lib","timer","data"].forEach(x=>{
     document.getElementById("v-"+x).classList.toggle("on",x===v);
     document.getElementById("nav-"+x).classList.toggle("on",x===v);
   });
@@ -1618,8 +1834,19 @@ function switchView(v){
   document.getElementById("hSub").textContent=TITLES[v][1];
   window.scrollTo({top:0,behavior:"smooth"});
   if(v==="plan"){renderDaySelect();renderPlan();}
+  if(v==="train"){renderTrain();}
   if(v==="data"){initMwUI();}
   if(v==="timer" && !tState.seq.length){resetTimer();}
+}
+// Plan sub-tabs
+let planSub="build";
+function setPlanSub(s){
+  planSub=s;
+  document.getElementById("sub-build").classList.toggle("on",s==="build");
+  document.getElementById("sub-week").classList.toggle("on",s==="week");
+  document.getElementById("planBuild").style.display = s==="build"?"block":"none";
+  document.getElementById("planWeek").style.display = s==="week"?"block":"none";
+  if(s==="week"){renderDaySelect();renderPlan();}
 }
 
 /* ---------------- TOAST ---------------- */
