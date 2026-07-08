@@ -361,6 +361,7 @@
     </div>
 
     <div class="tctrl">
+      <button class="btn ghost" onclick="testSound()">🔊 Test</button>
       <button class="btn ghost" onclick="resetTimer()">Reset</button>
       <button class="btn primary" id="startBtn" onclick="toggleTimer()">Start</button>
     </div>
@@ -1485,18 +1486,39 @@ function buildSequence(){
 }
 function fmt(s){const m=Math.floor(s/60),ss=s%60;return `${String(m).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;}
 
+// Play a single strong tone at time offset (seconds from now)
+function playTone(freq,start,dur,vol){
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type="square"; // richer, harsher than the default sine — cuts through gym noise
+  o.connect(g);g.connect(audioCtx.destination);
+  o.frequency.value=freq;
+  const t0=audioCtx.currentTime+start;
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(vol,t0+0.01);
+  g.gain.setValueAtTime(vol,t0+dur-0.05);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.start(t0);o.stop(t0+dur+0.02);
+}
 function beep(kind){
   try{
     audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
-    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-    o.connect(g);g.connect(audioCtx.destination);
-    o.frequency.value = kind==="work"?880:kind==="done"?1180:520;
-    g.gain.setValueAtTime(0.001,audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.4,audioCtx.currentTime+0.02);
-    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.35);
-    o.start();o.stop(audioCtx.currentTime+0.36);
-    if(kind==="done"){ // double beep
-      setTimeout(()=>beep("work2"),200);
+    if(audioCtx.state==="suspended")audioCtx.resume();
+    const V=0.9; // loud
+    if(kind==="work"){
+      // rising, urgent triple tone
+      playTone(700,0,0.18,V);
+      playTone(900,0.20,0.18,V);
+      playTone(1150,0.40,0.45,V);
+    }else if(kind==="rest"){
+      // two lower, calmer but still firm tones
+      playTone(560,0,0.25,V);
+      playTone(440,0.28,0.5,V);
+    }else if(kind==="done"){
+      // long 4-beep finish alarm
+      playTone(1000,0,0.25,V);
+      playTone(1000,0.35,0.25,V);
+      playTone(1000,0.70,0.25,V);
+      playTone(1250,1.05,0.7,V);
     }
   }catch(e){}
 }
@@ -1504,6 +1526,7 @@ function flashClock(){
   const c=document.getElementById("clockFace");
   c.classList.remove("flash");void c.offsetWidth;c.classList.add("flash");
 }
+function testSound(){beep("work");flashClock();toast("If that was quiet, turn your phone volume up");}
 
 function paintPhase(){
   const p=tState.seq[tState.idx];
