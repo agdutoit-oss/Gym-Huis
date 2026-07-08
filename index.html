@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Home Gym Trainer</title>
+<style>
+  :root{
+    --bg:#0f1419; --card:#1a2129; --card2:#222b35; --line:#2c3744;
+    --txt:#e8edf2; --dim:#8a98a8; --accent:#e8502e; --accent2:#ff7a4d;
+    --good:#3ec07a; --blue:#4d9fff; --purple:#a97bff; --amber:#ffb84d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);padding-bottom:80px;line-height:1.5;font-size:15px}
+  .wrap{max-width:600px;margin:0 auto}
+
+  header{padding:20px 18px 14px;background:linear-gradient(135deg,#1a2129,#0f1419);position:relative;overflow:hidden}
+  header::after{content:"";position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(232,80,46,.18),transparent 70%)}
+  .kick{font-size:10px;letter-spacing:3px;color:var(--accent2);font-weight:700;text-transform:uppercase}
+  h1{font-size:24px;font-weight:800;margin-top:3px;letter-spacing:-.5px}
+  .sub{color:var(--dim);font-size:12.5px;margin-top:5px}
+
+  /* Goal selector */
+  .goalbar{padding:12px 14px;background:var(--card);border-bottom:1px solid var(--line)}
+  .goalbar .lab{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;font-weight:600}
+  .goals{display:flex;gap:7px}
+  .goal{flex:1;padding:9px 6px;border-radius:11px;background:var(--card2);border:1.5px solid transparent;text-align:center;cursor:pointer;transition:.15s}
+  .goal.on{border-color:var(--accent);background:rgba(232,80,46,.12)}
+  .goal b{display:block;font-size:13px}
+  .goal span{font-size:9.5px;color:var(--dim)}
+
+  /* bottom nav */
+  .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,33,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:100;max-width:600px;margin:0 auto}
+  .nav button{flex:1;background:none;border:none;color:var(--dim);padding:10px 4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .nav button.on{color:var(--accent2)}
+  .nav svg{width:21px;height:21px;fill:currentColor}
+
+  .view{display:none;padding:14px}
+  .view.on{display:block;animation:fade .25s}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+
+  /* filter chips */
+  .filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;padding:7px 13px;border-radius:18px;background:var(--card2);color:var(--dim);font-size:12.5px;font-weight:600;border:none;white-space:nowrap;cursor:pointer;transition:.15s}
+  .chip.on{background:var(--accent);color:#fff}
+
+  .lvlrow{display:flex;gap:6px;margin-bottom:12px}
+  .lvlchip{flex:1;padding:6px;border-radius:9px;background:var(--card2);color:var(--dim);font-size:11.5px;font-weight:600;border:1.5px solid transparent;cursor:pointer;text-align:center}
+  .lvlchip.on{border-color:var(--blue);color:var(--blue)}
+
+  /* exercise cards */
+  .ex{background:var(--card);border-radius:14px;margin-bottom:10px;overflow:hidden;border:1px solid var(--line)}
+  .ex-top{display:flex;align-items:center;gap:12px;padding:13px;cursor:pointer}
+  .ic{flex:0 0 46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--card2)}
+  .ic svg{width:24px;height:24px;fill:var(--accent2)}
+  .ex-info{flex:1;min-width:0}
+  .ex-info h3{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .lvl{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px}
+  .lvl.beg{background:rgba(62,192,122,.16);color:var(--good)}
+  .lvl.int{background:rgba(255,184,77,.16);color:var(--amber)}
+  .lvl.adv{background:rgba(233,80,46,.16);color:var(--accent2)}
+  .ex-info .mus{font-size:11.5px;color:var(--dim);margin-top:2px}
+  .ex-info .suggest{font-size:12px;color:var(--accent2);font-weight:600;margin-top:3px}
+  .addbtn{flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:var(--card2);border:none;color:var(--accent2);font-size:20px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .addbtn.added{background:var(--good);color:#fff}
+  .chev{color:var(--dim);font-size:19px;transition:.25s;flex:0 0 auto;margin-left:2px}
+  .ex.open .chev{transform:rotate(90deg)}
+  .ex-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .ex.open .ex-body{max-height:900px}
+  .exp .ex-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .exp.open .ex-body{max-height:1200px}
+  .exp .chev{color:var(--dim);font-size:19px;transition:.25s;flex:0 0 auto;cursor:pointer}
+  .exp.open .chev{transform:rotate(90deg)}
+  .ex-pad{padding:0 13px 14px}
+  .forrow{background:var(--card2);border-radius:9px;padding:9px 11px;font-size:12.5px;color:#cdd6df;margin-bottom:10px}
+  .forrow b{color:var(--accent2)}
+  .steps{counter-reset:s;margin-bottom:10px}
+  .steps li{list-style:none;display:flex;gap:9px;margin-bottom:6px;font-size:13px;color:#cdd6df}
+  .steps li::before{counter-increment:s;content:counter(s);flex:0 0 20px;height:20px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+  .tip{background:rgba(77,159,255,.09);border:1px solid rgba(77,159,255,.25);border-radius:9px;padding:8px 11px;font-size:12px;color:#cdd6df;margin-bottom:8px}
+  .tip b{color:var(--blue)}
+  .demo{display:block;text-align:center;background:var(--card2);border-radius:9px;padding:9px;font-size:12.5px;color:var(--accent2);font-weight:600;text-decoration:none}
+  .equiptag{display:inline-block;font-size:10px;color:var(--dim);background:var(--card2);padding:2px 7px;border-radius:7px;margin-top:5px}
+
+  .count{font-size:11.5px;color:var(--dim);margin-bottom:10px}
+  .empty{text-align:center;color:var(--dim);padding:40px 20px;font-size:13px}
+
+  /* PLANNER */
+  .dayselect{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+  .dayselect::-webkit-scrollbar{display:none}
+  .daybtn{flex:0 0 auto;padding:8px 14px;border-radius:11px;background:var(--card2);color:var(--dim);font-size:13px;font-weight:700;border:1.5px solid transparent;cursor:pointer}
+  .daybtn.on{border-color:var(--accent);color:var(--txt);background:rgba(232,80,46,.1)}
+  .daybtn .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-left:5px;vertical-align:middle}
+
+  .planhead{display:flex;justify-content:space-between;align-items:center;margin:6px 0 12px}
+  .planhead h2{font-size:19px}
+  .planhead .n{font-size:12px;color:var(--dim)}
+  .plan-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:9px}
+  .plan-item .pi-main{display:flex;align-items:center;gap:11px}
+  .plan-item .pi-main .chev{margin-right:-4px}
+  .plan-item .ph{flex:1;min-width:0}
+  .pidemo{margin-top:10px}
+  .plan-item h4{font-size:14px;font-weight:700}
+  .plan-item .pm{font-size:11px;color:var(--dim)}
+  .plan-item .ps{font-size:12.5px;color:var(--accent2);font-weight:600;margin-top:2px}
+  .rm{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--card2);border:none;color:var(--dim);font-size:17px;cursor:pointer}
+  .planactions{display:flex;gap:8px;margin-top:14px}
+  .btn{flex:1;padding:12px;border-radius:12px;border:none;font-size:13.5px;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:var(--card2);color:var(--txt)}
+  .addhint{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--dim);font-size:13px}
+  .addhint b{color:var(--accent2)}
+
+  .summary{background:var(--card2);border-radius:11px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;color:#cdd6df}
+  .summary b{color:var(--accent2)}
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--good);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:200;pointer-events:none}
+  .toast.show{opacity:1}
+  .disc{font-size:11px;color:var(--dim);font-style:italic;padding:14px 4px;text-align:center}
+
+  /* media / video */
+  .mediaslot:empty{display:none}
+  .mediaslot{margin-bottom:12px}
+  .mmap{display:flex;gap:10px;justify-content:center;background:#f4f6f7;border-radius:11px;padding:12px 10px;margin-bottom:12px}
+  .mmv{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .mmv span{font-size:9px;color:#8a98a8;text-transform:uppercase;letter-spacing:1px}
+  .daymaplab{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin:10px 0 6px;font-weight:600}
+  .mwvid{width:100%;border-radius:11px;background:#000;display:block}
+  .vidload,.viderr{background:var(--card2);border-radius:11px;padding:22px;text-align:center;font-size:12.5px;color:var(--dim)}
+  .viderr{color:var(--amber)}
+  /* settings */
+  .setcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .setcard h3{font-size:15px;color:var(--accent2);margin-bottom:6px}
+  .setcard p{font-size:12.5px;color:#cdd6df;margin-bottom:10px}
+  .keyinput{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--txt);font-size:13px;font-family:monospace}
+  .keyinput:focus{outline:none;border-color:var(--accent)}
+  .mwstatus{font-size:12px;margin-top:10px;min-height:16px}
+  .mwstatus .ok{color:var(--good)}
+  .mwstatus .bad{color:var(--accent2)}
+  .setnote{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5}
+
+  /* BUILD */
+  .bsec{margin-bottom:18px}
+  .blab{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:9px}
+  .bgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .bpart{padding:13px 10px;border-radius:12px;background:var(--card2);border:1.5px solid transparent;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s}
+  .bpart.on{border-color:var(--accent);background:rgba(232,80,46,.12)}
+  .bpart.dis{opacity:.4;pointer-events:none}
+  .bpart svg{width:22px;height:22px;fill:var(--accent2);flex:0 0 auto}
+  .bpart b{font-size:13.5px}
+  .bpart .num{margin-left:auto;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .timerow{display:flex;gap:7px}
+  .tbtn{flex:1;padding:11px 4px;border-radius:11px;background:var(--card2);border:1.5px solid transparent;cursor:pointer;text-align:center}
+  .tbtn.on{border-color:var(--blue);background:rgba(77,159,255,.1)}
+  .tbtn b{display:block;font-size:16px}
+  .tbtn span{font-size:9.5px;color:var(--dim)}
+  .reshead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .reshead h2{font-size:18px}
+  .reshead .meta{font-size:11.5px;color:var(--dim);text-align:right}
+  .warm{background:rgba(255,184,77,.1);border:1px solid rgba(255,184,77,.25);border-radius:11px;padding:10px 13px;font-size:12.5px;color:#cdd6df;margin-bottom:10px}
+  .warm b{color:var(--amber)}
+  .gitem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:9px}
+  .gitem-top{display:flex;align-items:center;gap:11px}
+  .gitem .ic{width:40px;height:40px;flex:0 0 40px}
+  .gh{flex:1;min-width:0}
+  .gh h4{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .gh .mins{font-size:9.5px;color:var(--blue);background:rgba(77,159,255,.12);padding:1px 6px;border-radius:6px;font-weight:600}
+  .gh .gm{font-size:11px;color:var(--dim)}
+  .gh .gs{font-size:12.5px;color:var(--accent2);font-weight:600;margin-top:2px}
+  .gacts{display:flex;gap:6px;flex:0 0 auto}
+  .gact{width:30px;height:30px;border-radius:9px;background:var(--card2);border:none;color:var(--dim);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .gact svg{width:15px;height:15px;fill:currentColor}
+  .swapbox{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);display:none}
+  .swapbox.open{display:block}
+  .swaplab{font-size:10.5px;color:var(--dim);margin-bottom:6px}
+  .swapopt{display:block;width:100%;text-align:left;background:var(--card2);border:none;color:var(--txt);padding:8px 11px;border-radius:8px;margin-bottom:5px;font-size:12.5px;cursor:pointer}
+  .swapopt .sl{font-size:8px;padding:1px 5px;border-radius:6px;margin-left:5px}
+  .resfoot{display:flex;gap:8px;margin-top:14px}
+  .daypick{background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:14px;margin-top:12px;animation:fade .2s}
+  .dplab{font-size:13px;font-weight:600;margin-bottom:10px;text-align:center}
+  .dpgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
+  .dpbtn{padding:12px 4px;border-radius:10px;background:var(--card2);border:none;color:var(--txt);font-size:13px;font-weight:700;cursor:pointer}
+  .dpbtn:active{background:var(--accent);color:#fff}
+  .dpcancel{width:100%;padding:9px;border-radius:10px;background:none;border:1px solid var(--line);color:var(--dim);font-size:12.5px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kick">Home Gym Trainer</div>
+    <h1 id="hTitle">Build a Session</h1>
+    <div class="sub" id="hSub">Pick 2 areas + your time · get a ready workout</div>
+  </header>
+
+  <div class="goalbar">
+    <div class="lab">Training goal — sets reps to match</div>
+    <div class="goals" id="goals"></div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div class="view" id="v-lib">
+    <div class="filters" id="muscleFilters"></div>
+    <div class="lvlrow" id="lvlFilters"></div>
+    <div class="count" id="libCount"></div>
+    <div id="libList"></div>
+    <div class="disc">General guidance, not medical advice. On Mounjaro, keep protein up and stay hydrated. Start lighter than you think and prioritise form.</div>
+  </div>
+
+  <!-- BUILD SESSION -->
+  <div class="view on" id="v-build">
+    <div class="bsec">
+      <div class="blab">1 · Pick up to 2 areas to train</div>
+      <div class="bgrid" id="buildParts"></div>
+    </div>
+    <div class="bsec">
+      <div class="blab">2 · How long have you got?</div>
+      <div class="timerow" id="buildTimes"></div>
+    </div>
+    <button class="btn primary" style="width:100%;margin-top:4px" onclick="generateSession()">Build my session</button>
+    <div id="buildResult" style="margin-top:16px"></div>
+  </div>
+
+  <!-- PLANNER -->
+  <div class="view" id="v-plan">
+    <div class="dayselect" id="daySelect"></div>
+    <div class="planhead"><h2 id="planDayName">Monday</h2><span class="n" id="planCount"></span></div>
+    <div class="summary" id="planSummary" style="display:none"></div>
+    <div id="planList"></div>
+    <div class="planactions">
+      <button class="btn ghost" onclick="clearDay()">Clear day</button>
+      <button class="btn primary" onclick="gotoLib()">+ Add exercises</button>
+    </div>
+  </div>
+
+  <!-- SAVE/DATA -->
+  <div class="view" id="v-data">
+    <div class="setcard">
+      <h3>Exercise demo videos</h3>
+      <p>Add a <b>MuscleWiki API key</b> to show real looping exercise demos inside each exercise, instead of leaving the app. The video appears at the top of an exercise when you open it.</p>
+      <input type="text" id="mwKeyInput" class="keyinput" placeholder="Paste key (mw_...)" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn primary" onclick="saveMwKey()">Save &amp; test key</button>
+        <button class="btn ghost" onclick="clearMwKey()">Remove</button>
+      </div>
+      <div id="mwStatus" class="mwstatus"></div>
+      <div class="setnote">Get a key at <b>api.musclewiki.com/register</b>. Direct video access needs the <b>TESTING tier ($10/mo)</b> — the free BASIC tier is playground-only and won't stream video. Without a key, the app still works using the written form cues and the demo link. Your key is stored only on this device.</div>
+    </div>
+
+    <div class="summary">Your plans are saved automatically on this device. To move them to another device or back them up, export below.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn primary" onclick="exportPlans()">Export my plans (copy)</button>
+      <button class="btn ghost" onclick="importPlans()">Import plans (paste)</button>
+      <button class="btn ghost" onclick="resetAll()" style="color:var(--accent2)">Reset everything</button>
+    </div>
+    <div id="dataArea" style="margin-top:14px"></div>
+    <div class="disc">Tip: after building your week, export once and keep the text safe. Re-import any time.</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="on" id="nav-build" onclick="switchView('build')">
+    <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/></svg>Build</button>
+  <button id="nav-lib" onclick="switchView('lib')">
+    <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg>Library</button>
+  <button id="nav-plan" onclick="switchView('plan')">
+    <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2zm12 8v10H5V10z"/></svg>Planner</button>
+  <button id="nav-data" onclick="switchView('data')">
+    <svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm2 4v2h10V7zm0 4v2h10v-2zm0 4v2h7v-2z"/></svg>Save</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- ICONS ---------------- */
+const I={
+ legs:'<svg viewBox="0 0 24 24"><path d="M8 2h8l-1 9-2 11h-3l-1-8-1 8H4l3-13z"/></svg>',
+ chest:'<svg viewBox="0 0 24 24"><path d="M3 7c3-2 6-1 9 1 3-2 6-3 9-1 0 4-3 7-9 8-6-1-9-4-9-8z"/></svg>',
+ back:'<svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 013 3v4l4 3-2 2-3-2v9h-4v-9l-3 2-2-2 4-3V5a3 3 0 013-3z"/></svg>',
+ shoulders:'<svg viewBox="0 0 24 24"><path d="M12 4a2 2 0 100 4 2 2 0 000-4zM4 12a4 4 0 018 0 4 4 0 018 0v6h-4v-5a2 2 0 00-4 0 2 2 0 00-4 0v5H4z"/></svg>',
+ arms:'<svg viewBox="0 0 24 24"><path d="M6 4h5v3H8v4a4 4 0 008 0V4h2v7a6 6 0 01-12 0z"/></svg>',
+ core:'<svg viewBox="0 0 24 24"><path d="M6 3h12v4H6zm0 6h12v2H6zm0 4h12v2H6zm2 4h8v3H8z"/></svg>',
+ glutes:'<svg viewBox="0 0 24 24"><path d="M12 3a4 4 0 014 4c0 2 1 3 2 5s0 5-4 5-4-2-4-2-0 2-4 2-5-3-4-5 2-3 2-5a4 4 0 014-4z"/></svg>',
+ cardio:'<svg viewBox="0 0 24 24"><path d="M12 21l-1.5-1.4C5 14.6 2 11.9 2 8.5 2 6 4 4 6.5 4 8 4 9.5 4.8 10 6c.5-1.2 2-2 3.5-2C20 4 22 6 22 8.5c0 3.4-3 6.1-8.5 11.1z"/></svg>',
+ fullbody:'<svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 110 4 2 2 0 010-4zM8 7h8v2l-2 1v4l2 6h-2l-2-5-2 5H8l2-6v-4L8 9z"/></svg>'
+};
+
+/* ---------------- GOALS ---------------- */
+// Each goal defines how strength (reps) and time-based work is prescribed.
+const GOALS={
+ strength:{name:"Strength",desc:"heavier, lower reps",
+   rep:e=>e.timed?e.t.str:`${e.compound?4:3} × ${e.compound?"5-6":"6-8"}`, rest:"2-3 min rest"},
+ endurance:{name:"Endurance",desc:"lighter, higher reps",
+   rep:e=>e.timed?e.t.end:`${3} × ${e.compound?"15-20":"15-20"}`, rest:"30-45s rest"},
+ fatloss:{name:"Fat Loss",desc:"moderate, steady pace",
+   rep:e=>e.timed?e.t.fat:`3 × ${e.compound?"10-12":"12-15"}`, rest:"45-60s rest"},
+};
+let goal="fatloss";
+
+/* ---------------- EXERCISE LIBRARY ----------------
+ Fields:
+  n name, m muscle group(s) text, grp filter group, ic icon, lvl beg/int/adv,
+  eq equipment used, for = what it's for / trains,
+  compound true=multi-joint, timed true=held/timed (needs t{str,end,fat}),
+  steps[], tip
+------------------------------------------------------*/
+const LIB=[
+ // ---- LEGS ----
+ {n:"Bodyweight Squat",grp:"legs",m:"Quads, glutes",ic:"legs",lvl:"beg",eq:"None",compound:true,
+  for:"The foundation of all lower-body training. Builds leg strength and teaches the basic squat pattern.",
+  steps:["Feet shoulder-width, toes slightly out.","Push hips back and bend knees, lowering until thighs near parallel.","Keep chest up and heels flat.","Drive through heels to stand."],
+  tip:"Master this before adding weight. Go as low as you can with good form."},
+ {n:"Goblet Squat",grp:"legs",m:"Quads, glutes, core",ic:"legs",lvl:"beg",eq:"Dumbbell / kettlebell",compound:true,
+  for:"Adds load to the squat while the front-held weight keeps your torso upright. Great strength builder.",
+  steps:["Hold one dumbbell vertically against your chest.","Feet shoulder-width, toes slightly out.","Squat down, hips back, until thighs near parallel.","Drive up through your heels."],
+  tip:"Keep elbows tucked and the weight close to your chest."},
+ {n:"Reverse Lunge",grp:"legs",m:"Quads, glutes, balance",ic:"legs",lvl:"int",eq:"Bodyweight / dumbbells",compound:true,
+  for:"Single-leg strength and balance. Stepping back is gentler on the knees than forward lunges.",
+  steps:["Stand tall, weights at your sides (or no weight).","Step one foot back, lower until both knees ~90°.","Back knee hovers above the floor.","Push through the front heel to stand. Alternate."],
+  tip:"Keep most of your weight on the front leg."},
+ {n:"Bulgarian Split Squat",grp:"legs",m:"Quads, glutes, balance",ic:"legs",lvl:"adv",eq:"Bench + dumbbells",compound:true,
+  for:"A demanding single-leg builder. Big strength and balance challenge once you're comfortable.",
+  steps:["Stand a couple feet in front of the bench, facing away.","Rest the top of one foot on the bench behind you.","Lower by bending your front knee.","Drive through the front heel. Finish reps, then switch."],
+  tip:"Start bodyweight only until you're steady, then add dumbbells."},
+ {n:"Step-Up",grp:"legs",m:"Quads, glutes",ic:"legs",lvl:"beg",eq:"Bench + dumbbells (optional)",compound:true,
+  for:"Simple, knee-friendly single-leg strength. Easy to scale by bench height or added weight.",
+  steps:["Stand facing the bench, dumbbells optional.","Place one full foot on the bench.","Drive through that heel to stand up on the bench.","Step back down under control. Alternate legs."],
+  tip:"Don't push off the bottom foot — let the top leg do the work."},
+ {n:"Calf Raise",grp:"legs",m:"Calves",ic:"legs",lvl:"beg",eq:"Bodyweight / dumbbells",compound:false,
+  for:"Strengthens the calves for walking, running and jumping.",
+  steps:["Stand tall, optionally holding dumbbells.","Rise up onto the balls of your feet.","Pause at the top.","Lower slowly."],
+  tip:"For more range, stand with the balls of your feet on a step."},
+
+ // ---- GLUTES / HAMSTRINGS ----
+ {n:"Glute Bridge",grp:"glutes",m:"Glutes, hamstrings",ic:"glutes",lvl:"beg",eq:"Bodyweight / dumbbell",compound:true,
+  for:"Teaches you to fire your glutes. Foundation for hip strength with no balance demand.",
+  steps:["Lie on your back, knees bent, feet flat hip-width.","Push through your heels and lift your hips.","Form a straight line knees to shoulders.","Squeeze glutes at the top, lower slowly."],
+  tip:"Rest a dumbbell across your hips to add load."},
+ {n:"Single-Leg Glute Bridge",grp:"glutes",m:"Glutes, hamstrings, core",ic:"glutes",lvl:"int",eq:"Bodyweight",compound:true,
+  for:"A harder bridge that also challenges core stability and evens out left/right strength.",
+  steps:["Set up as a glute bridge, then extend one leg straight.","Push through the planted heel to lift your hips.","Keep hips level — don't let one side drop.","Lower slowly. Finish reps, then switch."],
+  tip:"Go slow; the balance is the hard part."},
+ {n:"Romanian Deadlift",grp:"glutes",m:"Hamstrings, glutes, lower back",ic:"glutes",lvl:"int",eq:"Dumbbells",compound:true,
+  for:"Teaches the hip hinge — the key pattern behind deadlifts and swings. Builds the whole posterior chain.",
+  steps:["Hold dumbbells in front of your thighs, soft knee bend.","Push hips back, hinge forward, lowering weights down your legs.","Feel a hamstring stretch.","Drive hips forward to stand tall."],
+  tip:"Keep your back flat — never round it. Hinge from the hips, not the waist."},
+ {n:"Kettlebell Swing",grp:"glutes",m:"Glutes, hamstrings, cardio",ic:"glutes",lvl:"int",eq:"Kettlebell",compound:true,timed:false,
+  for:"An explosive hip hinge that builds power and doubles as conditioning. Learn the RDL hinge first.",
+  steps:["Feet shoulder-width, kettlebell on the floor in front.","Hinge and grab the handle with both hands.","Hike it back between your legs, snap hips forward.","Let it swing to chest height, guide back down."],
+  tip:"Power comes from the hip snap, not the arms. Start light."},
+
+ // ---- CHEST ----
+ {n:"Push-Up",grp:"chest",m:"Chest, shoulders, triceps",ic:"chest",lvl:"beg",eq:"Bodyweight / power tower handles",compound:true,
+  for:"Classic upper-body pushing strength. Handles on the power tower are easier on the wrists.",
+  steps:["Hands slightly wider than shoulders.","Body in a straight line, core braced.","Lower until your chest nearly touches.","Press back up."],
+  tip:"Too hard? Do them on your knees or against the bench at an incline."},
+ {n:"Dumbbell Chest Press",grp:"chest",m:"Chest, shoulders, triceps",ic:"chest",lvl:"beg",eq:"Bench + dumbbells",compound:true,
+  for:"The main chest strength builder. Dumbbells let each arm work independently.",
+  steps:["Lie flat, a dumbbell in each hand at chest level.","Feet planted, back gently on the bench.","Press both up until arms nearly straight.","Lower slowly to chest level."],
+  tip:"Control the lowering — that's where strength is built."},
+ {n:"Bench Press",grp:"chest",m:"Chest, shoulders, triceps",ic:"chest",lvl:"int",eq:"Bench press",compound:true,
+  for:"Heavy barbell pressing for the chest, shoulders and triceps. Load up as you progress.",
+  steps:["Lie flat, grip the bar slightly wider than shoulders.","Unrack and hold it over your chest.","Lower to mid-chest under control.","Press back up to straight arms."],
+  tip:"Always use safe loads solo, or a spotter. Keep wrists stacked over elbows."},
+ {n:"Incline Dumbbell Press",grp:"chest",m:"Upper chest, shoulders",ic:"chest",lvl:"int",eq:"Adjustable bench + dumbbells",compound:true,
+  for:"Shifts the work to the upper chest and front shoulders.",
+  steps:["Set the bench to ~30°.","Dumbbells at upper-chest level.","Press up and slightly together.","Lower slowly to start."],
+  tip:"Too steep turns it into a shoulder press — keep it around 30°."},
+ {n:"Chest Fly",grp:"chest",m:"Chest (stretch/isolation)",ic:"chest",lvl:"int",eq:"Bench + dumbbells",compound:false,
+  for:"Isolates the chest through a big stretch. Good for building the mind-muscle connection.",
+  steps:["Lie flat, dumbbells above your chest, palms facing each other.","Slight elbow bend, lower the weights out wide in an arc.","Feel a stretch across your chest.","Bring them back together over your chest."],
+  tip:"Keep it light — this is a stretch movement, not a heavy press."},
+ {n:"Dip",grp:"chest",m:"Lower chest, triceps",ic:"chest",lvl:"adv",eq:"Power tower dip station",compound:true,
+  for:"Strong pushing exercise for the lower chest and triceps.",
+  steps:["Grip the dip handles, arms straight, body upright.","Lower by bending your elbows until you feel a stretch.","Lean slightly forward for chest emphasis.","Press back up to straight arms."],
+  tip:"New to dips? Use the power tower's knee support or do partial range first."},
+
+ // ---- BACK ----
+ {n:"Lat Pulldown",grp:"back",m:"Lats, biceps",ic:"back",lvl:"beg",eq:"Power stack (high pulley)",compound:true,
+  for:"Builds the wide back muscles and preps you for pull-ups.",
+  steps:["Grip the bar slightly wider than shoulders.","Sit tall, slight lean back.","Pull to your upper chest, squeeze shoulder blades.","Let it rise slowly under control."],
+  tip:"Lead with the elbows, not the hands."},
+ {n:"Seated Cable Row",grp:"back",m:"Mid-back, biceps",ic:"back",lvl:"beg",eq:"Power stack (low pulley)",compound:true,
+  for:"Builds mid-back thickness and improves posture.",
+  steps:["Sit facing the machine, feet braced, knees soft.","Grab the handle, arms extended, sit tall.","Pull to your stomach, squeeze shoulder blades.","Extend arms out slowly."],
+  tip:"Keep your torso still — don't rock for momentum."},
+ {n:"One-Arm Dumbbell Row",grp:"back",m:"Lats, mid-back, biceps",ic:"back",lvl:"beg",eq:"Bench + dumbbell",compound:true,
+  for:"Single-arm back work with a big range of motion; evens out left/right differences.",
+  steps:["One knee and hand on the bench, back flat.","Other foot on the floor, dumbbell hanging.","Pull the dumbbell to your hip, elbow close.","Lower slowly. Finish reps, then switch."],
+  tip:"Don't twist your torso to lift — keep it steady."},
+ {n:"Resistance Band Row",grp:"back",m:"Mid-back, biceps",ic:"back",lvl:"beg",eq:"Resistance band",compound:true,
+  for:"A joint-friendly back exercise you can do anywhere. Good for warm-ups too.",
+  steps:["Anchor the band at chest height (or loop around your feet seated).","Hold both ends, arms extended.","Pull elbows back, squeezing shoulder blades.","Return slowly."],
+  tip:"Step further back for more resistance."},
+ {n:"Assisted Pull-Up",grp:"back",m:"Lats, biceps",ic:"back",lvl:"int",eq:"Power tower + band",compound:true,
+  for:"The stepping stone to full pull-ups. Loop a band over the bar and into it for help.",
+  steps:["Loop a resistance band over the bar, foot or knee in it.","Grip the bar shoulder-width, hang with straight arms.","Pull until your chin clears the bar.","Lower under control."],
+  tip:"A thicker band gives more help. Reduce assistance over time."},
+ {n:"Pull-Up",grp:"back",m:"Lats, biceps, grip",ic:"back",lvl:"adv",eq:"Power tower bar",compound:true,
+  for:"The gold-standard upper-body pull. Builds a strong, wide back.",
+  steps:["Grip the bar slightly wider than shoulders.","Hang with straight arms.","Pull up until your chin clears the bar.","Lower all the way down under control."],
+  tip:"Can't do one yet? Do slow lowers (negatives) from the top."},
+
+ // ---- SHOULDERS ----
+ {n:"Dumbbell Shoulder Press",grp:"shoulders",m:"Shoulders, triceps",ic:"shoulders",lvl:"beg",eq:"Dumbbells (+ bench)",compound:true,
+  for:"Main overhead pressing strength for the shoulders.",
+  steps:["Dumbbells at shoulder height, core braced.","Press overhead until arms nearly straight.","Lower slowly to shoulder level."],
+  tip:"Sit with back support to start; don't arch your lower back."},
+ {n:"Lateral Raise",grp:"shoulders",m:"Side delts",ic:"shoulders",lvl:"beg",eq:"Dumbbells",compound:false,
+  for:"Builds shoulder width by isolating the side delts.",
+  steps:["Stand, light dumbbells at your sides.","Raise them out to the sides to shoulder height.","Slight elbow bend, lead with the elbows.","Lower slowly."],
+  tip:"Go light — this one doesn't need heavy weight to work."},
+ {n:"Band Pull-Apart",grp:"shoulders",m:"Rear delts, upper back",ic:"shoulders",lvl:"beg",eq:"Resistance band",compound:false,
+  for:"Strengthens rear shoulders and upper back — excellent for posture if you sit at a desk.",
+  steps:["Hold a band with both hands, arms straight out front.","Pull the band apart, squeezing shoulder blades.","Bring hands out wide.","Return slowly, no jerking."],
+  tip:"Keep arms straight throughout."},
+ {n:"Face Pull",grp:"shoulders",m:"Rear delts, upper back",ic:"shoulders",lvl:"int",eq:"Power stack / band",compound:false,
+  for:"Targets the often-neglected rear delts and improves shoulder health and posture.",
+  steps:["Set a band/cable at head height.","Hold each end, arms extended.","Pull toward your face, hands splitting by your ears.","Squeeze, return slowly."],
+  tip:"Keep it light and controlled."},
+ {n:"Pike Push-Up",grp:"shoulders",m:"Shoulders, triceps",ic:"shoulders",lvl:"adv",eq:"Bodyweight",compound:true,
+  for:"A bodyweight overhead press. Builds toward handstand push-ups.",
+  steps:["Start in a push-up, then walk feet in to form an inverted V.","Head points at the floor between your hands.","Lower the top of your head toward the floor.","Press back up."],
+  tip:"The higher your hips, the more it hits the shoulders."},
+
+ // ---- ARMS ----
+ {n:"Dumbbell Bicep Curl",grp:"arms",m:"Biceps",ic:"arms",lvl:"beg",eq:"Dumbbells",compound:false,
+  for:"Isolates and builds the biceps.",
+  steps:["Stand, dumbbells at your sides, palms forward.","Curl up toward your shoulders, elbows still.","Squeeze at the top.","Lower slowly."],
+  tip:"Don't swing — keep your elbows pinned to your sides."},
+ {n:"Hammer Curl",grp:"arms",m:"Biceps, forearms",ic:"arms",lvl:"beg",eq:"Dumbbells",compound:false,
+  for:"Works the biceps and forearms with a neutral, joint-friendly grip.",
+  steps:["Dumbbells at your sides, palms facing each other.","Curl up keeping palms facing in.","Squeeze at the top.","Lower slowly."],
+  tip:"Great if regular curls bother your wrists."},
+ {n:"Overhead Tricep Extension",grp:"arms",m:"Triceps",ic:"arms",lvl:"beg",eq:"Dumbbell",compound:false,
+  for:"Builds the triceps — the bigger part of your upper arm.",
+  steps:["Hold one dumbbell overhead with both hands.","Keep elbows pointing forward.","Lower the weight behind your head by bending elbows.","Extend back up."],
+  tip:"Keep your upper arms still; only the forearms move."},
+ {n:"Tricep Dip (Bench)",grp:"arms",m:"Triceps",ic:"arms",lvl:"beg",eq:"Bench",compound:true,
+  for:"An easy-to-scale triceps builder using just a bench.",
+  steps:["Hands on the bench edge behind you, legs out front.","Lower your hips by bending your elbows.","Keep elbows pointing back.","Press back up."],
+  tip:"Bend your knees to make it easier, straighten legs to make it harder."},
+ {n:"Band Tricep Pushdown",grp:"arms",m:"Triceps",ic:"arms",lvl:"beg",eq:"Resistance band / power stack",compound:false,
+  for:"Constant-tension triceps work that's gentle on the elbows.",
+  steps:["Anchor a band high (or use the stack).","Elbows tucked at your sides.","Push down until arms are straight.","Return slowly."],
+  tip:"Keep those elbows glued to your sides."},
+
+ // ---- CORE ----
+ {n:"Plank",grp:"core",m:"Core, shoulders",ic:"core",lvl:"beg",eq:"Bodyweight",compound:false,timed:true,
+  t:{str:"3 × 20-30s",end:"3 × 45-60s",fat:"3 × 30-45s"},
+  for:"Builds deep core stability and a strong midsection with no movement.",
+  steps:["Forearms and toes down, elbows under shoulders.","Straight line head to heels.","Squeeze glutes, brace your stomach.","Hold and breathe."],
+  tip:"Drop to your knees if your hips start to sag."},
+ {n:"Side Plank",grp:"core",m:"Obliques",ic:"core",lvl:"int",eq:"Bodyweight",compound:false,timed:true,
+  t:{str:"3 × 15-20s/side",end:"3 × 30-45s/side",fat:"3 × 20-30s/side"},
+  for:"Targets the side core (obliques) and stabilises the spine.",
+  steps:["On your side, propped on one forearm, elbow under shoulder.","Stack feet, lift hips off the floor.","Straight line head to feet.","Hold, then switch sides."],
+  tip:"Drop the bottom knee for an easier version."},
+ {n:"Dead Bug",grp:"core",m:"Deep core",ic:"core",lvl:"beg",eq:"Bodyweight",compound:false,
+  for:"Teaches core control while moving your limbs — safe for the lower back.",
+  steps:["On your back, arms up, knees bent 90°.","Press your lower back into the floor.","Slowly lower opposite arm and leg.","Return and switch sides."],
+  tip:"If your back arches off the floor, use a smaller range."},
+ {n:"Hanging Knee Raise",grp:"core",m:"Lower abs, hip flexors",ic:"core",lvl:"int",eq:"Power tower (VKR or bar)",compound:false,
+  for:"Strong lower-ab work. The vertical knee raise station supports your back.",
+  steps:["Support forearms on the VKR pads (or hang from the bar).","Let your legs hang straight.","Raise your knees toward your chest.","Lower slowly — no swinging."],
+  tip:"Control it. Swinging means momentum is doing the work, not your abs."},
+ {n:"Hanging Leg Raise",grp:"core",m:"Lower abs, hip flexors",ic:"core",lvl:"adv",eq:"Power tower bar",compound:false,
+  for:"An advanced core builder with straight legs for maximum challenge.",
+  steps:["Hang from the bar, arms straight.","Keep legs straight.","Raise them until parallel to the floor (or higher).","Lower slowly under control."],
+  tip:"Start with bent knees and straighten as you get stronger."},
+ {n:"Russian Twist",grp:"core",m:"Obliques",ic:"core",lvl:"beg",eq:"Bodyweight / dumbbell",compound:false,
+  for:"Builds rotational core strength through the obliques.",
+  steps:["Sit, knees bent, lean back slightly.","Hold a weight (or hands together) at your chest.","Rotate side to side, tapping near your hip.","Keep your core tight."],
+  tip:"Lift your feet off the floor to make it harder."},
+
+ // ---- CARDIO / CONDITIONING ----
+ {n:"Bike Intervals",grp:"cardio",m:"Cardio, legs",ic:"cardio",lvl:"beg",eq:"Training bike",compound:true,timed:true,
+  t:{str:"—",end:"20-30 min steady",fat:"8 × 1 min hard / 1 min easy"},
+  for:"Low-impact cardio. Intervals torch calories; steady rides build your aerobic base.",
+  steps:["Warm up 5 min easy.","For intervals: 1 min hard, 1 min easy, repeat.","For steady: hold a conversational pace.","Cool down 3-5 min."],
+  tip:"Check your Apple Watch — Zone 2 for steady, Zone 4 on the hard bursts."},
+ {n:"Treadmill Incline Walk",grp:"cardio",m:"Cardio, legs, glutes",ic:"cardio",lvl:"beg",eq:"Treadmill",compound:true,timed:true,
+  t:{str:"—",end:"20-30 min",fat:"20 min brisk incline"},
+  for:"Excellent low-impact fat-loss cardio that's easy on the joints.",
+  steps:["Set a slight-to-moderate incline.","Walk at a brisk but conversational pace.","Keep heart rate ~115-135 bpm.","Hold steady for the duration."],
+  tip:"Incline walking burns more than flat, with less joint stress than running."},
+ {n:"Jump Rope",grp:"cardio",m:"Cardio, calves, coordination",ic:"cardio",lvl:"int",eq:"Jump rope",compound:true,timed:true,
+  t:{str:"—",end:"10-15 min",fat:"10 × 30s on / 30s off"},
+  for:"High-calorie-burn cardio that also builds coordination and footwork.",
+  steps:["Start with small, low jumps off the balls of your feet.","Keep elbows in, turn the rope with your wrists.","Build up continuous time as you improve.","Rest as needed between bouts."],
+  tip:"Beginner? Do 20-30s bouts with rest. It's tiring fast."},
+ {n:"Boxing / Bag Work",grp:"cardio",m:"Cardio, arms, core, coordination",ic:"cardio",lvl:"beg",eq:"Punching bag",compound:true,timed:true,
+  t:{str:"—",end:"15-20 min rounds",fat:"5-8 × 3 min on / 1 min rest"},
+  for:"Fun full-body conditioning and stress relief that builds coordination.",
+  steps:["Staggered stance, hands up by your chin.","Throw straight punches, rotating your hips.","Keep moving your feet, breathe out with each punch.","Work in 3-min rounds with 1-min rest."],
+  tip:"Technique over power. Stay relaxed and rhythmic."},
+ {n:"Kettlebell Circuit",grp:"cardio",m:"Full body, cardio",ic:"fullbody",lvl:"int",eq:"Kettlebell",compound:true,timed:true,
+  t:{str:"—",end:"15-20 min",fat:"5 rounds: swings + squats + rows"},
+  for:"Combines strength and cardio in one. Great time-efficient fat-loss finisher.",
+  steps:["Pick 3-4 KB moves (swing, goblet squat, row).","Do 10-15 reps of each back to back.","Rest 60-90s between rounds.","Repeat for 4-5 rounds."],
+  tip:"Keep form sharp even as you tire. Slow down if it slips."},
+];
+
+/* muscle filter groups */
+const GROUPS=[
+ {id:"all",name:"All"},{id:"legs",name:"Legs"},{id:"glutes",name:"Glutes/Ham"},
+ {id:"chest",name:"Chest"},{id:"back",name:"Back"},{id:"shoulders",name:"Shoulders"},
+ {id:"arms",name:"Arms"},{id:"core",name:"Core"},{id:"cardio",name:"Cardio"},
+];
+const LVLS=[{id:"all",name:"All levels"},{id:"beg",name:"Beginner"},{id:"int",name:"Intermediate"},{id:"adv",name:"Advanced"}];
+const LVLNAME={beg:"Beginner",int:"Intermediate",adv:"Advanced"};
+const DAYNAMES=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
+/* ---------------- STATE ---------------- */
+let curMuscle="all", curLvl="all", curDay=0;
+let plans={}; // {0:[{n,...}], ...}
+const STORE_KEY="hgt_plans_v1", GOAL_KEY="hgt_goal_v1", MW_KEY="hgt_mw_key_v1";
+let mwKey="";                    // MuscleWiki API key (user-supplied)
+const mwCache={};                // name -> {status, blobUrl, err} in-memory cache
+const MW_BASE="https://api.musclewiki.com";
+
+function save(){ try{localStorage.setItem(STORE_KEY,JSON.stringify(plans));localStorage.setItem(GOAL_KEY,goal);localStorage.setItem(MW_KEY,mwKey);}catch(e){} }
+function load(){ try{const p=localStorage.getItem(STORE_KEY);if(p)plans=JSON.parse(p);const g=localStorage.getItem(GOAL_KEY);if(g&&GOALS[g])goal=g;const k=localStorage.getItem(MW_KEY);if(k)mwKey=k;}catch(e){} }
+
+/* ---- MIT muscle map data (react-body-highlighter, MIT © GV79) ---- */
+const MM_ANT={"chest":["51.8367347 41.6326531 51.0204082 55.1020408 57.9591837 57.9591837 67.755102 55.5102041 70.6122449 47.3469388 62.0408163 41.6326531 ","29.7959184 46.5306122 31.4285714 55.5102041 40.8163265 57.9591837 48.1632653 55.1020408 47.755102 42.0408163 37.5510204 42.0408163"],"obliques":["68.5714286 63.2653061 67.3469388 57.1428571 58.7755102 59.5918367 60 64.0816327 60.4081633 83.2653061 65.7142857 78.7755102 66.5306122 69.7959184","33.877551 78.3673469 33.0612245 71.8367347 31.0204082 63.2653061 32.244898 57.1428571 40.8163265 59.1836735 39.1836735 63.2653061 39.1836735 83.6734694"],"abs":["56.3265306 59.1836735 57.9591837 64.0816327 58.3673469 77.9591837 58.3673469 92.6530612 56.3265306 98.3673469 55.1020408 104.081633 51.4285714 107.755102 51.0204082 84.4897959 50.6122449 67.3469388 51.0204082 57.1428571","43.6734694 58.7755102 48.5714286 57.1428571 48.9795918 67.3469388 48.5714286 84.4897959 48.1632653 107.346939 44.4897959 103.673469 40.8163265 91.4285714 40.8163265 78.3673469 41.2244898 64.4897959"],"biceps":["16.7346939 68.1632653 17.9591837 71.4285714 22.8571429 66.122449 28.9795918 53.877551 27.755102 49.3877551 20.4081633 55.9183673","71.4285714 49.3877551 70.2040816 54.6938776 76.3265306 66.122449 81.6326531 71.8367347 82.8571429 68.9795918 78.7755102 55.5102041"],"triceps":["69.3877551 55.5102041 69.3877551 61.6326531 75.9183673 72.6530612 77.5510204 70.2040816 75.5102041 67.3469388","22.4489796 69.3877551 29.7959184 55.5102041 29.7959184 60.8163265 22.8571429 73.0612245"],"neck":["55.5102041 23.6734694 50.6122449 33.4693878 50.6122449 39.1836735 61.6326531 40 70.6122449 44.8979592 69.3877551 36.7346939 63.2653061 35.1020408 58.3673469 30.6122449","28.9795918 44.8979592 30.2040816 37.1428571 36.3265306 35.1020408 41.2244898 30.2040816 44.4897959 24.4897959 48.9795918 33.877551 48.5714286 39.1836735 37.9591837 39.5918367"],"front-deltoids":["78.3673469 53.0612245 79.5918367 47.755102 79.1836735 41.2244898 75.9183673 37.9591837 71.0204082 36.3265306 72.244898 42.8571429 71.4285714 47.3469388","28.1632653 47.3469388 21.2244898 53.0612245 20 47.755102 20.4081633 40.8163265 24.4897959 37.1428571 28.5714286 37.1428571 26.9387755 43.2653061"],"head":["42.4489796 2.85714286 40 11.8367347 42.0408163 19.5918367 46.122449 23.2653061 49.7959184 25.3061224 54.6938776 22.4489796 57.5510204 19.1836735 59.1836735 10.2040816 57.1428571 2.44897959 49.7959184 0"],"abductors":["52.6530612 110.204082 54.2857143 124.897959 60 110.204082 62.0408163 100 64.8979592 94.2857143 60 92.6530612 56.7346939 104.489796","47.755102 110.612245 44.8979592 125.306122 42.0408163 115.918367 40.4081633 113.061224 39.5918367 107.346939 37.9591837 102.44898 34.6938776 93.877551 39.5918367 92.244898 41.6326531 99.1836735 43.6734694 105.306122"],"quadriceps":["34.6938776 98.7755102 37.1428571 108.163265 37.1428571 127.755102 34.2857143 137.142857 31.0204082 132.653061 29.3877551 120 28.1632653 111.428571 29.3877551 100.816327 32.244898 94.6938776","63.2653061 105.714286 64.4897959 100 66.9387755 94.6938776 70.2040816 101.22449 71.0204082 111.836735 68.1632653 133.061224 65.3061224 137.55102 62.4489796 128.571429 62.0408163 111.428571","38.7755102 129.387755 38.3673469 112.244898 41.2244898 118.367347 44.4897959 129.387755 42.8571429 135.102041 40 146.122449 36.3265306 146.530612 35.5102041 140","59.5918367 145.714286 55.5102041 128.979592 60.8163265 113.877551 61.2244898 130.204082 64.0816327 139.591837 62.8571429 146.530612","32.6530612 138.367347 26.5306122 145.714286 25.7142857 136.734694 25.7142857 127.346939 26.9387755 114.285714 29.3877551 133.469388","71.8367347 113.061224 73.877551 124.081633 73.877551 140.408163 72.6530612 145.714286 66.5306122 138.367347 70.2040816 133.469388"],"knees":["33.877551 140 34.6938776 143.265306 35.5102041 147.346939 36.3265306 151.020408 35.1020408 156.734694 29.7959184 156.734694 27.3469388 152.653061 27.3469388 147.346939 30.2040816 144.081633","65.7142857 140 72.244898 147.755102 72.244898 152.244898 69.7959184 157.142857 64.8979592 156.734694 62.8571429 151.020408"],"calves":["71.4285714 160.408163 73.4693878 153.469388 76.7346939 161.22449 79.5918367 167.755102 78.3673469 187.755102 79.5918367 195.510204 74.6938776 195.510204","24.8979592 194.693878 27.755102 164.897959 28.1632653 160.408163 26.122449 154.285714 24.8979592 157.55102 22.4489796 161.632653 20.8163265 167.755102 22.0408163 188.163265 20.8163265 195.510204","72.6530612 195.102041 69.7959184 159.183673 65.3061224 158.367347 64.0816327 162.44898 64.0816327 165.306122 65.7142857 177.142857","35.5102041 158.367347 35.9183673 162.44898 35.9183673 166.938776 35.1020408 172.244898 35.1020408 176.734694 32.244898 182.040816 30.6122449 187.346939 26.9387755 194.693878 27.3469388 187.755102 28.1632653 180.408163 28.5714286 175.510204 28.9795918 169.795918 29.7959184 164.081633 30.2040816 158.77551"],"forearm":["6.12244898 88.5714286 10.2040816 75.1020408 14.6938776 70.2040816 16.3265306 74.2857143 19.1836735 73.4693878 4.48979592 97.5510204 0 100","84.4897959 69.7959184 83.2653061 73.4693878 80 73.0612245 95.1020408 98.3673469 100 100.408163 93.4693878 89.3877551 89.7959184 76.3265306","77.5510204 72.244898 77.5510204 77.5510204 80.4081633 84.0816327 85.3061224 89.7959184 92.244898 101.22449 94.6938776 99.5918367","6.93877551 101.22449 13.4693878 90.6122449 18.7755102 84.0816327 21.6326531 77.1428571 21.2244898 71.8367347 4.89795918 98.7755102"]};
+const MM_POST={"head":["50.6382979 0 45.9574468 0.85106383 40.8510638 5.53191489 40.4255319 12.7659574 45.106383 20 55.7446809 20 59.1489362 13.6170213 59.5744681 4.68085106 55.7446809 1.27659574"],"trapezius":["44.6808511 21.7021277 47.6595745 21.7021277 47.2340426 38.2978723 47.6595745 64.6808511 38.2978723 53.1914894 35.3191489 40.8510638 31.0638298 36.5957447 39.1489362 33.1914894 43.8297872 27.2340426","52.3404255 21.7021277 55.7446809 21.7021277 56.5957447 27.2340426 60.8510638 32.7659574 68.9361702 36.5957447 64.6808511 40.4255319 61.7021277 53.1914894 52.3404255 64.6808511 53.1914894 38.2978723"],"back-deltoids":["29.3617021 37.0212766 22.9787234 39.1489362 17.4468085 44.2553191 18.2978723 53.6170213 24.2553191 49.3617021 27.2340426 46.3829787","71.0638298 37.0212766 78.2978723 39.5744681 82.5531915 44.6808511 81.7021277 53.6170213 74.893617 48.9361702 72.3404255 45.106383"],"upper-back":["31.0638298 38.7234043 28.0851064 48.9361702 28.5106383 55.3191489 34.0425532 75.3191489 47.2340426 71.0638298 47.2340426 66.3829787 36.5957447 54.0425532 33.6170213 41.2765957","68.9361702 38.7234043 71.9148936 49.3617021 71.4893617 56.1702128 65.9574468 75.3191489 52.7659574 71.0638298 52.7659574 66.3829787 63.4042553 54.4680851 66.3829787 41.7021277"],"triceps":["26.8085106 49.787234 17.8723404 55.7446809 14.4680851 72.3404255 16.5957447 81.7021277 21.7021277 63.8297872 26.8085106 55.7446809","73.6170213 50.212766 82.1276596 55.7446809 85.9574468 73.1914894 83.4042553 82.1276596 77.8723404 62.9787234 73.1914894 55.7446809","26.8085106 58.2978723 26.8085106 68.5106383 22.9787234 75.3191489 19.1489362 77.4468085 22.5531915 65.5319149","72.7659574 58.2978723 77.0212766 64.6808511 80.4255319 77.4468085 76.5957447 75.3191489 72.7659574 68.9361702"],"lower-back":["47.6595745 72.7659574 34.4680851 77.0212766 35.3191489 83.4042553 49.3617021 102.12766 46.8085106 82.9787234","52.3404255 72.7659574 65.5319149 77.0212766 64.6808511 83.4042553 50.6382979 102.12766 53.1914894 83.8297872"],"forearm":["86.3829787 75.7446809 91.0638298 83.4042553 93.1914894 94.0425532 100 106.382979 96.1702128 104.255319 88.0851064 89.3617021 84.2553191 83.8297872","13.6170213 75.7446809 8.93617021 83.8297872 6.80851064 93.6170213 0 106.382979 3.82978723 104.255319 12.3404255 88.5106383 15.7446809 82.9787234","81.2765957 79.5744681 77.4468085 77.8723404 79.1489362 84.6808511 91.0638298 103.829787 93.1914894 108.93617 94.4680851 104.680851","18.7234043 79.5744681 22.1276596 77.8723404 20.8510638 84.2553191 9.36170213 102.978723 6.80851064 108.510638 5.10638298 104.680851"],"gluteal":["44.6808511 99.5744681 30.212766 108.510638 29.787234 118.723404 31.4893617 125.957447 47.2340426 121.276596 49.3617021 114.893617","55.3191489 99.1489362 51.0638298 114.468085 52.3404255 120.851064 68.0851064 125.957447 69.787234 119.148936 69.3617021 108.510638"],"adductor":["48.0851064 122.978723 44.6808511 122.978723 41.2765957 125.531915 45.106383 144.255319 48.5106383 135.744681 48.9361702 129.361702","51.9148936 122.553191 55.7446809 123.404255 59.1489362 125.957447 54.893617 144.255319 51.9148936 136.170213 51.0638298 129.361702"],"hamstring":["28.9361702 122.12766 31.0638298 129.361702 36.5957447 125.957447 35.3191489 135.319149 34.4680851 150.212766 29.3617021 158.297872 28.9361702 146.808511 27.6595745 141.276596 27.2340426 131.489362","71.4893617 121.702128 69.3617021 128.93617 63.8297872 125.957447 65.5319149 136.595745 66.3829787 150.212766 71.0638298 158.297872 71.4893617 147.659574 72.7659574 142.12766 73.6170213 131.914894","38.7234043 125.531915 44.2553191 145.957447 40.4255319 166.808511 36.1702128 152.765957 37.0212766 135.319149","61.7021277 125.531915 63.4042553 136.170213 64.2553191 153.191489 60 166.808511 56.1702128 146.382979"],"knees":["34.4680851 153.191489 31.0638298 159.148936 33.6170213 166.382979 37.4468085 162.553191","66.3829787 153.617021 62.9787234 162.978723 66.8085106 166.382979 69.3617021 159.148936"],"calves":["29.3617021 160.425532 28.5106383 167.234043 24.6808511 179.574468 23.8297872 192.765957 25.5319149 197.021277 28.5106383 193.191489 29.787234 180 31.9148936 171.06383 31.9148936 166.808511","37.4468085 165.106383 35.3191489 167.659574 33.1914894 171.914894 31.0638298 180.425532 30.212766 191.914894 34.0425532 200 38.7234043 190.638298 39.1489362 168.93617","62.9787234 165.106383 61.2765957 168.510638 61.7021277 190.638298 66.3829787 199.574468 70.6382979 191.914894 68.9361702 179.574468 66.8085106 170.212766","70.6382979 160.425532 72.3404255 168.510638 75.7446809 179.148936 76.5957447 192.765957 74.4680851 196.595745 72.3404255 193.617021 70.6382979 179.574468 68.0851064 168.085106"],"left-soleus":["28.5106383 195.744681 30.212766 195.744681 33.6170213 201.702128 30.6382979 220 28.5106383 213.617021 26.8085106 198.297872"],"right-soleus":["69.787234 195.744681 71.9148936 195.744681 73.6170213 198.297872 71.9148936 213.191489 70.212766 219.574468 67.2340426 202.12766"]};
+const EX_MUS={"Bodyweight Squat":["quadriceps","gluteal","adductor"],"Goblet Squat":["quadriceps","gluteal","abs","adductor"],"Reverse Lunge":["quadriceps","gluteal","hamstring"],"Bulgarian Split Squat":["quadriceps","gluteal","hamstring"],"Step-Up":["quadriceps","gluteal"],"Calf Raise":["calves"],"Glute Bridge":["gluteal","hamstring"],"Single-Leg Glute Bridge":["gluteal","hamstring","abs"],"Romanian Deadlift":["hamstring","gluteal","lower-back"],"Kettlebell Swing":["gluteal","hamstring","lower-back","front-deltoids"],"Push-Up":["chest","triceps","front-deltoids"],"Dumbbell Chest Press":["chest","triceps","front-deltoids"],"Bench Press":["chest","triceps","front-deltoids"],"Incline Dumbbell Press":["chest","front-deltoids","triceps"],"Chest Fly":["chest"],"Dip":["chest","triceps"],"Lat Pulldown":["upper-back","lower-back","biceps"],"Seated Cable Row":["upper-back","lower-back","biceps","trapezius"],"One-Arm Dumbbell Row":["upper-back","lower-back","biceps"],"Resistance Band Row":["upper-back","biceps","trapezius"],"Assisted Pull-Up":["upper-back","lower-back","biceps","back-deltoids"],"Pull-Up":["upper-back","lower-back","biceps","back-deltoids","trapezius"],"Dumbbell Shoulder Press":["front-deltoids","triceps","trapezius"],"Lateral Raise":["front-deltoids","back-deltoids"],"Band Pull-Apart":["back-deltoids","upper-back","trapezius"],"Face Pull":["back-deltoids","upper-back","trapezius"],"Pike Push-Up":["front-deltoids","triceps","trapezius"],"Dumbbell Bicep Curl":["biceps","forearm"],"Hammer Curl":["biceps","forearm"],"Overhead Tricep Extension":["triceps"],"Tricep Dip (Bench)":["triceps"],"Band Tricep Pushdown":["triceps"],"Plank":["abs","obliques"],"Side Plank":["obliques","abs"],"Dead Bug":["abs"],"Hanging Knee Raise":["abs"],"Hanging Leg Raise":["abs"],"Russian Twist":["obliques","abs"],"Bike Intervals":["quadriceps","calves","hamstring"],"Treadmill Incline Walk":["quadriceps","gluteal","calves"],"Jump Rope":["calves","quadriceps"],"Boxing / Bag Work":["front-deltoids","obliques","abs"],"Kettlebell Circuit":["gluteal","quadriceps","upper-back","front-deltoids"]};
+
+/* Render a muscle map (front+back) highlighting the muscles worked.
+   muscles: array of slugs. Returns HTML string. compact=smaller for cards. */
+function muscleMapSVG(muscles, opts){
+  opts=opts||{};
+  const active=new Set(muscles||[]);
+  const H=opts.h||130;
+  const base=opts.base||"#cdd2d8";
+  const hot=opts.hot||"#e8502e";
+  const line=opts.line||"#aab0b6";
+  function view(data){
+    let p="";
+    for(const mus in data){
+      const on=active.has(mus);
+      for(const pts of data[mus]){
+        p+=`<polygon points="${pts}" fill="${on?hot:base}" stroke="${line}" stroke-width="0.3"/>`;
+      }
+    }
+    return `<svg viewBox="0 0 100 200" style="height:${H}px;width:auto" xmlns="http://www.w3.org/2000/svg">${p}</svg>`;
+  }
+  return `<div class="mmap">
+    <div class="mmv">${view(MM_ANT)}<span>Front</span></div>
+    <div class="mmv">${view(MM_POST)}<span>Back</span></div>
+  </div>`;
+}
+// combined muscles for a whole day's plan
+function musclesForDay(di){
+  const arr=plans[di]||[];const s=new Set();
+  arr.forEach(x=>{(EX_MUS[x.n]||[]).forEach(m=>s.add(m));});
+  return [...s];
+}
+
+function exByName(n){return LIB.find(e=>e.n===n);}
+
+/* ---------------- MUSCLEWIKI VIDEO INTEGRATION ----------------
+ Requires a user-supplied API key (TESTING tier+, key format mw_...).
+ Flow: search by name -> get exercise -> pick a video filename -> stream
+ the branded mp4 with the X-API-Key header -> show as an in-memory blob URL.
+ All requests send the header; results are cached per session.
+--------------------------------------------------------------- */
+async function mwHeaders(){return {"X-API-Key":mwKey};}
+
+// Map our exercise name to a MuscleWiki search term (theirs use standard names).
+function mwSearchTerm(name){
+  return name
+    .replace(/\(.*?\)/g,"")          // drop parenthetical notes
+    .replace(/\s*\/\s*/g," ")        // "Boxing / Bag Work" -> "Boxing Bag Work"
+    .trim();
+}
+
+// Fetch and cache the video blob URL for an exercise name. Returns {ok, url, err}.
+async function mwGetVideo(name){
+  if(!mwKey) return {ok:false,err:"no-key"};
+  if(mwCache[name]?.status==="ready") return {ok:true,url:mwCache[name].blobUrl};
+  if(mwCache[name]?.status==="error") return {ok:false,err:mwCache[name].err};
+  mwCache[name]={status:"loading"};
+  try{
+    const q=encodeURIComponent(mwSearchTerm(name));
+    const sr=await fetch(`${MW_BASE}/search?q=${q}&limit=1`,{headers:await mwHeaders()});
+    if(!sr.ok) throw new Error(sr.status===403?"Key invalid or tier too low (needs TESTING+)":sr.status===429?"Monthly quota reached":`Search failed (${sr.status})`);
+    const sj=await sr.json();
+    const hit=(sj.results||[])[0];
+    if(!hit) throw new Error("No match found");
+    // get full exercise for video list
+    const er=await fetch(`${MW_BASE}/exercises/${hit.id}`,{headers:await mwHeaders()});
+    if(!er.ok) throw new Error(`Load failed (${er.status})`);
+    const ej=await er.json();
+    // pick a branded front video if present, else first video
+    const vids=ej.videos||[];
+    let file=null, branded=true;
+    // videos may carry a filename or a url; handle both shapes defensively
+    const pick = vids.find(v=>/front/i.test(JSON.stringify(v))) || vids[0];
+    if(!pick) throw new Error("No video for this exercise");
+    // derive filename
+    file = pick.branded_filename || pick.filename || pick.file || (typeof pick==="string"?pick:null)
+        || (pick.url && pick.url.split("/").pop());
+    if(!file) throw new Error("No video file");
+    // stream branded, fall back to unbranded
+    let vr=await fetch(`${MW_BASE}/stream/videos/branded/${encodeURIComponent(file)}`,{headers:await mwHeaders()});
+    if(!vr.ok){vr=await fetch(`${MW_BASE}/stream/videos/unbranded/${encodeURIComponent(file)}`,{headers:await mwHeaders()});}
+    if(!vr.ok) throw new Error(`Video stream failed (${vr.status})`);
+    const blob=await vr.blob();
+    const url=URL.createObjectURL(blob);
+    mwCache[name]={status:"ready",blobUrl:url};
+    return {ok:true,url};
+  }catch(e){
+    mwCache[name]={status:"error",err:e.message||"Failed"};
+    return {ok:false,err:e.message||"Failed"};
+  }
+}
+
+// Called when an exercise card opens: injects the video if a key is set.
+async function loadExerciseMedia(name){
+  const slot=document.getElementById("media-"+cssId(name));
+  if(!slot) return;
+  if(!mwKey){slot.innerHTML="";return;}
+  if(slot.dataset.loaded==="1") return;
+  slot.dataset.loaded="1";
+  slot.innerHTML=`<div class="vidload">Loading demo…</div>`;
+  const r=await mwGetVideo(name);
+  if(r.ok){
+    slot.innerHTML=`<video src="${r.url}" autoplay loop muted playsinline class="mwvid"></video>`;
+  }else if(r.err==="no-key"){
+    slot.innerHTML="";
+  }else{
+    slot.innerHTML=`<div class="viderr">Demo unavailable: ${r.err}</div>`;
+    slot.dataset.loaded="0"; // allow retry
+  }
+}
+function cssId(name){return name.replace(/[^a-z0-9]/gi,"_");}
+function suggestFor(e){
+  const g=GOALS[goal];
+  const reps=g.rep(e);
+  if(e.timed && reps==="—") return "Not suited to this goal";
+  return e.timed ? reps : `${reps} · ${g.rest}`;
+}
+
+/* ---------------- RENDER: GOALS ---------------- */
+function renderGoals(){
+  document.getElementById("goals").innerHTML=Object.entries(GOALS).map(([k,v])=>
+    `<div class="goal ${k===goal?'on':''}" onclick="setGoal('${k}')"><b>${v.name}</b><span>${v.desc}</span></div>`).join("");
+}
+function setGoal(g){goal=g;renderGoals();renderLib();renderPlan();renderSession();save();toast(`Goal: ${GOALS[g].name}`);}
+
+/* ---------------- RENDER: LIBRARY ---------------- */
+function renderFilters(){
+  document.getElementById("muscleFilters").innerHTML=GROUPS.map(g=>
+    `<button class="chip ${g.id===curMuscle?'on':''}" onclick="setMuscle('${g.id}')">${g.name}</button>`).join("");
+  document.getElementById("lvlFilters").innerHTML=LVLS.map(l=>
+    `<button class="lvlchip ${l.id===curLvl?'on':''}" onclick="setLvl('${l.id}')">${l.name}</button>`).join("");
+}
+function setMuscle(m){curMuscle=m;renderFilters();renderLib();}
+function setLvl(l){curLvl=l;renderFilters();renderLib();}
+
+function inPlanAnywhere(name){return Object.values(plans).some(arr=>arr&&arr.some(x=>x.n===name));}
+
+function renderLib(){
+  let list=LIB.filter(e=>(curMuscle==="all"||e.grp===curMuscle)&&(curLvl==="all"||e.lvl===curLvl));
+  document.getElementById("libCount").textContent=`${list.length} exercise${list.length!==1?"s":""}`;
+  document.getElementById("libList").innerHTML=list.map(e=>{
+    const inplan=inPlanAnywhere(e.n);
+    return `<div class="ex" data-n="${enc(e.n)}">
+      <div class="ex-top">
+        <div class="ic" onclick="tog(this)">${I[e.ic]||I.fullbody}</div>
+        <div class="ex-info" onclick="tog(this)">
+          <h3>${e.n} <span class="lvl ${e.lvl}">${e.lvl}</span></h3>
+          <div class="mus">${e.m}</div>
+          <div class="suggest">${suggestFor(e)}</div>
+        </div>
+        <button class="addbtn ${inplan?'added':''}" onclick="quickAdd('${enc(e.n)}',this)">${inplan?'✓':'+'}</button>
+        <div class="chev" onclick="tog(this)">›</div>
+      </div>
+      <div class="ex-body"><div class="ex-pad">
+        <div class="mediaslot" id="media-${cssId(e.n)}"></div>
+        ${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n]):""}
+        <div class="forrow"><b>What it's for:</b> ${e.for}</div>
+        <ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+        <div class="tip"><b>Tip:</b> ${e.tip}</div>
+        <span class="equiptag">🏋 ${e.eq}</span>
+        <a class="demo" style="margin-top:8px" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' exercise how to form')}" target="_blank" rel="noopener">▶ Watch form demo${mwKey?' (or use inline demo above)':''}</a>
+      </div></div>
+    </div>`;
+  }).join("");
+}
+function enc(s){return s.replace(/'/g,"\\'");}
+// Shared expandable detail body used by Library, Build and Planner cards.
+function exDetailBody(e,withMedia){
+  const media = withMedia ? `<div class="mediaslot" id="media-${cssId(e.n)}"></div>` : "";
+  return `<div class="ex-body"><div class="ex-pad">
+    ${media}
+    ${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n]):""}
+    <div class="forrow"><b>What it's for:</b> ${e.for}</div>
+    <ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+    <div class="tip"><b>Tip:</b> ${e.tip}</div>
+    <span class="equiptag">🏋 ${e.eq}</span>
+    <a class="demo" style="margin-top:8px" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' exercise how to form')}" target="_blank" rel="noopener">▶ Watch form demo</a>
+  </div></div>`;
+}
+function togCard(el){el.closest(".exp").classList.toggle("open");}
+function tog(el){
+  const card=el.closest(".ex");
+  card.classList.toggle("open");
+  if(card.classList.contains("open")){
+    const name=card.getAttribute("data-n").replace(/\\'/g,"'");
+    loadExerciseMedia(name);
+  }
+}
+
+/* quick add: adds to currently selected planner day */
+function quickAdd(name,btn){
+  name=name.replace(/\\'/g,"'");
+  if(!plans[curDay])plans[curDay]=[];
+  const arr=plans[curDay];
+  const idx=arr.findIndex(x=>x.n===name);
+  if(idx>=0){arr.splice(idx,1);toast(`Removed from ${DAYNAMES[curDay]}`);}
+  else{arr.push({n:name});toast(`Added to ${DAYNAMES[curDay]}`);}
+  save();renderLib();renderPlan();renderDaySelect();
+}
+
+/* ---------------- RENDER: PLANNER ---------------- */
+function renderDaySelect(){
+  document.getElementById("daySelect").innerHTML=DAYNAMES.map((d,i)=>{
+    const has=plans[i]&&plans[i].length;
+    return `<button class="daybtn ${i===curDay?'on':''}" onclick="setDay(${i})">${d.slice(0,3)}${has?'<span class="dot"></span>':''}</button>`;
+  }).join("");
+}
+function setDay(i){curDay=i;renderDaySelect();renderPlan();}
+function gotoLib(){switchView('lib');}
+
+function renderPlan(){
+  document.getElementById("planDayName").textContent=DAYNAMES[curDay];
+  const arr=plans[curDay]||[];
+  document.getElementById("planCount").textContent=arr.length?`${arr.length} exercise${arr.length!==1?"s":""}`:"empty";
+  const listEl=document.getElementById("planList");
+  const sumEl=document.getElementById("planSummary");
+
+  if(!arr.length){
+    sumEl.style.display="none";
+    listEl.innerHTML=`<div class="addhint">No exercises yet.<br>Go to the <b>Library</b> and tap <b>+</b> to add moves to ${DAYNAMES[curDay]}.</div>`;
+    return;
+  }
+  // muscle summary
+  const muscles={};
+  arr.forEach(x=>{const e=exByName(x.n);if(e){const key=GROUPS.find(g=>g.id===e.grp)?.name||e.grp;muscles[key]=(muscles[key]||0)+1;}});
+  sumEl.style.display="block";
+  const dayMus=musclesForDay(curDay);
+  sumEl.innerHTML=`<b>${GOALS[goal].name} focus</b> · Covering: ${Object.keys(muscles).join(", ")}`
+    + `<div class="daymaplab">Muscles worked this day</div>`
+    + muscleMapSVG(dayMus,{h:150});
+
+  listEl.innerHTML=arr.map((x,i)=>{
+    const e=exByName(x.n);if(!e)return"";
+    return `<div class="plan-item exp">
+      <div class="pi-main">
+        <div class="ic" style="width:40px;height:40px;flex:0 0 40px" onclick="togCard(this)">${I[e.ic]||I.fullbody}</div>
+        <div class="ph" onclick="togCard(this)">
+          <h4>${e.n} <span class="lvl ${e.lvl}" style="font-size:8px">${e.lvl}</span></h4>
+          <div class="pm">${e.m}</div>
+          <div class="ps">${suggestFor(e)}</div>
+        </div>
+        <div class="chev" onclick="togCard(this)">›</div>
+        <button class="rm" onclick="removeFromDay(${i})">×</button>
+      </div>
+      ${exDetailBody(e,false)}
+    </div>`;
+  }).join("");
+}
+function removeFromDay(i){plans[curDay].splice(i,1);if(!plans[curDay].length)delete plans[curDay];save();renderPlan();renderDaySelect();renderLib();}
+function clearDay(){if(!plans[curDay]||!plans[curDay].length)return;if(confirm(`Clear all exercises from ${DAYNAMES[curDay]}?`)){delete plans[curDay];save();renderPlan();renderDaySelect();renderLib();}}
+
+/* ---------------- DATA (export/import) ---------------- */
+function exportPlans(){
+  const data=JSON.stringify({goal,plans});
+  const ta=document.createElement("textarea");
+  ta.value=data;document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
+  document.getElementById("dataArea").innerHTML=`<div class="summary" style="word-break:break-all;font-family:monospace;font-size:11px">${data}</div>`;
+  ta.remove();
+}
+function importPlans(){
+  const area=document.getElementById("dataArea");
+  area.innerHTML=`<div class="summary" style="padding:12px">
+    <div style="margin-bottom:8px">Paste your exported plan text below:</div>
+    <textarea id="importTa" class="keyinput" style="width:100%;height:80px;font-size:11px" placeholder="Paste here..."></textarea>
+    <button class="btn primary" style="width:100%;margin-top:8px" onclick="doImport()">Import</button>
+  </div>`;
+  const ta=document.getElementById("importTa");if(ta)ta.focus();
+}
+function doImport(){
+  const ta=document.getElementById("importTa");
+  const txt=ta?ta.value.trim():"";
+  if(!txt){toast("Paste text first");return;}
+  try{const d=JSON.parse(txt);if(d.plans)plans=d.plans;if(d.goal&&GOALS[d.goal])goal=d.goal;save();renderGoals();renderLib();renderPlan();renderDaySelect();document.getElementById("dataArea").innerHTML="";toast("Plans imported");}
+  catch(e){toast("Couldn't read that text");}
+}
+function resetAll(){if(confirm("Delete all saved plans? This can't be undone.")){plans={};save();renderPlan();renderDaySelect();renderLib();toast("Reset done");}}
+
+/* ---- MuscleWiki key management ---- */
+function initMwUI(){
+  const inp=document.getElementById("mwKeyInput");
+  if(inp)inp.value=mwKey||"";
+  const st=document.getElementById("mwStatus");
+  if(st)st.innerHTML = mwKey ? `<span class="ok">✓ Key saved. Open any exercise to load its demo.</span>` : "";
+}
+async function saveMwKey(){
+  const inp=document.getElementById("mwKeyInput");
+  const st=document.getElementById("mwStatus");
+  const k=(inp.value||"").trim();
+  if(!k){st.innerHTML=`<span class="bad">Enter a key first.</span>`;return;}
+  st.innerHTML=`<span>Testing key…</span>`;
+  try{
+    // /health is public, so hit /search which requires auth to validate the key + tier
+    const r=await fetch(`${MW_BASE}/search?q=squat&limit=1`,{headers:{"X-API-Key":k}});
+    if(r.ok){
+      mwKey=k;save();
+      for(const kk in mwCache)delete mwCache[kk]; // clear any old errors
+      st.innerHTML=`<span class="ok">✓ Key works. Real demos are on — open any exercise.</span>`;
+      renderLib();
+      toast("Demo videos enabled");
+    }else if(r.status===403){
+      st.innerHTML=`<span class="bad">Key rejected, or tier too low. Direct video needs TESTING tier+.</span>`;
+    }else if(r.status===401){
+      st.innerHTML=`<span class="bad">Missing/invalid key.</span>`;
+    }else if(r.status===429){
+      st.innerHTML=`<span class="bad">Key valid but monthly quota is used up.</span>`;
+    }else{
+      st.innerHTML=`<span class="bad">Couldn't verify (error ${r.status}).</span>`;
+    }
+  }catch(e){
+    st.innerHTML=`<span class="bad">Network error testing key. Check connection.</span>`;
+  }
+}
+function clearMwKey(){
+  mwKey="";save();
+  for(const k in mwCache)delete mwCache[k];
+  const inp=document.getElementById("mwKeyInput");if(inp)inp.value="";
+  const st=document.getElementById("mwStatus");if(st)st.innerHTML=`<span>Key removed. Using written cues + demo links.</span>`;
+  renderLib();
+  toast("Demo videos off");
+}
+
+/* ---------------- BUILD SESSION ---------------- */
+// selectable areas (muscle groups, cardio included)
+const BUILD_PARTS=[
+ {id:"legs",name:"Legs"},{id:"glutes",name:"Glutes/Ham"},{id:"chest",name:"Chest"},
+ {id:"back",name:"Back"},{id:"shoulders",name:"Shoulders"},{id:"arms",name:"Arms"},
+ {id:"core",name:"Core"},{id:"cardio",name:"Cardio"},
+];
+// time options in minutes (session fills to fit this budget)
+const TIME_OPTS=[{min:20},{min:30},{min:45},{min:60}];
+let buildSel=[];         // chosen part ids (max 2)
+let buildTime=30;        // minutes
+let session=[];          // generated: [{n, area}]
+
+function renderBuildControls(){
+  document.getElementById("buildParts").innerHTML=BUILD_PARTS.map(p=>{
+    const on=buildSel.includes(p.id);
+    const dis=!on&&buildSel.length>=2;
+    const pos=buildSel.indexOf(p.id)+1;
+    return `<div class="bpart ${on?'on':''} ${dis?'dis':''}" onclick="toggleBuildPart('${p.id}')">
+      ${I[p.id]||I.fullbody}<b>${p.name}</b>${on?`<span class="num">${pos}</span>`:''}</div>`;
+  }).join("");
+  document.getElementById("buildTimes").innerHTML=TIME_OPTS.map(t=>
+    `<div class="tbtn ${t.min===buildTime?'on':''}" onclick="setBuildTime(${t.min})"><b>${t.min}</b><span>min</span></div>`).join("");
+}
+function toggleBuildPart(id){
+  const i=buildSel.indexOf(id);
+  if(i>=0)buildSel.splice(i,1);
+  else{if(buildSel.length>=2){buildSel.shift();}buildSel.push(id);}
+  renderBuildControls();
+}
+function setBuildTime(m){buildTime=m;renderBuildControls();}
+
+// pick n exercises for an area, preferring the user's level ramp (beg first for beginners),
+// compounds before isolation, avoiding duplicates
+function pickForArea(area,n,exclude){
+  let pool=LIB.filter(e=>e.grp===area && !exclude.includes(e.n));
+  // order: beginner compounds, beginner iso, intermediate, advanced
+  const rank=e=>(e.lvl==="beg"?0:e.lvl==="int"?1:2)*10 + (e.compound?0:3);
+  pool.sort((a,b)=>rank(a)-rank(b));
+  return pool.slice(0,n);
+}
+
+// Estimated minutes a strength exercise takes (3 sets incl. rest), by goal.
+function strengthMinutes(){
+  return goal==="strength"?6 : goal==="endurance"?4 : 5;
+}
+// Minutes to allot a cardio piece given how much cardio time is available for the block.
+// Returns {mins, label} — the label overrides the generic suggestion so it fits the session.
+function cardioBlock(e,minsAvail){
+  const m=Math.max(5,Math.min(minsAvail,20)); // clamp 5-20 min per cardio piece
+  let label;
+  if(/Bike/.test(e.n))      label = goal==="fatloss"?`${m} min intervals (1 on/1 off)`:`${m} min steady`;
+  else if(/Treadmill/.test(e.n)) label = `${m} min incline walk`;
+  else if(/Jump Rope/.test(e.n)) label = `${m} min (30s on / 30s off)`;
+  else if(/Boxing/.test(e.n))    label = `${Math.floor(m/4)} × 3 min rounds`;
+  else if(/Circuit/.test(e.n))   label = `${m} min circuit`;
+  else label = `${m} min`;
+  return {mins:m,label};
+}
+
+// Core builder: fills to a minute budget. Returns array of {n, area, mins, label?}
+function buildSession(exclude){
+  const budget=buildTime-5;           // reserve 5 min for warm-up
+  const sMin=strengthMinutes();
+  const used=[...exclude];
+  const out=[];
+  const areas=buildSel.slice();
+
+  // How many cardio picks are allowed and their time share.
+  const cardioAreas=areas.filter(a=>a==="cardio");
+  const strengthAreas=areas.filter(a=>a!=="cardio");
+
+  let remaining=budget;
+
+  if(cardioAreas.length){
+    // Cardio-only session: 1-2 pieces filling the budget.
+    if(strengthAreas.length===0){
+      const nPieces = budget<=25?1:2;
+      const perPiece=Math.floor(budget/nPieces);
+      pickForArea("cardio",nPieces,used).forEach(e=>{
+        const cb=cardioBlock(e,perPiece);
+        out.push({n:e.n,area:"cardio",mins:cb.mins,label:cb.label});
+        used.push(e.n);remaining-=cb.mins;
+      });
+    }else{
+      // Mixed: ONE cardio piece, given a modest slice (~1/3 of budget, 8-15 min).
+      const cardioShare=Math.max(8,Math.min(15,Math.round(budget*0.35)));
+      const pick=pickForArea("cardio",1,used)[0];
+      if(pick){
+        const cb=cardioBlock(pick,cardioShare);
+        out.push({n:pick.n,area:"cardio",mins:cb.mins,label:cb.label});
+        used.push(pick.n);remaining-=cb.mins;
+      }
+    }
+  }
+
+  // Fill remaining budget with strength from the strength area(s), alternating.
+  if(strengthAreas.length){
+    let ai=0,guard=0;
+    while(remaining>=sMin && guard<30){
+      guard++;
+      const area=strengthAreas[ai%strengthAreas.length];
+      const pick=pickForArea(area,1,used)[0];
+      if(!pick){ // this area exhausted; if all exhausted, stop
+        if(strengthAreas.every(a=>pickForArea(a,1,used).length===0))break;
+        ai++;continue;
+      }
+      out.push({n:pick.n,area,mins:sMin});
+      used.push(pick.n);remaining-=sMin;ai++;
+    }
+  }
+
+  // Order: strength first (fresh), cardio last as a finisher — unless cardio-only.
+  if(strengthAreas.length && cardioAreas.length){
+    out.sort((a,b)=>(a.area==="cardio"?1:0)-(b.area==="cardio"?1:0));
+  }
+  return out;
+}
+
+function estTotal(sess){return 5+sess.reduce((t,s)=>t+(s.mins||strengthMinutes()),0);} // incl warm-up
+
+function generateSession(){
+  if(buildSel.length===0){toast("Pick at least 1 area");return;}
+  session=buildSession([]);
+  renderSession();
+}
+
+function areaName(id){return (BUILD_PARTS.find(p=>p.id===id)||{}).name||id;}
+
+function renderSession(){
+  const el=document.getElementById("buildResult");
+  if(!session.length){el.innerHTML="";return;}
+  const areas=buildSel.map(areaName).join(" + ");
+  const total=estTotal(session);
+  const warm=`<div class="warm"><b>Warm up first:</b> 5 min easy on the bike or treadmill, then start. Rest ${GOALS[goal].rest.replace(' rest','')} between sets.</div>`;
+  const items=session.map((s,i)=>{
+    const e=exByName(s.n);if(!e)return"";
+    const sugg = s.label ? s.label : suggestFor(e);
+    return `<div class="gitem exp" data-i="${i}">
+      <div class="gitem-top">
+        <div class="ic" onclick="togCard(this)">${I[e.ic]||I.fullbody}</div>
+        <div class="gh" onclick="togCard(this)">
+          <h4>${e.n} <span class="lvl ${e.lvl}" style="font-size:8px">${e.lvl}</span> <span class="mins">~${s.mins||strengthMinutes()} min</span></h4>
+          <div class="gm">${e.m} · ${areaName(s.area)}</div>
+          <div class="gs">${sugg}</div>
+        </div>
+        <div class="gacts">
+          <button class="gact" title="Swap" onclick="toggleSwap(${i})"><svg viewBox="0 0 24 24"><path d="M7 7h10l-2-2 1.4-1.4L21 8l-4.6 4.4L15 11l2-2H7zm10 10H7l2 2-1.4 1.4L3 16l4.6-4.4L9 13l-2 2h10z"/></svg></button>
+          <button class="gact" title="Remove" onclick="removeSession(${i})">×</button>
+          <div class="chev" onclick="togCard(this)">›</div>
+        </div>
+      </div>
+      <div class="swapbox" id="swap-${i}"></div>
+      ${exDetailBody(e,false)}
+    </div>`;
+  }).join("");
+  const fit = total<=buildTime+3 ? `<span style="color:var(--good)">≈${total} min total ✓</span>` : `<span style="color:var(--amber)">≈${total} min total</span>`;
+  el.innerHTML=`
+    <div class="reshead"><h2>${areas}</h2><div class="meta">${buildTime} min · ${GOALS[goal].name}<br>${fit}</div></div>
+    ${warm}
+    ${items}
+    <div class="resfoot">
+      <button class="btn ghost" onclick="regenSession()">↻ Regenerate</button>
+      <button class="btn primary" onclick="saveSessionToDay()">Save to a day</button>
+    </div>
+    <div class="disc">Times include rest and are estimates. Tap swap to change an exercise, × to remove. Add is in the Library.</div>`;
+}
+
+function regenSession(){
+  // rebuild with the same budget, excluding current picks for variety
+  const prev=session.map(s=>s.n);
+  let next=buildSession(prev);
+  // if exclusion left it too thin (small pools), rebuild without exclusion
+  if(next.length===0) next=buildSession([]);
+  session=next;
+  renderSession();
+}
+
+function removeSession(i){session.splice(i,1);renderSession();}
+
+function toggleSwap(i){
+  const box=document.getElementById("swap-"+i);
+  const open=box.classList.contains("open");
+  // close all
+  document.querySelectorAll(".swapbox").forEach(b=>{b.classList.remove("open");b.innerHTML="";});
+  if(open)return;
+  const cur=session[i];
+  const inSession=session.map(s=>s.n);
+  const alts=LIB.filter(e=>e.grp===cur.area && !inSession.includes(e.n));
+  if(!alts.length){box.innerHTML=`<div class="swaplab">No other ${areaName(cur.area)} exercises available.</div>`;box.classList.add("open");return;}
+  box.innerHTML=`<div class="swaplab">Swap for another ${areaName(cur.area)} exercise:</div>`+
+    alts.map(e=>`<button class="swapopt" onclick="doSwap(${i},'${enc(e.n)}')">${e.n}<span class="lvl ${e.lvl} sl">${e.lvl}</span></button>`).join("");
+  box.classList.add("open");
+}
+function doSwap(i,name){
+  name=name.replace(/\\'/g,"'");
+  const e=exByName(name);
+  session[i].n=name;
+  // recalc mins/label if swapping cardio, keep the same time slice
+  if(e && e.grp==="cardio"){
+    const cb=cardioBlock(e,session[i].mins||10);
+    session[i].mins=cb.mins;session[i].label=cb.label;
+  }else{
+    session[i].mins=strengthMinutes();delete session[i].label;
+  }
+  renderSession();
+}
+
+function saveSessionToDay(){
+  if(!session.length)return;
+  // toggle an in-app day picker (prompt() is unreliable in iOS standalone mode)
+  const existing=document.getElementById("daypick");
+  if(existing){existing.remove();return;}
+  const panel=document.createElement("div");
+  panel.id="daypick";
+  panel.className="daypick";
+  panel.innerHTML=`<div class="dplab">Save session to which day?</div>
+    <div class="dpgrid">${DAYNAMES.map((d,i)=>`<button class="dpbtn" onclick="commitSessionToDay(${i})">${d.slice(0,3)}</button>`).join("")}</div>
+    <button class="dpcancel" onclick="document.getElementById('daypick').remove()">Cancel</button>`;
+  document.querySelector("#v-build .resfoot").after(panel);
+}
+function commitSessionToDay(di){
+  if(isNaN(di)||di<0||di>6)return;
+  plans[di]=session.map(s=>({n:s.n}));
+  save();
+  const p=document.getElementById("daypick");if(p)p.remove();
+  toast(`Saved to ${DAYNAMES[di]}`);
+  curDay=di;renderDaySelect();renderPlan();renderLib();
+}
+
+/* ---------------- NAV ---------------- */
+const TITLES={build:["Build a Session","Pick 2 areas + your time · get a ready workout"],
+ lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
+ plan:["My Planner","Build your week · suggestions match your goal"],
+ data:["Save & Settings","Backup plans · enable demo videos"]};
+function switchView(v){
+  ["build","lib","plan","data"].forEach(x=>{
+    document.getElementById("v-"+x).classList.toggle("on",x===v);
+    document.getElementById("nav-"+x).classList.toggle("on",x===v);
+  });
+  document.getElementById("hTitle").textContent=TITLES[v][0];
+  document.getElementById("hSub").textContent=TITLES[v][1];
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(v==="plan"){renderDaySelect();renderPlan();}
+  if(v==="data"){initMwUI();}
+}
+
+/* ---------------- TOAST ---------------- */
+let toastT;
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1600);}
+
+/* ---------------- INIT ---------------- */
+load();
+renderGoals();renderBuildControls();renderFilters();renderLib();renderDaySelect();renderPlan();
+</script>
+</body>
+</html>
