@@ -213,7 +213,34 @@
 
   /* PLAN SUBTABS */
   .subtabs{display:flex;gap:7px;margin-bottom:16px}
-  .subtab{flex:1;padding:10px;border-radius:11px;background:var(--card2);color:var(--dim);font-size:14px;font-weight:700;border:1.5px solid transparent;cursor:pointer}
+  .subtab{flex:1;padding:10px 6px;border-radius:11px;background:var(--card2);color:var(--dim);font-size:13px;font-weight:700;border:1.5px solid transparent;cursor:pointer}
+
+  /* HISTORY */
+  .histstats{display:flex;gap:8px;margin-bottom:16px}
+  .hstat{flex:1;background:var(--card2);border-radius:12px;padding:12px 6px;text-align:center}
+  .hstat b{display:block;font-size:22px;color:var(--accent2);font-weight:800}
+  .hstat span{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+  .hday{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:12px}
+  .hdhead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+  .hdname{font-size:16px;font-weight:800}
+  .hddate{font-size:11px;color:var(--dim)}
+  .hdcount{font-size:11px;color:var(--accent2);font-weight:700;background:rgba(232,80,46,.12);padding:4px 9px;border-radius:10px;white-space:nowrap}
+  .hdmap{margin-bottom:10px}
+  .hdmap .mmap{padding:8px}
+  .hxrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+  .hxic{flex:0 0 30px;height:30px;border-radius:8px;background:var(--card2);display:flex;align-items:center;justify-content:center}
+  .hxic svg{width:17px;height:17px;fill:var(--accent2)}
+  .hxinfo{flex:1;min-width:0}
+  .hxn{font-size:13.5px;font-weight:700}
+  .hxs{font-size:11.5px;color:var(--dim)}
+  .hxfeel{flex:0 0 auto;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .hss{border:1px solid var(--accent);border-radius:10px;padding:6px 8px;margin:8px 0;background:rgba(232,80,46,.05)}
+  .hsslbl{font-size:9.5px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+  .hss .hxrow:first-of-type{border-top:none}
+  .hrepeat{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .hrepeat .btn{flex:1;padding:10px 6px;font-size:12.5px}
+  .hdaypick:empty{display:none}
+  .hdaypick{background:var(--card2);border:1px solid var(--accent);border-radius:12px;padding:12px;margin-top:10px}
   .subtab.on{border-color:var(--accent);color:var(--txt);background:rgba(232,80,46,.1)}
   .trainstart{width:100%;margin-bottom:12px;background:var(--good)}
 
@@ -340,6 +367,7 @@
     <div class="subtabs">
       <button class="subtab on" id="sub-build" onclick="setPlanSub('build')">Build</button>
       <button class="subtab" id="sub-week" onclick="setPlanSub('week')">My Week</button>
+      <button class="subtab" id="sub-hist" onclick="setPlanSub('hist')">History</button>
     </div>
 
     <!-- BUILD sub-panel -->
@@ -367,6 +395,12 @@
         <button class="btn ghost" onclick="clearDay()">Clear day</button>
         <button class="btn primary" onclick="gotoLib()">+ Add exercises</button>
       </div>
+    </div>
+
+    <!-- HISTORY sub-panel -->
+    <div id="planHist" style="display:none">
+      <div id="histStats" class="histstats"></div>
+      <div id="histList"></div>
     </div>
   </div>
 
@@ -1068,7 +1102,16 @@ function saveLog(btn,name,t,cid){
   if(!d.sets.length){toast("Add at least one set");return;}
   if(!d.feel){toast("Tap how it felt");return;}
   if(!logs[name])logs[name]=[];
-  logs[name].push({date:new Date().toISOString(),feel:d.feel,sets:d.sets.slice()});
+  const entry={date:new Date().toISOString(),feel:d.feel,sets:d.sets.slice()};
+  // if logged during an active training session, remember the superset group + order
+  if(train.active){
+    const pos=train.list.findIndex(x=>x.n===name);
+    if(pos>=0){
+      if(train.list[pos].ss) entry.ss=train.list[pos].ss;
+      entry.ord=pos;
+    }
+  }
+  logs[name].push(entry);
   save();
   toast("Workout logged ✓");
   delete _draft[cid];
@@ -1844,9 +1887,155 @@ function setPlanSub(s){
   planSub=s;
   document.getElementById("sub-build").classList.toggle("on",s==="build");
   document.getElementById("sub-week").classList.toggle("on",s==="week");
+  document.getElementById("sub-hist").classList.toggle("on",s==="hist");
   document.getElementById("planBuild").style.display = s==="build"?"block":"none";
   document.getElementById("planWeek").style.display = s==="week"?"block":"none";
+  document.getElementById("planHist").style.display = s==="hist"?"block":"none";
   if(s==="week"){renderDaySelect();renderPlan();}
+  if(s==="hist"){renderHistory();}
+}
+
+/* ---------------- WORKOUT HISTORY ---------------- */
+// Group all logged entries by calendar day
+function historyByDay(){
+  const days={};  // "YYYY-MM-DD" -> [{name, entry}]
+  for(const name in logs){
+    (logs[name]||[]).forEach(en=>{
+      const d=new Date(en.date);
+      const key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+      if(!days[key])days[key]=[];
+      days[key].push({name,entry:en});
+    });
+  }
+  // sort each day's exercises by time logged
+  // order by the position they held in the workout, else by time logged
+  for(const k in days)days[k].sort((a,b)=>{
+    const ao=a.entry.ord, bo=b.entry.ord;
+    if(ao!=null && bo!=null) return ao-bo;
+    return new Date(a.entry.date)-new Date(b.entry.date);
+  });
+  return days;
+}
+function prettyDate(key){
+  const [y,m,d]=key.split("-").map(Number);
+  const dt=new Date(y,m-1,d);
+  const today=new Date(); today.setHours(0,0,0,0);
+  const diff=Math.round((today-dt)/86400000);
+  const wd=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][dt.getDay()];
+  if(diff===0)return "Today";
+  if(diff===1)return "Yesterday";
+  if(diff<7)return wd;
+  return dt.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
+}
+function renderHistory(){
+  const days=historyByDay();
+  const keys=Object.keys(days).sort().reverse();  // newest first
+  const statsEl=document.getElementById("histStats");
+  const listEl=document.getElementById("histList");
+
+  if(!keys.length){
+    statsEl.innerHTML="";
+    listEl.innerHTML=`<div class="addhint">No workouts logged yet.<br>Log your sets while training and they'll appear here.</div>`;
+    return;
+  }
+
+  // quick stats
+  const totalSessions=keys.length;
+  let totalEx=0, totalSets=0;
+  keys.forEach(k=>{days[k].forEach(it=>{totalEx++;totalSets+=entrySets(it.entry).length;});});
+  // this week count
+  const now=new Date(); const weekAgo=new Date(now.getTime()-7*86400000);
+  const thisWeek=keys.filter(k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)>=weekAgo;}).length;
+
+  statsEl.innerHTML=`
+    <div class="hstat"><b>${totalSessions}</b><span>days trained</span></div>
+    <div class="hstat"><b>${thisWeek}</b><span>this week</span></div>
+    <div class="hstat"><b>${totalSets}</b><span>total sets</span></div>`;
+
+  listEl.innerHTML=keys.map(k=>{
+    const items=days[k];
+    // muscles hit that day
+    const mus=new Set();
+    items.forEach(it=>{(EX_MUS[it.name]||[]).forEach(m=>mus.add(m));});
+
+    const rowFor=it=>{
+      const e=exByName(it.name);
+      const t=e?logType(e):"weight";
+      const sets=entrySets(it.entry);
+      const setStr=sets.map(s=>{
+        if(t==="weight")return `${s.w||"?"}kg×${s.r||"?"}`;
+        if(t==="timed")return `${s.r||"?"}s`;
+        return `${s.r||"?"}`;
+      }).join(", ");
+      return `<div class="hxrow">
+        <div class="hxic">${e?(I[e.ic]||I.fullbody):""}</div>
+        <div class="hxinfo">
+          <div class="hxn">${it.name}</div>
+          <div class="hxs">${sets.length} set${sets.length!==1?"s":""} · ${setStr}</div>
+        </div>
+        <span class="hxfeel feel-${it.entry.feel}">${it.entry.feel}</span>
+      </div>`;
+    };
+
+    // render, grouping consecutive items that shared a superset id
+    let exRows="";let i=0;
+    while(i<items.length){
+      const it=items[i];
+      if(it.entry.ss){
+        const gid=it.entry.ss;const grp=[];
+        while(i<items.length && items[i].entry.ss===gid){grp.push(items[i]);i++;}
+        const ids=[];items.forEach(a=>{if(a.entry.ss&&!ids.includes(a.entry.ss))ids.push(a.entry.ss);});
+        const letter=String.fromCharCode(65+ids.indexOf(gid));
+        exRows+=`<div class="hss"><div class="hsslbl">Superset ${letter}</div>${grp.map(rowFor).join("")}</div>`;
+      }else{exRows+=rowFor(it);i++;}
+    }
+
+    return `<div class="hday">
+      <div class="hdhead">
+        <div><div class="hdname">${prettyDate(k)}</div><div class="hddate">${new Date(k).toLocaleDateString()}</div></div>
+        <span class="hdcount">${items.length} exercise${items.length!==1?"s":""}</span>
+      </div>
+      ${mus.size?`<div class="hdmap">${muscleMapSVG([...mus],{h:95})}</div>`:""}
+      ${exRows}
+      <div class="hrepeat">
+        <button class="btn ghost" onclick="repeatToDay('${k}')">↺ Save to a day</button>
+        <button class="btn primary" onclick="repeatTrainNow('${k}')">▶ Train it now</button>
+      </div>
+      <div class="hdaypick" id="hdp-${k}"></div>
+    </div>`;
+  }).join("");
+}
+
+/* ---- repeat a past workout ---- */
+// rebuild an ordered exercise list (with supersets) from a history day
+function workoutFromDay(key){
+  const days=historyByDay();
+  const items=days[key]||[];
+  return items.map(it=> it.entry.ss ? {n:it.name, ss:it.entry.ss} : {n:it.name});
+}
+function repeatTrainNow(key){
+  const list=workoutFromDay(key);
+  if(!list.length){toast("Nothing to repeat");return;}
+  train={active:true, list:buildTrainList(list), idx:0, title:prettyDate(key)+" (repeat)"};
+  switchView('train');
+}
+function repeatToDay(key){
+  const box=document.getElementById("hdp-"+key);
+  if(!box)return;
+  if(box.innerHTML){box.innerHTML="";return;}
+  box.innerHTML=`<div class="dplab">Save this workout to which day?</div>
+    <div class="dpgrid">${DAYNAMES.map((d,i)=>`<button class="dpbtn" onclick="commitRepeat('${key}',${i})">${d.slice(0,3)}</button>`).join("")}</div>
+    <button class="dpcancel" onclick="document.getElementById('hdp-${key}').innerHTML=''">Cancel</button>`;
+}
+function commitRepeat(key,di){
+  const list=workoutFromDay(key);
+  if(!list.length)return;
+  plans[di]=list.map(x=>x.ss?({n:x.n,ss:x.ss}):({n:x.n}));
+  save();
+  document.getElementById("hdp-"+key).innerHTML="";
+  toast(`Saved to ${DAYNAMES[di]}`);
+  curDay=di;
+  renderDaySelect();renderPlan();renderLib();
 }
 
 /* ---------------- TOAST ---------------- */
