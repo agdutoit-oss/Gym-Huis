@@ -264,6 +264,24 @@
   .hdaypick{background:var(--card2);border:1px solid var(--accent);border-radius:12px;padding:12px;margin-top:10px}
 
   /* NUTRITION */
+  /* DATE BAR */
+  .datebar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:8px 10px;margin-bottom:14px}
+  .dnav{flex:0 0 34px;height:34px;border-radius:10px;background:var(--card2);border:none;color:var(--txt);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .dnav:active{background:var(--accent);color:#fff}
+  .dmid{flex:1;text-align:center;min-width:0}
+  .dlab{position:relative;display:inline-block;font-size:15px;font-weight:800;cursor:pointer;color:var(--txt)}
+  .dlab.future{color:var(--blue)}
+  .dlab::after{content:" ▾";font-size:10px;color:var(--dim)}
+  .dinput{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+  .dsub{font-size:10.5px;color:var(--dim)}
+  .dtoday{flex:0 0 auto;padding:7px 11px;border-radius:9px;background:rgba(232,80,46,.14);border:none;color:var(--accent2);font-size:11.5px;font-weight:700;cursor:pointer}
+  .addingto{background:var(--card2);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--dim);margin-bottom:10px}
+  .addingto b{color:var(--accent2)}
+  .chgday{color:var(--blue);text-decoration:underline;cursor:pointer}
+  .fwarn.plan{background:rgba(77,159,255,.1);border:1px solid rgba(77,159,255,.35);color:#cfe0f2}
+  .fwarn.plan b{color:var(--blue)}
+  .fhrow{cursor:pointer}
+
   .macros{display:flex;gap:8px;margin-bottom:14px}
   .macro{flex:1;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 8px;text-align:center}
   .mval{font-size:19px;font-weight:800}
@@ -567,6 +585,7 @@
 
     <!-- ADD FOOD -->
     <div id="foodAdd" style="display:none">
+      <div class="addingto" id="addingTo"></div>
       <input type="text" id="foodSearch" class="keyinput" placeholder="Search foods (e.g. ribeye, eggs)" oninput="renderFoodList()" autocomplete="off">
       <div class="fcats" id="foodCats"></div>
       <div id="foodList"></div>
@@ -574,6 +593,7 @@
 
     <!-- WEIGHT -->
     <div id="foodWeight" style="display:none">
+      <div id="weightDateBar"></div>
       <div class="wcard">
         <div class="wnow" id="weightNow">—</div>
         <div class="wsub" id="weightSub">Log your weight to start tracking</div>
@@ -1533,7 +1553,12 @@ function saveLog(btn,name,t,cid){
   if(!d.sets.length){toast("Add at least one set");return;}
   if(!d.feel){toast("Tap how it felt");return;}
   if(!logs[name])logs[name]=[];
-  const entry={date:new Date().toISOString(),feel:d.feel,sets:d.sets.slice()};
+  // stamp with the selected training day (keeps time-of-day when it's today)
+  const ld=dateOf(selKey);
+  const now=new Date();
+  if(selKey===todayKey())ld.setHours(now.getHours(),now.getMinutes(),now.getSeconds());
+  else ld.setHours(12,0,0);
+  const entry={date:ld.toISOString(),feel:d.feel,sets:d.sets.slice()};
   // if logged during an active training session, remember the superset group + order
   if(train.active){
     const pos=train.list.findIndex(x=>x.n===name);
@@ -2250,6 +2275,7 @@ function renderTrain(){
 
   // big current card
   const bigCard=`
+    ${dateBar()}
     <div class="trtop">${train.title} · ${done+1} of ${total}${ssLabel?` · <span class="trss">${ssLabel}</span>`:""}</div>
     <div class="trcard">
       ${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n],{h:120}):""}
@@ -2367,6 +2393,53 @@ const FOODS=[
 let foodCat="All", foodSub="today";
 
 function todayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function keyOf(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function dateOf(key){const [y,m,d]=key.split("-").map(Number);return new Date(y,m-1,d);}
+
+// The day currently being viewed/logged to (food + training share this)
+let selKey=todayKey();
+
+function shiftDay(n){
+  const d=dateOf(selKey); d.setDate(d.getDate()+n);
+  selKey=keyOf(d);
+  refreshForDate();
+}
+function goToday(){selKey=todayKey();refreshForDate();}
+function pickDate(v){ if(v){selKey=v;refreshForDate();} }
+function refreshForDate(){
+  // re-render whatever view is showing
+  if(document.getElementById("v-food").classList.contains("on")){
+    if(foodSub==="today")renderToday();
+    if(foodSub==="weight")renderWeight();
+  }
+  if(document.getElementById("v-train").classList.contains("on"))renderTrain();
+}
+// Friendly label: Today / Yesterday / Tomorrow / Wed 16 Jul
+function dayLabel(key){
+  const d=dateOf(key), t=dateOf(todayKey());
+  const diff=Math.round((d-t)/86400000);
+  if(diff===0)return "Today";
+  if(diff===-1)return "Yesterday";
+  if(diff===1)return "Tomorrow";
+  return d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
+}
+// The date bar used at the top of Food and Train
+function dateBar(){
+  const isToday = selKey===todayKey();
+  const future = dateOf(selKey) > dateOf(todayKey());
+  return `<div class="datebar">
+    <button class="dnav" onclick="shiftDay(-1)">‹</button>
+    <div class="dmid">
+      <label class="dlab ${future?'future':''}">
+        ${dayLabel(selKey)}
+        <input type="date" class="dinput" value="${selKey}" onchange="pickDate(this.value)">
+      </label>
+      <div class="dsub">${dateOf(selKey).toLocaleDateString()}</div>
+    </div>
+    <button class="dnav" onclick="shiftDay(1)">›</button>
+    ${isToday?"":`<button class="dtoday" onclick="goToday()">Today</button>`}
+  </div>`;
+}
 
 // --- targets ---
 function targets(){
@@ -2395,21 +2468,21 @@ function setFoodSub(s){
   document.getElementById("foodAdd").style.display    = s==="add"?"block":"none";
   document.getElementById("foodWeight").style.display = s==="weight"?"block":"none";
   if(s==="today")renderToday();
-  if(s==="add"){renderFoodCats();renderFoodList();}
+  if(s==="add"){renderAddingTo();renderFoodCats();renderFoodList();}
   if(s==="weight")renderWeight();
 }
 
-// --- TODAY view ---
+// --- TODAY view (shows whichever date is selected) ---
 function renderToday(){
   const t=targets();
-  const key=todayKey();
+  const key=selKey;
   const tot=dayTotals(key);
   const pctP=Math.min(100,(tot.p/t.pMid)*100);
   const pctF=Math.min(100,(tot.f/t.fatG)*100);
   const pctK=Math.min(100,(tot.k/t.kcal)*100);
 
   document.getElementById("fdDate").textContent="";
-  document.getElementById("macroRings").innerHTML=`
+  document.getElementById("macroRings").innerHTML= dateBar() + `
     <div class="macros">
       <div class="macro">
         <div class="mval">${Math.round(tot.p)}<small>/${t.pMid}g</small></div>
@@ -2428,24 +2501,29 @@ function renderToday(){
       </div>
     </div>`;
 
-  // warnings
+  // warnings — only meaningful for today or past days, not future planning
   let warns="";
-  const pKcal=tot.p*4, fKcal=tot.f*9;
-  if(tot.k>0){
-    const pPct=pKcal/tot.k*100;
-    if(pPct>40 && tot.k>800){
-      warns+=`<div class="fwarn bad"><b>⚠ Too lean.</b> Protein is ${Math.round(pPct)}% of your calories. On carnivore, fat should be the main energy source — aim for protein under ~35%. Add butter, tallow, or fattier cuts.</div>`;
+  const isFuture = dateOf(selKey) > dateOf(todayKey());
+  const pKcal=tot.p*4;
+  if(!isFuture){
+    if(tot.k>0){
+      const pPct=pKcal/tot.k*100;
+      if(pPct>40 && tot.k>800){
+        warns+=`<div class="fwarn bad"><b>⚠ Too lean.</b> Protein is ${Math.round(pPct)}% of your calories. On carnivore, fat should be the main energy source — aim for protein under ~35%. Add butter, tallow, or fattier cuts.</div>`;
+      }
     }
-  }
-  if(tot.k>0 && tot.k<t.floor){
-    warns+=`<div class="fwarn warn"><b>Under your floor.</b> You're at ${Math.round(tot.k)} kcal — below your ${t.floor} kcal minimum. On Mounjaro it's easy to undereat. Eating too little costs you muscle.</div>`;
-  }
-  if(tot.p>0 && tot.p<t.pLo*0.8){
-    warns+=`<div class="fwarn warn"><b>Protein low.</b> Aim for ${t.pLo}-${t.pHi}g to protect your muscle while you lose fat.</div>`;
+    if(tot.k>0 && tot.k<t.floor){
+      warns+=`<div class="fwarn warn"><b>Under your floor.</b> You're at ${Math.round(tot.k)} kcal — below your ${t.floor} kcal minimum. On Mounjaro it's easy to undereat. Eating too little costs you muscle.</div>`;
+    }
+    if(tot.p>0 && tot.p<t.pLo*0.8){
+      warns+=`<div class="fwarn warn"><b>Protein low.</b> Aim for ${t.pLo}-${t.pHi}g to protect your muscle while you lose fat.</div>`;
+    }
+  }else if(tot.k>0){
+    warns+=`<div class="fwarn plan"><b>Planning ahead.</b> This is a future day — targets shown for reference.</div>`;
   }
   document.getElementById("fatWarn").innerHTML=warns;
 
-  // today's items
+  // items for the selected day
   const items=foodLog[key]||[];
   document.getElementById("todayList").innerHTML = items.length
     ? items.map((i,idx)=>`<div class="fitem">
@@ -2453,16 +2531,16 @@ function renderToday(){
           <div class="fi-m">${i.g}g · ${Math.round(i.p)}p ${Math.round(i.f)}f · ${Math.round(i.k)} kcal</div></div>
         <button class="rm" onclick="rmFood('${key}',${idx})">×</button>
       </div>`).join("")
-    : `<div class="addhint">Nothing logged today.</div>`;
+    : `<div class="addhint">Nothing logged for ${dayLabel(key).toLowerCase()}.</div>`;
 
-  // history
+  // other days
   const keys=Object.keys(foodLog).filter(k=>k!==key).sort().reverse().slice(0,14);
   document.getElementById("foodHistory").innerHTML = keys.length
     ? keys.map(k=>{const d=dayTotals(k);
-        return `<div class="fhrow"><span>${new Date(k).toLocaleDateString()}</span>
+        return `<div class="fhrow" onclick="pickDate('${k}')"><span>${dayLabel(k)}</span>
           <span>${Math.round(d.p)}p · ${Math.round(d.f)}f</span>
           <span>${Math.round(d.k)} kcal</span></div>`;}).join("")
-    : `<div class="addhint">No previous days yet.</div>`;
+    : `<div class="addhint">No other days logged yet.</div>`;
 }
 function rmFood(key,idx){
   foodLog[key].splice(idx,1);
@@ -2477,6 +2555,10 @@ function renderFoodCats(){
     `<button class="chip ${c===foodCat?'on':''}" onclick="setFoodCat('${c}')">${c}</button>`).join("");
 }
 function setFoodCat(c){foodCat=c;renderFoodCats();renderFoodList();}
+function renderAddingTo(){
+  const el=document.getElementById("addingTo");
+  if(el)el.innerHTML=`Adding to <b>${dayLabel(selKey)}</b> · <span class="chgday" onclick="setFoodSub('today')">change day</span>`;
+}
 function renderFoodList(){
   const q=(document.getElementById("foodSearch")?.value||"").toLowerCase().trim();
   let list=FOODS.filter(f=>(foodCat==="All"||f.c===foodCat) && (!q||f.n.toLowerCase().includes(q)));
@@ -2501,11 +2583,11 @@ function addFood(btn,name,p100,f100,k100){
   const card=btn.closest(".fcard");
   const g=parseFloat(card.querySelector(".fg").value);
   if(!g||g<=0){toast("Enter grams");return;}
-  const key=todayKey();
+  const key=selKey;
   if(!foodLog[key])foodLog[key]=[];
   foodLog[key].push({name,g,p:p100*g/100,f:f100*g/100,k:k100*g/100});
   saveFood();
-  toast(`${name} added`);
+  toast(`${name} → ${dayLabel(key)}`);
   setFoodSub("today");
 }
 
@@ -2514,14 +2596,24 @@ function logWeight(){
   const el=document.getElementById("weightInput");
   const kg=parseFloat(el.value);
   if(!kg||kg<30||kg>400){toast("Enter a valid weight");return;}
-  weightLog.push({date:new Date().toISOString(),kg});
-  profile.kg=kg;                 // targets follow your current weight
+  // stamp with the selected day (keep the time-of-day if it's today)
+  const d=dateOf(selKey);
+  const now=new Date();
+  if(selKey===todayKey()){d.setHours(now.getHours(),now.getMinutes());}
+  else{d.setHours(8,0);}
+  // replace an existing entry for that same day rather than duplicating
+  const idx=weightLog.findIndex(w=>keyOf(new Date(w.date))===selKey);
+  if(idx>=0)weightLog[idx]={date:d.toISOString(),kg};
+  else weightLog.push({date:d.toISOString(),kg});
+  if(selKey===todayKey())profile.kg=kg;   // targets follow current weight
   saveFood();
   el.value="";
-  toast("Weight logged");
+  toast(`Weight logged for ${dayLabel(selKey)}`);
   renderWeight();renderToday();
 }
 function renderWeight(){
+  const db=document.getElementById("weightDateBar");
+  if(db)db.innerHTML=dateBar();
   const sorted=[...weightLog].sort((a,b)=>new Date(a.date)-new Date(b.date));
   const nowEl=document.getElementById("weightNow");
   const subEl=document.getElementById("weightSub");
@@ -2595,7 +2687,7 @@ const TITLES={plan:["Plan","Build a session or manage your week"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v8"]};
+ data:["Save & Settings","Backup your data · v9"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
