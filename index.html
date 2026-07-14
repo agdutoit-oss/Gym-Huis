@@ -21,6 +21,9 @@
   .wrap{max-width:600px;margin:0 auto}
 
   header{padding:20px 18px 14px;background:linear-gradient(135deg,#1a2129,#0f1419);position:relative;overflow:hidden}
+  .gearbtn{position:absolute;top:18px;right:16px;z-index:3;width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .gearbtn svg{width:19px;height:19px;fill:currentColor}
+  .gearbtn:active,.gearbtn.on{color:var(--accent2);border-color:var(--accent);background:rgba(232,80,46,.12)}
   header::after{content:"";position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(232,80,46,.18),transparent 70%)}
   .kick{font-size:10px;letter-spacing:3px;color:var(--accent2);font-weight:700;text-transform:uppercase}
   h1{font-size:24px;font-weight:800;margin-top:3px;letter-spacing:-.5px}
@@ -240,7 +243,77 @@
   .hrepeat{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
   .hrepeat .btn{flex:1;padding:10px 6px;font-size:12.5px}
   .hdaypick:empty{display:none}
+  /* EQUIPMENT BROWSER */
+  .eqgrid{display:flex;flex-direction:column;gap:8px}
+  .eqcard{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;cursor:pointer;transition:.15s}
+  .eqcard:active{border-color:var(--accent);background:rgba(232,80,46,.07)}
+  .eqic{flex:0 0 42px;height:42px;border-radius:11px;background:var(--card2);display:flex;align-items:center;justify-content:center}
+  .eqic svg{width:22px;height:22px;fill:var(--accent2)}
+  .eqinfo{flex:1;min-width:0}
+  .eqn{font-size:14.5px;font-weight:700}
+  .eqd{font-size:11.5px;color:var(--dim)}
+  .eqcount{flex:0 0 auto;min-width:30px;height:26px;padding:0 8px;border-radius:9px;background:rgba(232,80,46,.14);color:var(--accent2);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .eqback{background:none;border:none;color:var(--accent2);font-size:13px;font-weight:600;cursor:pointer;padding:4px 0 10px}
+  .eqhead{display:flex;align-items:center;gap:12px;background:var(--card);border:1.5px solid var(--accent);border-radius:14px;padding:14px;margin-bottom:14px}
+  .eqhic{flex:0 0 46px;height:46px;border-radius:12px;background:rgba(232,80,46,.14);display:flex;align-items:center;justify-content:center}
+  .eqhic svg{width:24px;height:24px;fill:var(--accent2)}
+  .eqhn{font-size:17px;font-weight:800}
+  .eqhd{font-size:12px;color:var(--dim)}
+  .eqgrp{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:14px 0 8px}
+
   .hdaypick{background:var(--card2);border:1px solid var(--accent);border-radius:12px;padding:12px;margin-top:10px}
+
+  /* NUTRITION */
+  .macros{display:flex;gap:8px;margin-bottom:14px}
+  .macro{flex:1;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 8px;text-align:center}
+  .mval{font-size:19px;font-weight:800}
+  .mval small{font-size:11px;color:var(--dim);font-weight:600}
+  .mlbl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin:2px 0 7px}
+  .mbar{height:5px;background:var(--card2);border-radius:3px;overflow:hidden}
+  .mfill{height:100%;border-radius:3px;transition:width .3s}
+  .mfill.p{background:var(--good)}
+  .mfill.f{background:var(--amber)}
+  .mfill.k{background:var(--accent)}
+  .fwarn{border-radius:11px;padding:11px 13px;font-size:12.5px;margin-bottom:10px;line-height:1.5}
+  .fwarn.bad{background:rgba(232,80,46,.12);border:1px solid var(--accent);color:#f0d6cf}
+  .fwarn.bad b{color:var(--accent2)}
+  .fwarn.warn{background:rgba(255,184,77,.1);border:1px solid rgba(255,184,77,.4);color:#e8ddc8}
+  .fwarn.warn b{color:var(--amber)}
+  .fdhead{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin:14px 0 8px}
+  .fitem{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:7px}
+  .fi-info{flex:1;min-width:0}
+  .fi-n{font-size:13.5px;font-weight:700}
+  .fi-m{font-size:11px;color:var(--dim)}
+  .fcats{display:flex;gap:6px;overflow-x:auto;padding:10px 0;scrollbar-width:none}
+  .fcats::-webkit-scrollbar{display:none}
+  .fcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px}
+  .fc-n{font-size:13.5px;font-weight:700}
+  .leantag{font-size:8.5px;background:rgba(255,184,77,.18);color:var(--amber);padding:2px 6px;border-radius:6px;font-weight:700;text-transform:uppercase;vertical-align:middle}
+  .fc-m{font-size:11px;color:var(--dim);margin-top:1px}
+  .fc-add{display:flex;gap:7px;margin-top:8px}
+  .fg{flex:1;background:var(--bg);border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;color:var(--txt);font-size:14px}
+  .fg:focus{outline:none;border-color:var(--accent)}
+  .fc-add .btn{flex:0 0 80px;padding:8px}
+  .fhist{margin-top:16px}
+  .fhist summary{font-size:12px;color:var(--dim);cursor:pointer;padding:6px 0}
+  .fhrow{display:flex;justify-content:space-between;font-size:12px;color:#cdd6df;padding:8px 0;border-bottom:1px solid var(--line)}
+  /* weight */
+  .wcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:center;margin-bottom:14px}
+  .wnow{font-size:42px;font-weight:800}
+  .wnow small{font-size:16px;color:var(--dim)}
+  .wsub{font-size:12.5px;color:var(--dim);margin-bottom:12px}
+  .wsub .good{color:var(--good);font-weight:700}
+  .wrow{display:flex;gap:8px}
+  .wrow .keyinput{flex:1;text-align:center;font-size:16px}
+  .wrow .btn{flex:0 0 90px}
+  .wchart{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:14px}
+  .wchart svg{width:100%;height:auto;display:block}
+  .wlist{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 12px}
+  .wrow2{display:flex;justify-content:space-between;font-size:12.5px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .wrow2:last-child{border:none}
+  .wrow2 .good{color:var(--good);font-weight:700}
+  .wrow2 .accent{color:var(--accent2)}
+  .wrow2 .dim{color:var(--dim)}
   .subtab.on{border-color:var(--accent);color:var(--txt);background:rgba(232,80,46,.1)}
   .trainstart{width:100%;margin-bottom:12px;background:var(--good)}
 
@@ -343,6 +416,9 @@
 <body>
 <div class="wrap">
   <header>
+    <button class="gearbtn" onclick="toggleSettings()" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94a7.07 7.07 0 000-1.88l2.03-1.58a.5.5 0 00.12-.64l-1.92-3.32a.5.5 0 00-.6-.22l-2.39.96a7.03 7.03 0 00-1.62-.94l-.36-2.54a.5.5 0 00-.5-.42h-3.84a.5.5 0 00-.5.42l-.36 2.54c-.58.24-1.12.56-1.62.94l-2.39-.96a.5.5 0 00-.6.22L2.71 8.84a.5.5 0 00.12.64l2.03 1.58a7.07 7.07 0 000 1.88l-2.03 1.58a.5.5 0 00-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.58-.24 1.12-.56 1.62-.94l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 00-.12-.64zM12 15.5A3.5 3.5 0 1112 8.5a3.5 3.5 0 010 7z"/></svg>
+    </button>
     <div class="kick">Home Gym Trainer</div>
     <h1 id="hTitle">Plan</h1>
     <div class="sub" id="hSub">Build a session or manage your week</div>
@@ -355,8 +431,14 @@
 
   <!-- LIBRARY -->
   <div class="view" id="v-lib">
-    <div class="filters" id="muscleFilters"></div>
-    <div class="lvlrow" id="lvlFilters"></div>
+    <div class="subtabs">
+      <button class="subtab on" id="lsub-muscle" onclick="setLibMode('muscle')">By Muscle</button>
+      <button class="subtab" id="lsub-equip" onclick="setLibMode('equip')">By Equipment</button>
+    </div>
+    <div id="libMuscleFilters">
+      <div class="filters" id="muscleFilters"></div>
+      <div class="lvlrow" id="lvlFilters"></div>
+    </div>
     <div class="count" id="libCount"></div>
     <div id="libList"></div>
     <div class="disc">General guidance, not medical advice. On Mounjaro, keep protein up and stay hydrated. Start lighter than you think and prioritise form.</div>
@@ -464,8 +546,50 @@
     <div class="disc">Keep the app open and your screen awake while the timer runs. It beeps and flashes when switching between work and rest.</div>
   </div>
 
+  <!-- FOOD / NUTRITION -->
+  <div class="view" id="v-food">
+    <div class="subtabs">
+      <button class="subtab on" id="fsub-today" onclick="setFoodSub('today')">Today</button>
+      <button class="subtab" id="fsub-add" onclick="setFoodSub('add')">Add Food</button>
+      <button class="subtab" id="fsub-weight" onclick="setFoodSub('weight')">Weight</button>
+    </div>
+
+    <!-- TODAY -->
+    <div id="foodToday">
+      <div id="macroRings"></div>
+      <div id="fatWarn"></div>
+      <div class="fdhead">Today's food <span id="fdDate"></span></div>
+      <div id="todayList"></div>
+      <button class="btn primary" style="width:100%;margin-top:10px" onclick="setFoodSub('add')">+ Add food</button>
+      <details class="fhist"><summary>Previous days</summary><div id="foodHistory"></div></details>
+      <div class="disc">Targets are estimates based on your weight, height and training. Your dietitian's advice always wins.</div>
+    </div>
+
+    <!-- ADD FOOD -->
+    <div id="foodAdd" style="display:none">
+      <input type="text" id="foodSearch" class="keyinput" placeholder="Search foods (e.g. ribeye, eggs)" oninput="renderFoodList()" autocomplete="off">
+      <div class="fcats" id="foodCats"></div>
+      <div id="foodList"></div>
+    </div>
+
+    <!-- WEIGHT -->
+    <div id="foodWeight" style="display:none">
+      <div class="wcard">
+        <div class="wnow" id="weightNow">—</div>
+        <div class="wsub" id="weightSub">Log your weight to start tracking</div>
+        <div class="wrow">
+          <input type="number" inputmode="decimal" id="weightInput" class="keyinput" placeholder="kg" step="0.1">
+          <button class="btn primary" onclick="logWeight()">Log</button>
+        </div>
+      </div>
+      <div id="weightChart"></div>
+      <div id="weightList"></div>
+    </div>
+  </div>
+
   <!-- SAVE/DATA -->
   <div class="view" id="v-data">
+    <button class="eqback" onclick="toggleSettings()">‹ Back</button>
     <div class="setcard">
       <h3>Exercise demo videos</h3>
       <p>Add a <b>MuscleWiki API key</b> to show real looping exercise demos inside each exercise, instead of leaving the app. The video appears at the top of an exercise when you open it.</p>
@@ -478,10 +602,10 @@
       <div class="setnote">Get a key at <b>api.musclewiki.com/register</b>. Direct video access needs the <b>TESTING tier ($10/mo)</b> — the free BASIC tier is playground-only and won't stream video. Without a key, the app still works using the written form cues and the demo link. Your key is stored only on this device.</div>
     </div>
 
-    <div class="summary">Your plans are saved automatically on this device. To move them to another device or back them up, export below.</div>
+    <div class="summary"><b>Back up your data.</b> Your weekly plans, training logs, workout history, food log and weight history are stored <b>only on this phone</b> — not in the cloud. If you clear Safari's data or change phones, they're gone. Export below and keep the text somewhere safe (a note, or email it to yourself).</div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn primary" onclick="exportPlans()">Export my plans (copy)</button>
-      <button class="btn ghost" onclick="importPlans()">Import plans (paste)</button>
+      <button class="btn primary" onclick="exportPlans()">Export everything (copy)</button>
+      <button class="btn ghost" onclick="importPlans()">Import backup (paste)</button>
       <button class="btn ghost" onclick="resetAll()" style="color:var(--accent2)">Reset everything</button>
     </div>
     <div id="dataArea" style="margin-top:14px"></div>
@@ -498,8 +622,8 @@
     <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg>Library</button>
   <button id="nav-timer" onclick="switchView('timer')">
     <svg viewBox="0 0 24 24"><path d="M12 6a9 9 0 109 9 9 9 0 00-9-9zm1 10h-2V9h2zM9 1h6v2H9z"/></svg>Timer</button>
-  <button id="nav-data" onclick="switchView('data')">
-    <svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm2 4v2h10V7zm0 4v2h10v-2zm0 4v2h7v-2z"/></svg>Save</button>
+  <button id="nav-food" onclick="switchView('food')">
+    <svg viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>Food</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1018,6 +1142,34 @@ function musclesForDay(di){
   return [...s];
 }
 
+
+/* ---- EQUIPMENT BROWSER ---- */
+const EQUIP=[["floor","Floor / Bodyweight","No equipment \u2014 just you and the mat"],["dumbbells","Adjustable Dumbbells","Your main free weights"],["barbell","Barbell + Plates","The bar and your weight plates"],["squatrack","Squat Rack","Rack with safety arms"],["benchpress","Bench Press","Dedicated bench press station"],["bench","Adjustable Bench","Flat / incline bench"],["kettlebell","Kettlebells","Swings, carries, circuits"],["bands","Resistance Bands","Portable, joint-friendly"],["stack","Trojan Power Stack 510","Cables, pulleys + leg attachment"],["tower","Marcy Power Tower","Pull-up bar, dips, VKR, push-up handles"],["abwheel","Ab Wheel","Rollouts"],["bag","Punching Bag","Boxing / conditioning"],["rope","Jump Rope","Cardio + coordination"],["bike","Training Bike","Low-impact cardio"],["treadmill","Treadmill","Walking / incline / intervals"]];
+const EX_EQ={"Bodyweight Squat":["floor"],"Goblet Squat":["dumbbells","kettlebell"],"Reverse Lunge":["dumbbells","floor"],"Bulgarian Split Squat":["bench","dumbbells"],"Step-Up":["bench","dumbbells"],"Calf Raise":["dumbbells","floor"],"Glute Bridge":["dumbbells","floor"],"Single-Leg Glute Bridge":["floor"],"Romanian Deadlift":["dumbbells"],"Kettlebell Swing":["kettlebell"],"Push-Up":["floor","tower"],"Dumbbell Chest Press":["bench","dumbbells"],"Bench Press":["benchpress"],"Incline Dumbbell Press":["bench","dumbbells"],"Chest Fly":["bench","dumbbells"],"Dip":["tower"],"Lat Pulldown":["stack"],"Seated Cable Row":["stack"],"One-Arm Dumbbell Row":["bench","dumbbells"],"Resistance Band Row":["bands"],"Assisted Pull-Up":["bands","tower"],"Pull-Up":["tower"],"Dumbbell Shoulder Press":["bench","dumbbells"],"Lateral Raise":["dumbbells"],"Band Pull-Apart":["bands"],"Face Pull":["bands","stack"],"Pike Push-Up":["floor"],"Dumbbell Bicep Curl":["dumbbells"],"Hammer Curl":["dumbbells"],"Overhead Tricep Extension":["dumbbells"],"Tricep Dip (Bench)":["bench"],"Band Tricep Pushdown":["bands","stack"],"Plank":["floor"],"Side Plank":["floor"],"Dead Bug":["floor"],"Hanging Knee Raise":["tower"],"Hanging Leg Raise":["tower"],"Russian Twist":["dumbbells","floor"],"Bike Intervals":["bike"],"Treadmill Incline Walk":["treadmill"],"Jump Rope":["rope"],"Boxing / Bag Work":["bag"],"Kettlebell Circuit":["kettlebell"],"Barbell Back Squat":["barbell","squatrack"],"Barbell Front Squat":["barbell","squatrack"],"Barbell Deadlift":["barbell"],"Barbell Romanian Deadlift":["barbell"],"Barbell Overhead Press":["barbell","squatrack"],"Barbell Bent-Over Row":["barbell"],"Barbell Hip Thrust":["barbell","bench"],"Close-Grip Bench Press":["barbell","benchpress"],"Ab Wheel Rollout":["abwheel"],"Leg Extension":["stack"],"Leg Curl":["stack"],"Barbell Lunge":["barbell","squatrack"],"Walking Lunge":["dumbbells","floor"],"Wall Sit":["floor"],"Split Squat":["dumbbells","floor"],"Barbell Calf Raise":["barbell","squatrack"],"Cable Kickback":["stack"],"Good Morning":["barbell","squatrack"],"Cable Chest Fly":["stack"],"Decline Push-Up":["bench","floor"],"Barbell Floor Press":["barbell"],"Chin-Up":["tower"],"Straight-Arm Pulldown":["stack"],"Barbell Shrug":["barbell"],"Dumbbell High Pull":["dumbbells","kettlebell"],"Inverted Row":["barbell","squatrack"],"Arnold Press":["dumbbells"],"Dumbbell Front Raise":["dumbbells"],"Dumbbell Rear Delt Fly":["bench","dumbbells"],"Upright Row":["barbell","dumbbells"],"Barbell Curl":["barbell"],"Incline Dumbbell Curl":["bench","dumbbells"],"Concentration Curl":["bench","dumbbells"],"Skull Crusher":["barbell","bench","dumbbells"],"Cable Bicep Curl":["stack"],"Tricep Kickback":["bench","dumbbells"],"Wrist Curl":["barbell","bench","dumbbells"],"Sit-Up":["floor"],"Crunch":["floor"],"Bicycle Crunch":["floor"],"Cable Woodchop":["stack"],"Mountain Climbers":["floor"],"Farmer's Carry":["dumbbells","kettlebell"],"Suitcase Carry":["dumbbells","kettlebell"],"Hollow Hold":["floor"],"Burpees":["floor"],"Jumping Jacks":["floor"],"Kettlebell Goblet Carry":["kettlebell"],"Treadmill Intervals":["treadmill"]};
+let curEquip=null;   // null = normal library view
+
+function equipIcon(id){
+  const m={floor:"fullbody",dumbbells:"arms",barbell:"legs",squatrack:"legs",benchpress:"chest",
+   bench:"chest",kettlebell:"glutes",bands:"shoulders",stack:"back",tower:"back",
+   abwheel:"core",bag:"cardio",rope:"cardio",bike:"cardio",treadmill:"cardio"};
+  return I[m[id]]||I.fullbody;
+}
+function countFor(id){return Object.values(EX_EQ).filter(t=>t.includes(id)).length;}
+
+function renderEquipGrid(){
+  return `<div class="eqgrid">`+EQUIP.map(([id,name,desc])=>`
+    <div class="eqcard" onclick="openEquip('${id}')">
+      <div class="eqic">${equipIcon(id)}</div>
+      <div class="eqinfo">
+        <div class="eqn">${name}</div>
+        <div class="eqd">${desc}</div>
+      </div>
+      <div class="eqcount">${countFor(id)}</div>
+    </div>`).join("")+`</div>`;
+}
+function openEquip(id){curEquip=id;renderLib();window.scrollTo({top:0,behavior:"smooth"});}
+function closeEquip(){curEquip=null;renderLib();window.scrollTo({top:0,behavior:"smooth"});}
+
 function exByName(n){return LIB.find(e=>e.n===n);}
 
 /* ---------------- MUSCLEWIKI VIDEO INTEGRATION ----------------
@@ -1122,12 +1274,19 @@ function setLvl(l){curLvl=l;renderFilters();renderLib();}
 
 function inPlanAnywhere(name){return Object.values(plans).some(arr=>arr&&arr.some(x=>x.n===name));}
 
-function renderLib(){
-  let list=LIB.filter(e=>(curMuscle==="all"||e.grp===curMuscle)&&(curLvl==="all"||e.lvl===curLvl));
-  document.getElementById("libCount").textContent=`${list.length} exercise${list.length!==1?"s":""}`;
-  document.getElementById("libList").innerHTML=list.map(e=>{
-    const inplan=inPlanAnywhere(e.n);
-    return `<div class="ex" data-n="${enc(e.n)}">
+let libMode="muscle";
+function setLibMode(m){
+  libMode=m;
+  if(m==="muscle")curEquip=null;
+  document.getElementById("lsub-muscle").classList.toggle("on",m==="muscle");
+  document.getElementById("lsub-equip").classList.toggle("on",m==="equip");
+  renderLib();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function libCardHTML(e){
+  const inplan=inPlanAnywhere(e.n);
+  return `<div class="ex" data-n="${enc(e.n)}">
       <div class="ex-top">
         <div class="ic" onclick="tog(this)">${I[e.ic]||I.fullbody}</div>
         <div class="ex-info" onclick="tog(this)">
@@ -1146,9 +1305,53 @@ function renderLib(){
         <div class="tip"><b>Tip:</b> ${e.tip}</div>
         <span class="equiptag">🏋 ${e.eq}</span>
         <a class="demo" style="margin-top:8px" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' exercise how to form')}" target="_blank" rel="noopener">▶ Watch form demo${mwKey?' (or use inline demo above)':''}</a>
+        ${logBlock(e)}
       </div></div>
     </div>`;
-  }).join("");
+}
+
+function renderLib(){
+  const filtEl=document.getElementById("libMuscleFilters");
+  const countEl=document.getElementById("libCount");
+  const listEl=document.getElementById("libList");
+
+  // ---- EQUIPMENT MODE ----
+  if(libMode==="equip"){
+    filtEl.style.display="none";
+    if(!curEquip){
+      // show the equipment grid
+      countEl.textContent=`${EQUIP.length} pieces of equipment · tap to see what you can do`;
+      listEl.innerHTML=renderEquipGrid();
+      return;
+    }
+    // show exercises for the chosen equipment
+    const meta=EQUIP.find(x=>x[0]===curEquip);
+    let list=LIB.filter(e=>(EX_EQ[e.n]||[]).includes(curEquip));
+    if(curLvl!=="all")list=list.filter(e=>e.lvl===curLvl);
+    // group by muscle group for readability
+    const byGrp={};
+    list.forEach(e=>{(byGrp[e.grp]=byGrp[e.grp]||[]).push(e);});
+    countEl.textContent="";
+    let html=`<button class="eqback" onclick="closeEquip()">‹ All equipment</button>
+      <div class="eqhead">
+        <div class="eqhic">${equipIcon(curEquip)}</div>
+        <div><div class="eqhn">${meta[1]}</div><div class="eqhd">${list.length} exercise${list.length!==1?"s":""} · ${meta[2]}</div></div>
+      </div>`;
+    GROUPS.filter(g=>g.id!=="all").forEach(g=>{
+      const arr=byGrp[g.id];
+      if(!arr||!arr.length)return;
+      html+=`<div class="eqgrp">${g.name}</div>`;
+      html+=arr.map(libCardHTML).join("");
+    });
+    listEl.innerHTML=html || `<div class="addhint">No exercises for this equipment.</div>`;
+    return;
+  }
+
+  // ---- MUSCLE MODE (default) ----
+  filtEl.style.display="block";
+  let list=LIB.filter(e=>(curMuscle==="all"||e.grp===curMuscle)&&(curLvl==="all"||e.lvl===curLvl));
+  countEl.textContent=`${list.length} exercise${list.length!==1?"s":""}`;
+  listEl.innerHTML=list.map(libCardHTML).join("");
 }
 function enc(s){return s.replace(/'/g,"\\'");}
 // Shared expandable detail body used by Library, Build and Planner cards.
@@ -1443,7 +1646,7 @@ function clearDay(){if(!plans[curDay]||!plans[curDay].length)return;if(confirm(`
 
 /* ---------------- DATA (export/import) ---------------- */
 function exportPlans(){
-  const data=JSON.stringify({goal,plans,logs});
+  const data=JSON.stringify({goal,plans,logs,foodLog,weightLog,profile});
   const ta=document.createElement("textarea");
   ta.value=data;document.body.appendChild(ta);ta.select();
   try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
@@ -1463,10 +1666,20 @@ function doImport(){
   const ta=document.getElementById("importTa");
   const txt=ta?ta.value.trim():"";
   if(!txt){toast("Paste text first");return;}
-  try{const d=JSON.parse(txt);if(d.plans)plans=d.plans;if(d.goal&&GOALS[d.goal])goal=d.goal;if(d.logs)logs=d.logs;save();renderGoals();renderLib();renderPlan();renderDaySelect();document.getElementById("dataArea").innerHTML="";toast("Plans imported");}
+  try{const d=JSON.parse(txt);
+    if(d.plans)plans=d.plans;
+    if(d.goal&&GOALS[d.goal])goal=d.goal;
+    if(d.logs)logs=d.logs;
+    if(d.foodLog)foodLog=d.foodLog;
+    if(d.weightLog)weightLog=d.weightLog;
+    if(d.profile)profile=Object.assign(profile,d.profile);
+    save();saveFood();
+    renderGoals();renderLib();renderPlan();renderDaySelect();
+    document.getElementById("dataArea").innerHTML="";
+    toast("Everything imported");}
   catch(e){toast("Couldn't read that text");}
 }
-function resetAll(){if(confirm("Delete all saved plans and training logs? This can't be undone.")){plans={};logs={};save();renderPlan();renderDaySelect();renderLib();toast("Reset done");}}
+function resetAll(){if(confirm("Delete EVERYTHING — plans, training logs, food log and weight history? This can't be undone.")){plans={};logs={};foodLog={};weightLog=[];save();saveFood();renderPlan();renderDaySelect();renderLib();toast("Reset done");}}
 
 /* ---- MuscleWiki key management ---- */
 function initMwUI(){
@@ -2090,23 +2303,328 @@ function endTraining(finished){
   renderTrain();
 }
 
+/* ---------------- NUTRITION (strict carnivore) ---------------- */
+const FOOD_KEY="hgt_food_v1", WEIGHT_KEY="hgt_weight_v1", PROFILE_KEY="hgt_profile_v1";
+let foodLog={};   // "YYYY-MM-DD" -> [{name,g,p,f,kcal}]
+let weightLog=[]; // [{date, kg}]
+let profile={kg:124, cm:181, born:1988};
+function currentAge(){return new Date().getFullYear() - (profile.born||1988);}
+
+// Carnivore food database: per 100g -> protein, fat, kcal
+const FOODS=[
+ // BEEF
+ {n:"Ribeye Steak",c:"Beef",p:24,f:22,k:291},
+ {n:"Beef Mince (20% fat)",c:"Beef",p:17,f:20,k:254},
+ {n:"Beef Mince (10% fat)",c:"Beef",p:20,f:10,k:176},
+ {n:"Sirloin Steak",c:"Beef",p:27,f:12,k:220},
+ {n:"Rump Steak",c:"Beef",p:27,f:10,k:200},
+ {n:"Chuck / Stewing Beef",c:"Beef",p:26,f:16,k:250},
+ {n:"Brisket",c:"Beef",p:23,f:22,k:290},
+ {n:"Short Rib",c:"Beef",p:19,f:30,k:350},
+ {n:"Beef Liver",c:"Beef",p:20,f:4,k:135},
+ {n:"Oxtail",c:"Beef",p:22,f:24,k:305},
+ {n:"Biltong (dry)",c:"Beef",p:50,f:9,k:290},
+ {n:"Bone Marrow",c:"Beef",p:7,f:84,k:786},
+ // LAMB
+ {n:"Lamb Chop",c:"Lamb",p:22,f:24,k:305},
+ {n:"Lamb Leg",c:"Lamb",p:25,f:14,k:230},
+ {n:"Lamb Mince",c:"Lamb",p:19,f:21,k:270},
+ // PORK
+ {n:"Pork Belly",c:"Pork",p:15,f:45,k:470},
+ {n:"Pork Chop",c:"Pork",p:26,f:14,k:230},
+ {n:"Bacon (streaky)",c:"Pork",p:20,f:35,k:400},
+ {n:"Pork Sausage (100% meat)",c:"Pork",p:15,f:28,k:315},
+ {n:"Pork Rinds / Crackling",c:"Pork",p:60,f:32,k:540},
+ // CHICKEN & POULTRY
+ {n:"Chicken Thigh (skin on)",c:"Poultry",p:20,f:15,k:220},
+ {n:"Chicken Breast (skinless)",c:"Poultry",p:31,f:4,k:165},
+ {n:"Chicken Wings (skin on)",c:"Poultry",p:20,f:19,k:250},
+ {n:"Chicken Liver",c:"Poultry",p:24,f:5,k:150},
+ {n:"Duck (skin on)",c:"Poultry",p:19,f:28,k:335},
+ // FISH & SEAFOOD
+ {n:"Salmon (fatty)",c:"Fish",p:20,f:13,k:208},
+ {n:"Mackerel",c:"Fish",p:19,f:14,k:205},
+ {n:"Sardines (in oil)",c:"Fish",p:25,f:11,k:208},
+ {n:"Tinned Tuna (in oil)",c:"Fish",p:25,f:8,k:190},
+ {n:"Hake / White Fish",c:"Fish",p:18,f:1,k:90},
+ {n:"Prawns",c:"Fish",p:24,f:1,k:99},
+ {n:"Snoek",c:"Fish",p:21,f:5,k:135},
+ // EGGS & DAIRY-FAT
+ {n:"Whole Egg (1 large ~50g)",c:"Eggs",p:13,f:11,k:155},
+ {n:"Egg Yolk",c:"Eggs",p:16,f:27,k:322},
+ // FATS
+ {n:"Butter",c:"Fats",p:1,f:81,k:717},
+ {n:"Ghee",c:"Fats",p:0,f:100,k:900},
+ {n:"Beef Tallow",c:"Fats",p:0,f:100,k:900},
+ {n:"Lard",c:"Fats",p:0,f:100,k:900},
+ {n:"Duck Fat",c:"Fats",p:0,f:100,k:900},
+ // ORGAN
+ {n:"Kidney",c:"Organ",p:17,f:3,k:100},
+ {n:"Heart (beef)",c:"Organ",p:17,f:4,k:112},
+ {n:"Tripe",c:"Organ",p:12,f:4,k:85},
+ {n:"Bone Broth",c:"Organ",p:6,f:1,k:35},
+];
+let foodCat="All", foodSub="today";
+
+function todayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+
+// --- targets ---
+function targets(){
+  const w=profile.kg, h=profile.cm, a=currentAge();
+  const bmr=10*w + 6.25*h - 5*a + 5;
+  const tdee=bmr*1.45;                 // 5 sessions/week
+  const kcal=Math.round(tdee*0.75);    // 25% deficit
+  const floor=Math.max(1500, Math.round(w*10));
+  const lbm=w*0.70;
+  const pLo=Math.round(lbm*2.0), pHi=Math.round(lbm*2.4);
+  const pMid=Math.round((pLo+pHi)/2);
+  const fatG=Math.round((kcal - pMid*4)/9);
+  return {kcal,floor,pLo,pHi,pMid,fatG,tdee:Math.round(tdee)};
+}
+function dayTotals(key){
+  const items=foodLog[key]||[];
+  return items.reduce((t,i)=>({p:t.p+i.p, f:t.f+i.f, k:t.k+i.k}),{p:0,f:0,k:0});
+}
+
+function setFoodSub(s){
+  foodSub=s;
+  ["today","add","weight"].forEach(x=>{
+    document.getElementById("fsub-"+x).classList.toggle("on",x===s);
+  });
+  document.getElementById("foodToday").style.display  = s==="today"?"block":"none";
+  document.getElementById("foodAdd").style.display    = s==="add"?"block":"none";
+  document.getElementById("foodWeight").style.display = s==="weight"?"block":"none";
+  if(s==="today")renderToday();
+  if(s==="add"){renderFoodCats();renderFoodList();}
+  if(s==="weight")renderWeight();
+}
+
+// --- TODAY view ---
+function renderToday(){
+  const t=targets();
+  const key=todayKey();
+  const tot=dayTotals(key);
+  const pctP=Math.min(100,(tot.p/t.pMid)*100);
+  const pctF=Math.min(100,(tot.f/t.fatG)*100);
+  const pctK=Math.min(100,(tot.k/t.kcal)*100);
+
+  document.getElementById("fdDate").textContent="";
+  document.getElementById("macroRings").innerHTML=`
+    <div class="macros">
+      <div class="macro">
+        <div class="mval">${Math.round(tot.p)}<small>/${t.pMid}g</small></div>
+        <div class="mlbl">Protein</div>
+        <div class="mbar"><div class="mfill p" style="width:${pctP}%"></div></div>
+      </div>
+      <div class="macro">
+        <div class="mval">${Math.round(tot.f)}<small>/${t.fatG}g</small></div>
+        <div class="mlbl">Fat</div>
+        <div class="mbar"><div class="mfill f" style="width:${pctF}%"></div></div>
+      </div>
+      <div class="macro">
+        <div class="mval">${Math.round(tot.k)}<small>/${t.kcal}</small></div>
+        <div class="mlbl">Calories</div>
+        <div class="mbar"><div class="mfill k" style="width:${pctK}%"></div></div>
+      </div>
+    </div>`;
+
+  // warnings
+  let warns="";
+  const pKcal=tot.p*4, fKcal=tot.f*9;
+  if(tot.k>0){
+    const pPct=pKcal/tot.k*100;
+    if(pPct>40 && tot.k>800){
+      warns+=`<div class="fwarn bad"><b>⚠ Too lean.</b> Protein is ${Math.round(pPct)}% of your calories. On carnivore, fat should be the main energy source — aim for protein under ~35%. Add butter, tallow, or fattier cuts.</div>`;
+    }
+  }
+  if(tot.k>0 && tot.k<t.floor){
+    warns+=`<div class="fwarn warn"><b>Under your floor.</b> You're at ${Math.round(tot.k)} kcal — below your ${t.floor} kcal minimum. On Mounjaro it's easy to undereat. Eating too little costs you muscle.</div>`;
+  }
+  if(tot.p>0 && tot.p<t.pLo*0.8){
+    warns+=`<div class="fwarn warn"><b>Protein low.</b> Aim for ${t.pLo}-${t.pHi}g to protect your muscle while you lose fat.</div>`;
+  }
+  document.getElementById("fatWarn").innerHTML=warns;
+
+  // today's items
+  const items=foodLog[key]||[];
+  document.getElementById("todayList").innerHTML = items.length
+    ? items.map((i,idx)=>`<div class="fitem">
+        <div class="fi-info"><div class="fi-n">${i.name}</div>
+          <div class="fi-m">${i.g}g · ${Math.round(i.p)}p ${Math.round(i.f)}f · ${Math.round(i.k)} kcal</div></div>
+        <button class="rm" onclick="rmFood('${key}',${idx})">×</button>
+      </div>`).join("")
+    : `<div class="addhint">Nothing logged today.</div>`;
+
+  // history
+  const keys=Object.keys(foodLog).filter(k=>k!==key).sort().reverse().slice(0,14);
+  document.getElementById("foodHistory").innerHTML = keys.length
+    ? keys.map(k=>{const d=dayTotals(k);
+        return `<div class="fhrow"><span>${new Date(k).toLocaleDateString()}</span>
+          <span>${Math.round(d.p)}p · ${Math.round(d.f)}f</span>
+          <span>${Math.round(d.k)} kcal</span></div>`;}).join("")
+    : `<div class="addhint">No previous days yet.</div>`;
+}
+function rmFood(key,idx){
+  foodLog[key].splice(idx,1);
+  if(!foodLog[key].length)delete foodLog[key];
+  saveFood();renderToday();
+}
+
+// --- ADD FOOD ---
+function renderFoodCats(){
+  const cats=["All",...new Set(FOODS.map(f=>f.c))];
+  document.getElementById("foodCats").innerHTML=cats.map(c=>
+    `<button class="chip ${c===foodCat?'on':''}" onclick="setFoodCat('${c}')">${c}</button>`).join("");
+}
+function setFoodCat(c){foodCat=c;renderFoodCats();renderFoodList();}
+function renderFoodList(){
+  const q=(document.getElementById("foodSearch")?.value||"").toLowerCase().trim();
+  let list=FOODS.filter(f=>(foodCat==="All"||f.c===foodCat) && (!q||f.n.toLowerCase().includes(q)));
+  document.getElementById("foodList").innerHTML=list.map(f=>{
+    const ratio=f.p>0?(f.f*9)/(f.p*4):99;
+    const lean = ratio<0.8 && f.f<8;
+    return `<div class="fcard">
+      <div class="fc-top">
+        <div class="fc-info">
+          <div class="fc-n">${f.n} ${lean?'<span class="leantag">lean</span>':''}</div>
+          <div class="fc-m">per 100g · ${f.p}g protein · ${f.f}g fat · ${f.k} kcal</div>
+        </div>
+      </div>
+      <div class="fc-add">
+        <input type="number" inputmode="numeric" class="fg" placeholder="grams" value="150">
+        <button class="btn primary" onclick="addFood(this,'${f.n.replace(/'/g,"\\'")}',${f.p},${f.f},${f.k})">Add</button>
+      </div>
+    </div>`;
+  }).join("") || `<div class="addhint">No foods match.</div>`;
+}
+function addFood(btn,name,p100,f100,k100){
+  const card=btn.closest(".fcard");
+  const g=parseFloat(card.querySelector(".fg").value);
+  if(!g||g<=0){toast("Enter grams");return;}
+  const key=todayKey();
+  if(!foodLog[key])foodLog[key]=[];
+  foodLog[key].push({name,g,p:p100*g/100,f:f100*g/100,k:k100*g/100});
+  saveFood();
+  toast(`${name} added`);
+  setFoodSub("today");
+}
+
+// --- WEIGHT ---
+function logWeight(){
+  const el=document.getElementById("weightInput");
+  const kg=parseFloat(el.value);
+  if(!kg||kg<30||kg>400){toast("Enter a valid weight");return;}
+  weightLog.push({date:new Date().toISOString(),kg});
+  profile.kg=kg;                 // targets follow your current weight
+  saveFood();
+  el.value="";
+  toast("Weight logged");
+  renderWeight();renderToday();
+}
+function renderWeight(){
+  const sorted=[...weightLog].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const nowEl=document.getElementById("weightNow");
+  const subEl=document.getElementById("weightSub");
+  if(!sorted.length){
+    nowEl.textContent="—";
+    subEl.textContent="Log your weight to start tracking";
+    document.getElementById("weightChart").innerHTML="";
+    document.getElementById("weightList").innerHTML="";
+    return;
+  }
+  const latest=sorted[sorted.length-1];
+  const first=sorted[0];
+  const diff=latest.kg-first.kg;
+  nowEl.innerHTML=`${latest.kg}<small>kg</small>`;
+  subEl.innerHTML = sorted.length>1
+    ? `<span class="${diff<0?'good':'dim'}">${diff<0?'▼':'▲'} ${Math.abs(diff).toFixed(1)}kg</span> since ${new Date(first.date).toLocaleDateString()}`
+    : `First entry logged`;
+
+  // chart
+  document.getElementById("weightChart").innerHTML = sorted.length>1 ? weightChartSVG(sorted) : "";
+
+  document.getElementById("weightList").innerHTML=`<div class="wlist">`+
+    sorted.slice().reverse().slice(0,20).map((w,i,arr)=>{
+      const prev=arr[i+1];
+      const d=prev?(w.kg-prev.kg):0;
+      return `<div class="wrow2"><span>${new Date(w.date).toLocaleDateString()}</span>
+        <span><b>${w.kg}kg</b></span>
+        <span class="${d<0?'good':d>0?'accent':'dim'}">${prev?(d>0?'+':'')+d.toFixed(1):'—'}</span></div>`;
+    }).join("")+`</div>`;
+}
+function weightChartSVG(pts){
+  const W=300,H=140,pad=26;
+  const kgs=pts.map(p=>p.kg);
+  const min=Math.min(...kgs)-1, max=Math.max(...kgs)+1;
+  const span=(max-min)||1;
+  const t0=new Date(pts[0].date).getTime();
+  const t1=new Date(pts[pts.length-1].date).getTime();
+  const tspan=(t1-t0)||1;
+  const xy=p=>{
+    const x=pad+((new Date(p.date).getTime()-t0)/tspan)*(W-pad*2);
+    const y=H-pad-((p.kg-min)/span)*(H-pad*2);
+    return [x,y];
+  };
+  const path=pts.map((p,i)=>{const[x,y]=xy(p);return (i?"L":"M")+x.toFixed(1)+","+y.toFixed(1);}).join(" ");
+  const dots=pts.map(p=>{const[x,y]=xy(p);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#e8502e"/>`;}).join("");
+  const area=`${path} L${(W-pad).toFixed(1)},${H-pad} L${pad},${H-pad} Z`;
+  return `<div class="wchart"><svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#2c3744" stroke-width="1"/>
+    <path d="${area}" fill="rgba(232,80,46,.15)"/>
+    <path d="${path}" fill="none" stroke="#e8502e" stroke-width="2.5" stroke-linejoin="round"/>
+    ${dots}
+    <text x="4" y="${pad}" fill="#8a98a8" font-size="9">${max.toFixed(0)}</text>
+    <text x="4" y="${H-pad}" fill="#8a98a8" font-size="9">${min.toFixed(0)}</text>
+  </svg></div>`;
+}
+
+function saveFood(){try{
+  localStorage.setItem(FOOD_KEY,JSON.stringify(foodLog));
+  localStorage.setItem(WEIGHT_KEY,JSON.stringify(weightLog));
+  localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));
+}catch(e){}}
+function loadFood(){try{
+  const f=localStorage.getItem(FOOD_KEY);if(f)foodLog=JSON.parse(f);
+  const w=localStorage.getItem(WEIGHT_KEY);if(w)weightLog=JSON.parse(w);
+  const p=localStorage.getItem(PROFILE_KEY);if(p)profile=Object.assign(profile,JSON.parse(p));
+}catch(e){}}
+
 /* ---------------- NAV ---------------- */
 const TITLES={plan:["Plan","Build a session or manage your week"],
  train:["Train","Your active workout, step by step"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
+ food:["Food","Carnivore macros · protein, fat, calories"],
  data:["Save & Settings","Backup plans · enable demo videos"]};
+let lastView="plan";
+function toggleSettings(){
+  const onSettings=document.getElementById("v-data").classList.contains("on");
+  if(onSettings){switchView(lastView||"plan");}
+  else{
+    // remember where we were
+    ["plan","train","lib","timer","food"].forEach(x=>{
+      if(document.getElementById("v-"+x).classList.contains("on"))lastView=x;
+    });
+    switchView("data");
+  }
+}
 function switchView(v){
-  ["plan","train","lib","timer","data"].forEach(x=>{
-    document.getElementById("v-"+x).classList.toggle("on",x===v);
-    document.getElementById("nav-"+x).classList.toggle("on",x===v);
+  ["plan","train","lib","timer","food","data"].forEach(x=>{
+    const view=document.getElementById("v-"+x);
+    if(view)view.classList.toggle("on",x===v);
+    const btn=document.getElementById("nav-"+x);   // "data" has no nav button (it's the header gear)
+    if(btn)btn.classList.toggle("on",x===v);
   });
+  // highlight the gear when Settings is open
+  const gear=document.querySelector(".gearbtn");
+  if(gear)gear.classList.toggle("on",v==="data");
   document.getElementById("hTitle").textContent=TITLES[v][0];
   document.getElementById("hSub").textContent=TITLES[v][1];
   window.scrollTo({top:0,behavior:"smooth"});
   if(v==="plan"){renderDaySelect();renderPlan();}
   if(v==="train"){renderTrain();}
   if(v==="data"){initMwUI();}
+  if(v==="food"){setFoodSub(foodSub);}
   if(v==="timer" && !tState.seq.length){resetTimer();}
 }
 // Plan sub-tabs
@@ -2272,6 +2790,7 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 
 /* ---------------- INIT ---------------- */
 load();
+loadFood();
 renderGoals();renderBuildControls();renderFilters();renderLib();renderDaySelect();renderPlan();resetTimer();
 </script>
 </body>
