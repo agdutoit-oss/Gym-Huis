@@ -424,7 +424,7 @@
     <div class="sub" id="hSub">Build a session or manage your week</div>
   </header>
 
-  <div class="goalbar">
+  <div class="goalbar" id="goalBar">
     <div class="lab">Training goal — sets reps to match</div>
     <div class="goals" id="goals"></div>
   </div>
@@ -2618,6 +2618,9 @@ function switchView(v){
   // highlight the gear when Settings is open
   const gear=document.querySelector(".gearbtn");
   if(gear)gear.classList.toggle("on",v==="data");
+  // Training goal only matters where rep suggestions are shown
+  const gb=document.getElementById("goalBar");
+  if(gb)gb.style.display = (v==="plan"||v==="train"||v==="lib") ? "block" : "none";
   document.getElementById("hTitle").textContent=TITLES[v][0];
   document.getElementById("hSub").textContent=TITLES[v][1];
   window.scrollTo({top:0,behavior:"smooth"});
