@@ -39,8 +39,8 @@
   .goal span{font-size:9.5px;color:var(--dim)}
 
   /* bottom nav */
-  .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,33,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:100;max-width:600px;margin:0 auto}
-  .nav button{flex:1;background:none;border:none;color:var(--dim);padding:10px 4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,33,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:100;max-width:600px;margin:0 auto;padding:0 6px}
+  .nav button{flex:1;max-width:110px;background:none;border:none;color:var(--dim);padding:10px 4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
   .nav button.on{color:var(--accent2)}
   .nav svg{width:21px;height:21px;fill:currentColor}
 
@@ -2687,7 +2687,7 @@ const TITLES={plan:["Plan","Build a session or manage your week"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v9"]};
+ data:["Save & Settings","Backup your data · v10"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
