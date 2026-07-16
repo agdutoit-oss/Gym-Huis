@@ -264,6 +264,15 @@
   .hdaypick{background:var(--card2);border:1px solid var(--accent);border-radius:12px;padding:12px;margin-top:10px}
 
   /* NUTRITION */
+  /* PROGRAM BANNER */
+  .progban{background:linear-gradient(135deg,rgba(232,80,46,.16),var(--card));border:1.5px solid var(--accent);border-radius:14px;padding:13px 14px;margin-bottom:14px}
+  .progban.off{background:var(--card);border-color:var(--line)}
+  .pb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .pb-name{font-size:15px;font-weight:800}
+  .pb-week{font-size:11px;font-weight:700;color:var(--accent2);background:rgba(232,80,46,.15);padding:3px 9px;border-radius:9px}
+  .pb-desc{font-size:12px;color:var(--dim);line-height:1.5}
+  .pb-stop{margin-top:9px;background:none;border:none;color:var(--dim);font-size:11.5px;text-decoration:underline;cursor:pointer;padding:0}
+
   /* DATE BAR */
   .datebar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:8px 10px;margin-bottom:14px}
   .dnav{flex:0 0 34px;height:34px;border-radius:10px;background:var(--card2);border:none;color:var(--txt);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -494,6 +503,7 @@
   <div class="view" id="v-train">
     <!-- when NOT actively training: pick a day -->
     <div id="trainWeek">
+      <div id="programBanner"></div>
       <div class="dayselect" id="daySelect"></div>
       <div class="planhead"><h2 id="planDayName">Monday</h2><span class="n" id="planCount"></span></div>
       <button class="btn primary trainstart" id="trainDayBtn" style="display:none" onclick="startTrainingFromDay()">▶ Start training</button>
@@ -659,8 +669,8 @@ const I={
 /* ---------------- GOALS ---------------- */
 // Each goal defines how strength (reps) and time-based work is prescribed.
 const GOALS={
- strength:{name:"Strength",desc:"heavier, lower reps",
-   rep:e=>e.timed?e.t.str:`${e.compound?4:3} × ${e.compound?"5-6":"6-8"}`, rest:"2-3 min rest"},
+ strength:{name:"Strength",desc:"heavier, 8-12 reps",
+   rep:e=>e.timed?e.t.str:`${e.compound?4:3} × ${e.compound?"6-10":"8-12"}`, rest:"90s-2 min rest"},
  endurance:{name:"Endurance",desc:"lighter, higher reps",
    rep:e=>e.timed?e.t.end:`${3} × ${e.compound?"15-20":"15-20"}`, rest:"30-45s rest"},
  fatloss:{name:"Fat Loss",desc:"moderate, steady pace",
@@ -1110,6 +1120,46 @@ const DAYNAMES=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","S
 
 /* ---------------- STATE ---------------- */
 let curMuscle="all", curLvl="all", curDay=(new Date().getDay()+6)%7; // Mon=0 … Sun=6, default to today
+
+/* ---- 5-DAY PROGRAM (Push/Pull/Legs style, Mon-Fri) ---- */
+const PROGRAM={
+  name:"5-Day Strength Split",
+  desc:"Push / Pull / Legs · Mon–Fri · run it 5–6 weeks, add a little weight each week",
+  days:{
+    0:{label:"Legs — Quads",  ex:["Barbell Back Squat","Leg Extension","Reverse Lunge","Leg Curl","Calf Raise","Plank"]},
+    1:{label:"Push",          ex:["Bench Press","Incline Dumbbell Press","Dumbbell Shoulder Press","Lateral Raise","Overhead Tricep Extension","Skull Crusher"]},
+    2:{label:"Pull",          ex:["Barbell Bent-Over Row","Lat Pulldown","Seated Cable Row","Face Pull","Barbell Curl","Hammer Curl"]},
+    3:{label:"Legs — Glutes", ex:["Barbell Romanian Deadlift","Barbell Hip Thrust","Bulgarian Split Squat","Leg Curl","Calf Raise","Hanging Knee Raise"]},
+    4:{label:"Upper + Core",  ex:["Dumbbell Chest Press","One-Arm Dumbbell Row","Arnold Press","Cable Chest Fly","Concentration Curl","Ab Wheel Rollout"]},
+  }
+};
+let program={active:false, startDate:null};   // whether the user is following it
+
+function loadProgram(){
+  if(Object.values(plans).some(a=>a&&a.length)){
+    if(!confirm("This will replace your current Mon–Fri plans with the 5-Day Strength Split. Continue?"))return;
+  }
+  for(let d=0; d<=4; d++){ plans[d]=PROGRAM.days[d].ex.map(n=>({n})); }
+  plans[5]=[]; plans[6]=[];   // weekends rest
+  program={active:true, startDate:new Date().toISOString()};
+  goal="strength";            // the program is built around 8-12 rep hypertrophy work
+  save();saveProgram();
+  renderGoals();
+  toast("5-day program loaded 💪");
+  curDay=Math.min((new Date().getDay()+6)%7,4);
+  switchView('train');
+}
+function stopProgram(){
+  program={active:false, startDate:null};
+  saveProgram();renderTrain();toast("Program set aside — your days stay as they are");
+}
+function programWeek(){
+  if(!program.active||!program.startDate)return 1;
+  const days=Math.floor((Date.now()-new Date(program.startDate).getTime())/86400000);
+  return Math.min(6, Math.floor(days/7)+1);
+}
+function saveProgram(){try{localStorage.setItem("hgt_program_v1",JSON.stringify(program));}catch(e){}}
+function loadProgramState(){try{const p=localStorage.getItem("hgt_program_v1");if(p)program=JSON.parse(p);}catch(e){}}
 let plans={}; // {0:[{n,...}], ...}
 const STORE_KEY="hgt_plans_v1", GOAL_KEY="hgt_goal_v1", MW_KEY="hgt_mw_key_v1", LOG_KEY="hgt_log_v1";
 let logs={};  // { exerciseName: [ {date, weight, reps, feel}, ... newest last ] }
@@ -1611,7 +1661,29 @@ function gotoLib(){switchView('lib');}
 function renderPlan(){
   const nameEl=document.getElementById("planDayName");
   if(!nameEl)return;   // elements live in the Train tab; skip if not present
-  nameEl.textContent=DAYNAMES[curDay];
+
+  // program banner
+  const banner=document.getElementById("programBanner");
+  if(banner){
+    if(program.active){
+      banner.innerHTML=`<div class="progban">
+        <div class="pb-top"><span class="pb-name">${PROGRAM.name}</span><span class="pb-week">Week ${programWeek()} of 6</span></div>
+        <div class="pb-desc">${PROGRAM.desc}</div>
+        <button class="pb-stop" onclick="stopProgram()">Stop following</button>
+      </div>`;
+    } else {
+      banner.innerHTML=`<div class="progban off">
+        <div class="pb-desc"><b>Stick to one program.</b> ${PROGRAM.desc}.</div>
+        <button class="btn primary" style="width:100%;margin-top:8px" onclick="loadProgram()">Load 5-day program</button>
+      </div>`;
+    }
+  }
+
+  // day label (program name for that day, if following)
+  const dayName = program.active && curDay<=4
+    ? `${DAYNAMES[curDay]} · ${PROGRAM.days[curDay].label}`
+    : DAYNAMES[curDay];
+  nameEl.textContent=dayName;
   const arr=plans[curDay]||[];
   document.getElementById("planCount").textContent=arr.length?`${arr.length} exercise${arr.length!==1?"s":""}`:"empty";
   const listEl=document.getElementById("planList");
@@ -1621,7 +1693,9 @@ function renderPlan(){
 
   if(!arr.length){
     sumEl.style.display="none";
-    listEl.innerHTML=`<div class="addhint">No exercises yet.<br>Go to the <b>Library</b> and tap <b>+</b> to add moves to ${DAYNAMES[curDay]}.</div>`;
+    listEl.innerHTML = (program.active && (curDay===5||curDay===6))
+      ? `<div class="addhint">Rest day 😌<br>The 5-day program trains Mon–Fri. Recover, eat, and come back strong.</div>`
+      : `<div class="addhint">No exercises yet.<br>Go to the <b>Library</b> and tap <b>+</b> to add moves to ${DAYNAMES[curDay]}.</div>`;
     return;
   }
   // muscle summary
@@ -1669,7 +1743,7 @@ function clearDay(){if(!plans[curDay]||!plans[curDay].length)return;if(confirm(`
 
 /* ---------------- DATA (export/import) ---------------- */
 function exportPlans(){
-  const data=JSON.stringify({goal,plans,logs,foodLog,weightLog,profile});
+  const data=JSON.stringify({goal,plans,logs,foodLog,weightLog,profile,program});
   const ta=document.createElement("textarea");
   ta.value=data;document.body.appendChild(ta);ta.select();
   try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
@@ -1696,6 +1770,7 @@ function doImport(){
     if(d.foodLog)foodLog=d.foodLog;
     if(d.weightLog)weightLog=d.weightLog;
     if(d.profile)profile=Object.assign(profile,d.profile);
+    if(d.program){program=d.program;saveProgram();}
     save();saveFood();
     renderGoals();renderLib();renderPlan();renderDaySelect();
     document.getElementById("dataArea").innerHTML="";
@@ -2688,7 +2763,7 @@ const TITLES={plan:["Plan","Build a session or review history"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v11"]};
+ data:["Save & Settings","Backup your data · v13"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -2884,6 +2959,7 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 /* ---------------- INIT ---------------- */
 load();
 loadFood();
+loadProgramState();
 renderGoals();renderBuildControls();renderFilters();renderLib();renderDaySelect();renderPlan();resetTimer();
 switchView("plan");   // ensures goal bar / nav state is initialised correctly
 </script>
