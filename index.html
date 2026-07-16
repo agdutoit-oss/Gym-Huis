@@ -466,7 +466,6 @@
   <div class="view on" id="v-plan">
     <div class="subtabs">
       <button class="subtab on" id="sub-build" onclick="setPlanSub('build')">Build</button>
-      <button class="subtab" id="sub-week" onclick="setPlanSub('week')">My Week</button>
       <button class="subtab" id="sub-hist" onclick="setPlanSub('hist')">History</button>
     </div>
 
@@ -484,19 +483,6 @@
       <div id="buildResult" style="margin-top:16px"></div>
     </div>
 
-    <!-- MY WEEK sub-panel -->
-    <div id="planWeek" style="display:none">
-      <div class="dayselect" id="daySelect"></div>
-      <div class="planhead"><h2 id="planDayName">Monday</h2><span class="n" id="planCount"></span></div>
-      <button class="btn primary trainstart" id="trainDayBtn" style="display:none" onclick="startTrainingFromDay()">▶ Train this day</button>
-      <div class="summary" id="planSummary" style="display:none"></div>
-      <div id="planList"></div>
-      <div class="planactions">
-        <button class="btn ghost" onclick="clearDay()">Clear day</button>
-        <button class="btn primary" onclick="gotoLib()">+ Add exercises</button>
-      </div>
-    </div>
-
     <!-- HISTORY sub-panel -->
     <div id="planHist" style="display:none">
       <div id="histStats" class="histstats"></div>
@@ -504,16 +490,24 @@
     </div>
   </div>
 
-  <!-- TRAIN (active workout player) -->
+  <!-- TRAIN (week selector + workout player) -->
   <div class="view" id="v-train">
-    <div id="trainEmpty" class="trainempty">
-      <div class="teicon">🏋️</div>
-      <h3>No workout loaded</h3>
-      <p>Start one from a saved day in <b>Plan → My Week</b>, or build a session and tap <b>Train this session</b>.</p>
-      <button class="btn primary" onclick="switchView('plan')">Go to Plan</button>
+    <!-- when NOT actively training: pick a day -->
+    <div id="trainWeek">
+      <div class="dayselect" id="daySelect"></div>
+      <div class="planhead"><h2 id="planDayName">Monday</h2><span class="n" id="planCount"></span></div>
+      <button class="btn primary trainstart" id="trainDayBtn" style="display:none" onclick="startTrainingFromDay()">▶ Start training</button>
+      <div class="summary" id="planSummary" style="display:none"></div>
+      <div id="planList"></div>
+      <div class="planactions">
+        <button class="btn ghost" onclick="clearDay()">Clear day</button>
+        <button class="btn primary" onclick="gotoLib()">+ Add exercises</button>
+      </div>
     </div>
+    <!-- when actively training: the player -->
     <div id="trainActive" style="display:none"></div>
   </div>
+
 
   <!-- TIMER -->
   <div class="view" id="v-timer">
@@ -1115,7 +1109,7 @@ const LVLNAME={beg:"Beginner",int:"Intermediate",adv:"Advanced"};
 const DAYNAMES=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
 /* ---------------- STATE ---------------- */
-let curMuscle="all", curLvl="all", curDay=0;
+let curMuscle="all", curLvl="all", curDay=(new Date().getDay()+6)%7; // Mon=0 … Sun=6, default to today
 let plans={}; // {0:[{n,...}], ...}
 const STORE_KEY="hgt_plans_v1", GOAL_KEY="hgt_goal_v1", MW_KEY="hgt_mw_key_v1", LOG_KEY="hgt_log_v1";
 let logs={};  // { exerciseName: [ {date, weight, reps, feel}, ... newest last ] }
@@ -1604,7 +1598,9 @@ function quickAdd(name,btn){
 
 /* ---------------- RENDER: PLANNER ---------------- */
 function renderDaySelect(){
-  document.getElementById("daySelect").innerHTML=DAYNAMES.map((d,i)=>{
+  const el=document.getElementById("daySelect");
+  if(!el)return;
+  el.innerHTML=DAYNAMES.map((d,i)=>{
     const has=plans[i]&&plans[i].length;
     return `<button class="daybtn ${i===curDay?'on':''}" onclick="setDay(${i})">${d.slice(0,3)}${has?'<span class="dot"></span>':''}</button>`;
   }).join("");
@@ -1613,7 +1609,9 @@ function setDay(i){curDay=i;renderDaySelect();renderPlan();}
 function gotoLib(){switchView('lib');}
 
 function renderPlan(){
-  document.getElementById("planDayName").textContent=DAYNAMES[curDay];
+  const nameEl=document.getElementById("planDayName");
+  if(!nameEl)return;   // elements live in the Train tab; skip if not present
+  nameEl.textContent=DAYNAMES[curDay];
   const arr=plans[curDay]||[];
   document.getElementById("planCount").textContent=arr.length?`${arr.length} exercise${arr.length!==1?"s":""}`:"empty";
   const listEl=document.getElementById("planList");
@@ -2051,8 +2049,8 @@ function commitSessionToDay(di){
   const p=document.getElementById("daypick");if(p)p.remove();
   toast(`Saved to ${DAYNAMES[di]}`);
   curDay=di;
-  setPlanSub('week');
-  renderDaySelect();renderPlan();renderLib();
+  renderLib();
+  switchView('train');
 }
 
 /* ---------------- TIMER ---------------- */
@@ -2254,12 +2252,15 @@ function startTrainingFromSession(){
 }
 
 function renderTrain(){
-  const empty=document.getElementById("trainEmpty");
+  const week=document.getElementById("trainWeek");
   const act=document.getElementById("trainActive");
   if(!train.active || !train.list.length){
-    empty.style.display="block"; act.style.display="none"; return;
+    // show the weekday selector + day view
+    week.style.display="block"; act.style.display="none";
+    renderDaySelect(); renderPlan();
+    return;
   }
-  empty.style.display="none"; act.style.display="block";
+  week.style.display="none"; act.style.display="block";
 
   const cur=train.list[train.idx];
   const e=exByName(cur.n);
@@ -2682,12 +2683,12 @@ function loadFood(){try{
 }catch(e){}}
 
 /* ---------------- NAV ---------------- */
-const TITLES={plan:["Plan","Build a session or manage your week"],
- train:["Train","Your active workout, step by step"],
+const TITLES={plan:["Plan","Build a session or review history"],
+ train:["Train","Pick a day, then start your workout"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v10"]};
+ data:["Save & Settings","Backup your data · v11"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -2716,23 +2717,20 @@ function switchView(v){
   document.getElementById("hTitle").textContent=TITLES[v][0];
   document.getElementById("hSub").textContent=TITLES[v][1];
   window.scrollTo({top:0,behavior:"smooth"});
-  if(v==="plan"){renderDaySelect();renderPlan();}
+  if(v==="plan"){setPlanSub(planSub);}
   if(v==="train"){renderTrain();}
   if(v==="data"){initMwUI();}
   if(v==="food"){setFoodSub(foodSub);}
   if(v==="timer" && !tState.seq.length){resetTimer();}
 }
-// Plan sub-tabs
+// Plan sub-tabs (Build + History)
 let planSub="build";
 function setPlanSub(s){
   planSub=s;
   document.getElementById("sub-build").classList.toggle("on",s==="build");
-  document.getElementById("sub-week").classList.toggle("on",s==="week");
   document.getElementById("sub-hist").classList.toggle("on",s==="hist");
   document.getElementById("planBuild").style.display = s==="build"?"block":"none";
-  document.getElementById("planWeek").style.display = s==="week"?"block":"none";
   document.getElementById("planHist").style.display = s==="hist"?"block":"none";
-  if(s==="week"){renderDaySelect();renderPlan();}
   if(s==="hist"){renderHistory();}
 }
 
