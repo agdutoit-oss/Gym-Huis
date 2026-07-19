@@ -362,12 +362,17 @@
   .trnav .btn{flex:1;padding:13px 6px;font-size:13px}
   .trlist{margin-top:18px}
   .truphead{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px}
-  .trrow{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;margin-bottom:6px;background:var(--card);border:1px solid var(--line);cursor:pointer;font-size:14px}
-  .trrow.done{opacity:.5}
+  .trrow{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--card);border:1px solid var(--line);font-size:14px}
+  .trrow.done{opacity:.55}
   .trrow.done .trrn{text-decoration:line-through}
   .trrow.now{border-color:var(--accent);background:rgba(232,80,46,.1)}
-  .trmark{flex:0 0 20px;text-align:center;font-weight:800;color:var(--accent2)}
-  .trrow.done .trmark{color:var(--good)}
+  .trrn{flex:1;cursor:pointer;min-width:0}
+  .trtick{flex:0 0 26px;width:26px;height:26px;border-radius:8px;border:2px solid var(--line);background:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+  .trtick.on{background:var(--good);border-color:var(--good)}
+  .trnow{flex:0 0 auto;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--accent2);background:rgba(232,80,46,.16);padding:3px 7px;border-radius:7px}
+  .trprog{float:right;color:var(--accent2);font-weight:700;text-transform:none;letter-spacing:0}
+  .trbar{height:5px;background:var(--card2);border-radius:3px;overflow:hidden;margin-bottom:10px}
+  .trbarfill{height:100%;background:var(--good);border-radius:3px;transition:width .3s}
   .trssgroup{display:flex;gap:8px;border:1.5px solid var(--accent);border-radius:12px;padding:8px;margin-bottom:6px;background:rgba(232,80,46,.05)}
   .trsslbl{flex:0 0 30px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--accent2)}
   .trssitems{flex:1}
@@ -1604,18 +1609,22 @@ function saveLog(btn,name,t,cid){
   else ld.setHours(12,0,0);
   const entry={date:ld.toISOString(),feel:d.feel,sets:d.sets.slice()};
   // if logged during an active training session, remember the superset group + order
+  let markedPos=-1;
   if(train.active){
     const pos=train.list.findIndex(x=>x.n===name);
     if(pos>=0){
       if(train.list[pos].ss) entry.ss=train.list[pos].ss;
       entry.ord=pos;
+      train.done[pos]=true;      // logging it = you did it
+      markedPos=pos;
     }
   }
   logs[name].push(entry);
   save();
-  toast("Workout logged ✓");
+  toast("Logged ✓");
   delete _draft[cid];
-  rerenderLogBox(box,cid);
+  if(markedPos>=0){renderTrain();}   // refresh so the tick shows
+  else{rerenderLogBox(box,cid);}
   renderDaySelect();
 }
 function logHistory(name,t){
@@ -2308,7 +2317,7 @@ function timerStep(){
 }
 
 /* ---------------- TRAINING PLAYER ---------------- */
-let train={active:false, list:[], idx:0, title:""};
+let train={active:false, list:[], idx:0, title:"", done:{}};
 
 // Build a flat training list from an array of {n, ss?} items, tagging superset groups
 function buildTrainList(arr){
@@ -2317,12 +2326,12 @@ function buildTrainList(arr){
 function startTrainingFromDay(){
   const arr=plans[curDay]||[];
   if(!arr.length){toast("This day is empty");return;}
-  train={active:true, list:buildTrainList(arr), idx:0, title:DAYNAMES[curDay]};
+  train={active:true, list:buildTrainList(arr), idx:0, title:DAYNAMES[curDay], done:{}};
   switchView('train');
 }
 function startTrainingFromSession(){
   if(!session.length){toast("Build a session first");return;}
-  train={active:true, list:buildTrainList(session), idx:0, title:"Session"};
+  train={active:true, list:buildTrainList(session), idx:0, title:"Session", done:{}};
   switchView('train');
 }
 
@@ -2352,7 +2361,7 @@ function renderTrain(){
   // big current card
   const bigCard=`
     ${dateBar()}
-    <div class="trtop">${train.title} · ${done+1} of ${total}${ssLabel?` · <span class="trss">${ssLabel}</span>`:""}</div>
+    <div class="trtop">${train.title} · exercise ${done+1} of ${total}${ssLabel?` · <span class="trss">${ssLabel}</span>`:""}</div>
     <div class="trcard">
       ${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n],{h:120}):""}
       <h2 class="trname">${e.n} <span class="lvl ${e.lvl}" style="font-size:9px">${e.lvl}</span></h2>
@@ -2368,7 +2377,9 @@ function renderTrain(){
     </div>`;
 
   // up-next list
-  let listHtml=`<div class="truphead">Workout</div>`;
+  const nDone=Object.keys(train.done).length;
+  let listHtml=`<div class="truphead">Workout <span class="trprog">${nDone} of ${total} done</span></div>
+    <div class="trbar"><div class="trbarfill" style="width:${total?(nDone/total*100):0}%"></div></div>`;
   let i=0;
   while(i<train.list.length){
     const it=train.list[i];
@@ -2389,9 +2400,19 @@ function renderTrain(){
 function trRow(i){
   const it=train.list[i];
   const e=exByName(it.n);if(!e)return"";
-  const state = i<train.idx?"done":i===train.idx?"now":"todo";
-  const mark = state==="done"?"✓":state==="now"?"▸":"○";
-  return `<div class="trrow ${state}" onclick="trainJump(${i})"><span class="trmark">${mark}</span><span class="trrn">${e.n}</span></div>`;
+  const isDone = !!train.done[i];
+  const isNow  = i===train.idx;
+  const state = isDone?"done":isNow?"now":"todo";
+  return `<div class="trrow ${state}">
+    <button class="trtick ${isDone?'on':''}" onclick="event.stopPropagation();toggleDone(${i})" aria-label="Mark done">${isDone?"✓":""}</button>
+    <span class="trrn" onclick="trainJump(${i})">${e.n}</span>
+    ${isNow&&!isDone?'<span class="trnow">now</span>':''}
+  </div>`;
+}
+function toggleDone(i){
+  if(train.done[i])delete train.done[i];
+  else train.done[i]=true;
+  renderTrain();
 }
 function trainNext(){
   if(train.idx>=train.list.length-1){endTraining(true);return;}
@@ -2400,8 +2421,12 @@ function trainNext(){
 function trainPrev(){if(train.idx>0){train.idx--;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}}
 function trainJump(i){train.idx=i;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}
 function endTraining(finished){
+  const nDone=Object.keys(train.done||{}).length;
+  const total=train.list.length;
   train.active=false;
-  if(finished)toast("Workout complete 💪");
+  if(finished||nDone>0){
+    toast(nDone>=total ? "Workout complete 💪" : `Ended · ${nDone} of ${total} done`);
+  }
   renderTrain();
 }
 
@@ -2763,7 +2788,7 @@ const TITLES={plan:["Plan","Build a session or review history"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v13"]};
+ data:["Save & Settings","Backup your data · v14"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -2930,7 +2955,7 @@ function workoutFromDay(key){
 function repeatTrainNow(key){
   const list=workoutFromDay(key);
   if(!list.length){toast("Nothing to repeat");return;}
-  train={active:true, list:buildTrainList(list), idx:0, title:prettyDate(key)+" (repeat)"};
+  train={active:true, list:buildTrainList(list), idx:0, title:prettyDate(key)+" (repeat)", done:{}};
   switchView('train');
 }
 function repeatToDay(key){
