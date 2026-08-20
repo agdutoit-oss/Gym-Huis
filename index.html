@@ -89,7 +89,8 @@
   .steps li::before{counter-increment:s;content:counter(s);flex:0 0 20px;height:20px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
   .tip{background:rgba(77,159,255,.09);border:1px solid rgba(77,159,255,.25);border-radius:9px;padding:8px 11px;font-size:12px;color:#cdd6df;margin-bottom:8px}
   .tip b{color:var(--blue)}
-  .demo{display:block;text-align:center;background:var(--card2);border-radius:9px;padding:9px;font-size:12.5px;color:var(--accent2);font-weight:600;text-decoration:none}
+  .demorow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .demo{flex:1;min-width:calc(50% - 3px);display:block;text-align:center;background:var(--card2);border-radius:9px;padding:9px;font-size:12px;color:var(--accent2);font-weight:600;text-decoration:none}
   .equiptag{display:inline-block;font-size:10px;color:var(--dim);background:var(--card2);padding:2px 7px;border-radius:7px;margin-top:5px}
 
   .count{font-size:11.5px;color:var(--dim);margin-bottom:10px}
@@ -517,6 +518,10 @@
         <div class="blab">2 · How long have you got?</div>
         <div class="timerow" id="buildTimes"></div>
       </div>
+      <div class="bsec">
+        <div class="blab">3 · Which equipment? <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">(optional — defaults to all)</span></div>
+        <div class="fchips" id="buildEquip"></div>
+      </div>
       <button class="btn primary" style="width:100%;margin-top:4px" onclick="generateSession()">Build my session</button>
       <div id="buildResult" style="margin-top:16px"></div>
     </div>
@@ -772,7 +777,7 @@ const LIB=[
   for:"Heavy barbell pressing for the chest, shoulders and triceps. Load up as you progress.",
   steps:["Lie flat, grip the bar slightly wider than shoulders.","Unrack and hold it over your chest.","Lower to mid-chest under control.","Press back up to straight arms."],
   tip:"Always use safe loads solo, or a spotter. Keep wrists stacked over elbows."},
- {n:"Incline Dumbbell Press",grp:"chest",m:"Upper chest, shoulders",ic:"chest",lvl:"int",eq:"Adjustable bench + dumbbells",compound:true,
+ {n:"Incline Press",grp:"chest",m:"Upper chest, shoulders",ic:"chest",lvl:"int",eq:"Adjustable bench + dumbbells",compound:true,
   for:"Shifts the work to the upper chest and front shoulders.",
   steps:["Set the bench to ~30°.","Dumbbells at upper-chest level.","Press up and slightly together.","Lower slowly to start."],
   tip:"Too steep turns it into a shoulder press — keep it around 30°."},
@@ -834,7 +839,7 @@ const LIB=[
   tip:"The higher your hips, the more it hits the shoulders."},
 
  // ---- ARMS ----
- {n:"Dumbbell Bicep Curl",grp:"arms",m:"Biceps",ic:"arms",lvl:"beg",eq:"Dumbbells",compound:false,
+ {n:"Bicep Curl",grp:"arms",m:"Biceps",ic:"arms",lvl:"beg",eq:"Dumbbells",compound:false,
   for:"Isolates and builds the biceps.",
   steps:["Stand, dumbbells at your sides, palms forward.","Curl up toward your shoulders, elbows still.","Squeeze at the top.","Lower slowly."],
   tip:"Don't swing — keep your elbows pinned to your sides."},
@@ -922,15 +927,11 @@ const LIB=[
   for:"The ultimate full-body pull. Builds your entire posterior chain plus grip and core.",
   steps:["Bar over mid-foot, feet hip-width. Hinge down and grip just outside your legs.","Chest up, back flat, shoulders slightly ahead of the bar.","Drive the floor away with your legs, keeping the bar close to your body.","Stand tall, then lower under control by pushing your hips back."],
   tip:"Back flat, never rounded. Start very light — this is the lift where form matters most."},
- {n:"Barbell Romanian Deadlift",grp:"glutes",m:"Hamstrings, glutes, lower back",ic:"glutes",lvl:"int",eq:"Barbell",compound:true,
-  for:"Hamstring and glute builder that lets you load much heavier than dumbbells.",
-  steps:["Stand holding the bar at hip level, soft knees.","Push your hips back, lowering the bar down your thighs.","Stop when you feel a strong hamstring stretch, around knee height.","Drive your hips forward to stand tall."],
-  tip:"Bar stays close to your legs the whole way. Flat back, hinge from the hips."},
- {n:"Barbell Overhead Press",grp:"shoulders",m:"Shoulders, triceps, core",ic:"shoulders",lvl:"int",eq:"Squat rack + barbell",compound:true,
+ {n:"Overhead Press",grp:"shoulders",m:"Shoulders, triceps, core",ic:"shoulders",lvl:"int",eq:"Squat rack + barbell",compound:true,
   for:"The main barbell shoulder builder. Also hammers your core for stability.",
   steps:["Set the bar at upper-chest height in the rack. Grip just outside shoulder-width.","Unrack and hold at your collarbone, elbows slightly forward.","Brace your core and press straight overhead, moving your head back out of the way.","Lock out overhead, then lower under control."],
   tip:"Squeeze your glutes and brace hard — don't lean back to muscle the weight up."},
- {n:"Barbell Bent-Over Row",grp:"back",m:"Mid-back, lats, biceps",ic:"back",lvl:"int",eq:"Barbell",compound:true,
+ {n:"Bent-Over Row",grp:"back",m:"Mid-back, lats, biceps",ic:"back",lvl:"int",eq:"Barbell",compound:true,
   for:"Heavy back-thickness builder that balances out all your pressing work.",
   steps:["Hold the bar overhand, hands just outside your legs.","Hinge forward at the hips to about 45°, back flat, knees soft.","Pull the bar to your lower ribs, squeezing your shoulder blades.","Lower under control without rounding your back."],
   tip:"Keep your torso still. If you're heaving upright to lift it, go lighter."},
@@ -950,11 +951,11 @@ const LIB=[
   tip:"Start with a very short range. If your lower back arches, you've gone too far. Build distance slowly — this one humbles people."},
 
  // ---- LEGS (added) ----
- {n:"Leg Extension",grp:"legs",m:"Quads (isolation)",ic:"legs",lvl:"beg",eq:"Power stack leg attachment",compound:false,
+ {n:"Leg Extension",grp:"legs",m:"Quads (isolation)",ic:"legs",lvl:"beg",eq:"Leg machine (not in your gym)",compound:false,
   for:"Isolates the quads with no balance or back involvement. Great for building the front of your thighs.",
   steps:["Sit on the machine with your shins behind the pad, knees at the pivot point.","Grip the handles and sit back against the pad.","Straighten your legs, squeezing your quads at the top.","Lower slowly under control — don't let the weight crash."],
   tip:"Pause for a second at the top. Don't swing or use momentum."},
- {n:"Leg Curl",grp:"legs",m:"Hamstrings (isolation)",ic:"legs",lvl:"beg",eq:"Power stack leg attachment",compound:false,
+ {n:"Leg Curl",grp:"legs",m:"Hamstrings (isolation)",ic:"legs",lvl:"beg",eq:"Leg machine (not in your gym)",compound:false,
   for:"Isolates the hamstrings. Balances out all your quad work and protects your knees.",
   steps:["Position yourself with the pad against the back of your lower legs.","Keep your hips down and still.","Curl your heels toward your glutes, squeezing the hamstrings.","Lower slowly under control."],
   tip:"Don't let your hips lift off — keep the movement in the knees only."},
@@ -975,12 +976,6 @@ const LIB=[
   for:"A static lunge — easier to balance than walking versions. Great stepping stone to Bulgarian split squats.",
   steps:["Take a long step forward into a split stance and stay there.","Lower straight down by bending both knees.","Back knee hovers just above the floor.","Drive through the front heel to stand. Finish all reps, then switch legs."],
   tip:"Your feet stay planted the whole set — you go straight down, not forward."},
- {n:"Barbell Calf Raise",grp:"legs",m:"Calves",ic:"legs",lvl:"int",eq:"Barbell + rack",compound:false,
-  for:"Lets you load the calves far heavier than bodyweight or dumbbells.",
-  steps:["Rack the bar across your upper back as for a squat.","Stand tall, feet hip-width.","Rise up onto the balls of your feet as high as you can.","Pause at the top, then lower slowly."],
-  tip:"Go slow. Calves respond to controlled reps and a full stretch at the bottom."},
-
- // ---- GLUTES (added) ----
  {n:"Cable Kickback",grp:"glutes",m:"Glutes (isolation)",ic:"glutes",lvl:"beg",eq:"Power stack (low pulley)",compound:false,
   for:"Isolates one glute at a time. Good for building the mind-muscle connection.",
   steps:["Attach an ankle strap to the low pulley and secure it to one ankle.","Face the machine, holding the frame for balance.","Keeping your leg fairly straight, drive it back and up, squeezing the glute.","Return slowly under control. Finish reps, then switch legs."],
@@ -991,10 +986,6 @@ const LIB=[
   tip:"Start with an EMPTY bar. This one is unforgiving of a rounded back — master the RDL first."},
 
  // ---- CHEST (added) ----
- {n:"Cable Chest Fly",grp:"chest",m:"Chest (isolation)",ic:"chest",lvl:"beg",eq:"Power stack (cables)",compound:false,
-  for:"Constant tension across the chest through a big arc. Easier on the shoulders than heavy dumbbell flyes.",
-  steps:["Set the cables at chest height, one handle in each hand.","Step forward into a staggered stance, arms out wide with a slight elbow bend.","Bring your hands together in front of your chest in an arc.","Squeeze, then return slowly under control."],
-  tip:"Think of hugging a tree. Keep the elbow angle fixed — don't turn it into a press."},
  {n:"Decline Push-Up",grp:"chest",m:"Upper chest, shoulders, triceps",ic:"chest",lvl:"int",eq:"Bench + bodyweight",compound:true,
   for:"A harder push-up that shifts the load to the upper chest and shoulders.",
   steps:["Place your feet up on the bench, hands on the floor.","Body in a straight line, core braced.","Lower your chest toward the floor.","Press back up."],
@@ -1031,11 +1022,11 @@ const LIB=[
   for:"A rotating shoulder press that hits the front and side delts through a bigger range.",
   steps:["Start with dumbbells at chest height, palms facing you.","As you press up, rotate your hands so palms face forward at the top.","Press to straight arms overhead.","Reverse the rotation on the way down."],
   tip:"Go lighter than a normal shoulder press — the rotation adds difficulty."},
- {n:"Dumbbell Front Raise",grp:"shoulders",m:"Front delts",ic:"shoulders",lvl:"beg",eq:"Dumbbells",compound:false,
+ {n:"Front Raise",grp:"shoulders",m:"Front delts",ic:"shoulders",lvl:"beg",eq:"Dumbbells",compound:false,
   for:"Isolates the front of the shoulder.",
   steps:["Stand with dumbbells in front of your thighs, palms facing you.","Keep your arms nearly straight.","Raise the weights out in front to shoulder height.","Lower slowly."],
   tip:"Go light and controlled. Don't swing or lean back."},
- {n:"Dumbbell Rear Delt Fly",grp:"shoulders",m:"Rear delts, upper back",ic:"shoulders",lvl:"beg",eq:"Dumbbells (+ bench)",compound:false,
+ {n:"Rear Delt Fly",grp:"shoulders",m:"Rear delts, upper back",ic:"shoulders",lvl:"beg",eq:"Dumbbells (+ bench)",compound:false,
   for:"Builds the rear shoulders — key for posture and balancing out your pressing.",
   steps:["Hinge forward at the hips (or lie chest-down on an incline bench).","Let the dumbbells hang below you, slight elbow bend.","Raise them out to the sides, squeezing your shoulder blades.","Lower slowly."],
   tip:"Very light weight. Lead with the elbows and don't shrug."},
@@ -1061,10 +1052,6 @@ const LIB=[
   for:"One of the best triceps mass builders. Big stretch, big contraction.",
   steps:["Lie on the bench holding the bar over your chest, arms straight.","Keeping your upper arms still and pointing up, bend at the elbows.","Lower the bar toward your forehead (or just past it).","Extend back up using your triceps."],
   tip:"Upper arms stay locked in place — only your forearms move. Control it, don't actually crush your skull."},
- {n:"Cable Bicep Curl",grp:"arms",m:"Biceps",ic:"arms",lvl:"beg",eq:"Power stack (low pulley)",compound:false,
-  for:"Constant tension on the biceps throughout the whole range — the cable never lets up.",
-  steps:["Stand facing the low pulley, grip the bar or handle underhand.","Elbows pinned to your sides.","Curl up toward your shoulders.","Lower slowly, resisting the pull."],
-  tip:"Unlike dumbbells, the tension stays on at the bottom — great for a burn."},
  {n:"Tricep Kickback",grp:"arms",m:"Triceps",ic:"arms",lvl:"beg",eq:"Bench + dumbbell",compound:false,
   for:"Isolates the triceps at their shortest, most contracted position.",
   steps:["Brace one hand and knee on the bench, back flat.","Hold a dumbbell in the other hand, upper arm tight to your side.","Extend your forearm straight back until your arm is straight.","Squeeze, then return slowly. Finish reps, then switch."],
@@ -1140,22 +1127,6 @@ const LIB=[
   for:"A squat on the guided Smith bar. The fixed path means you can push hard and bail safely alone by twisting the bar into the hooks — ideal for home training.",
   steps:["Set the bar on your upper back, feet slightly in front of the bar line.","Unlock the bar by rotating it out of the hooks.","Push hips back and bend the knees, lowering under control.","Drive up through your heels. To rack, twist the bar back into the hooks."],
   tip:"Set the safety stops just below your bottom position as a backup. Feet slightly forward is normal on a Smith — it keeps you balanced."},
- {n:"Smith Machine Bench Press",grp:"chest",m:"Chest, shoulders, triceps",ic:"chest",lvl:"beg",eq:"Munitio Smith + bench",compound:true,
-  for:"A bench press on the Smith bar — you can press to failure with no spotter and re-rack instantly by twisting the bar.",
-  steps:["Set the bench so the bar lines up over your mid-chest.","Grip slightly wider than shoulders, unrack by twisting.","Lower the bar to your chest under control, elbows ~45°.","Press up. Twist to re-rack when done."],
-  tip:"Set the safety stops at chest height so a failed rep rests on them, not on you."},
- {n:"Smith Machine Overhead Press",grp:"shoulders",m:"Shoulders, triceps",ic:"shoulders",lvl:"beg",eq:"Munitio Smith machine",compound:true,
-  for:"A guided overhead press — great for pushing shoulder strength safely when training alone.",
-  steps:["Set a bench upright or stand under the bar at shoulder height.","Unrack by twisting, bar at collarbone height.","Press straight up to lockout.","Lower under control to the start."],
-  tip:"Brace your core and don't lean back. The fixed bar path lets you focus purely on pressing."},
- {n:"Smith Machine Bent-Over Row",grp:"back",m:"Mid-back, lats, biceps",ic:"back",lvl:"int",eq:"Munitio Smith machine",compound:true,
-  for:"A rowing movement on the Smith bar — the fixed path lets you focus on squeezing the back without balancing the bar.",
-  steps:["Stand over the bar, hinge forward to ~45°, flat back.","Grip the bar overhand, unrack by twisting.","Pull the bar to your lower ribs, squeezing your shoulder blades.","Lower under control."],
-  tip:"Keep your torso still and hinge from the hips. Don't round your lower back."},
- {n:"Smith Machine Incline Press",grp:"chest",m:"Upper chest, shoulders, triceps",ic:"chest",lvl:"beg",eq:"Munitio Smith + incline bench",compound:true,
-  for:"An incline press on the Smith bar, hitting the upper chest with the safety of the guided path.",
-  steps:["Set the COMFID bench to ~30-45° under the bar.","Line the bar up over your upper chest, unrack by twisting.","Lower to the upper chest under control.","Press up and twist to re-rack."],
-  tip:"A 30-45° incline targets the upper chest best. Steeper turns it into a shoulder press."},
  {n:"Cable Pull-Through",grp:"glutes",m:"Glutes, hamstrings",ic:"glutes",lvl:"beg",eq:"Munitio low pulley",compound:true,
   for:"A hip hinge driven by the cable — a joint-friendly hamstring and glute builder that replaces the leg curl.",
   steps:["Attach a rope to the low pulley. Face away, rope between your legs.","Step forward, hinge at the hips with a flat back, letting the rope pull your hands back.","Feel the stretch in your hamstrings.","Drive your hips forward to stand tall, squeezing your glutes."],
@@ -1187,49 +1158,15 @@ const LIB=[
   for:"A close, neutral-grip pulldown that hits the lats lower and brings in more biceps and mid-back.",
   steps:["Attach a close/neutral grip handle to the high pulley.","Sit down, secure your knees.","Pull the handle to your chest, elbows driving down close to your sides.","Return slowly to a full stretch."],
   tip:"A great alternative on days your shoulders don't feel like a wide grip."},
- {n:"Cable Lateral Raise",grp:"shoulders",m:"Side delts",ic:"shoulders",lvl:"beg",eq:"Munitio low pulley",compound:false,
-  for:"A lateral raise with constant cable tension — the side delts stay loaded even at the bottom, unlike dumbbells.",
-  steps:["Set the pulley low, grip the handle with the opposite hand across your body.","Stand side-on to the machine.","Raise your arm out to the side to shoulder height, leading with the elbow.","Lower slowly. Finish reps, then switch sides."],
-  tip:"The cable keeps tension on at the bottom where dumbbells go slack — that's the whole benefit. Go light."},
- {n:"Cable Front Raise",grp:"shoulders",m:"Front delts",ic:"shoulders",lvl:"beg",eq:"Munitio low pulley",compound:false,
-  for:"Isolates the front delts with constant tension.",
-  steps:["Set the pulley low, grip a bar or handle with both hands, cable between your legs.","Stand tall, arms straight down.","Raise the handle straight out in front to shoulder height.","Lower slowly under control."],
-  tip:"Keep your torso still — no swinging or leaning back to lift it."},
- {n:"Cable Rear Delt Fly",grp:"shoulders",m:"Rear delts, upper back",ic:"shoulders",lvl:"beg",eq:"Munitio high pulleys",compound:false,
-  for:"Constant-tension rear delt work — key for posture and balancing all your pressing.",
-  steps:["Set both pulleys high, cross the cables so each hand grips the opposite handle.","Stand tall, arms out in front.","Pull your hands apart and back in a wide arc, squeezing your rear delts.","Return slowly under control."],
-  tip:"Light weight, lead with the elbows. Focus on squeezing the shoulder blades and rear delts."},
- {n:"Cable Upright Row",grp:"shoulders",m:"Side delts, traps",ic:"shoulders",lvl:"int",eq:"Munitio low pulley",compound:true,
-  for:"Builds side delts and traps together with smooth cable resistance.",
-  steps:["Set the pulley low, grip a bar with hands about shoulder-width.","Stand tall, bar in front of your thighs.","Pull straight up, leading with your elbows to chest height.","Lower under control."],
-  tip:"Don't pull above chest height — it can pinch the shoulder. If it hurts, skip it."},
- {n:"Cable Overhead Tricep Extension",grp:"arms",m:"Triceps (long head)",ic:"arms",lvl:"beg",eq:"Munitio low pulley + rope",compound:false,
-  for:"An overhead cable extension that stretches and loads the long head of the triceps — the part that adds arm size.",
-  steps:["Set the pulley low with a rope. Face away, rope overhead, elbows bent.","Keep your upper arms beside your head.","Extend your arms straight overhead, splitting the rope at the top.","Lower slowly for a deep stretch."],
-  tip:"Keep your elbows pointing forward and still — only your forearms move."},
  {n:"Cable Rope Pushdown",grp:"arms",m:"Triceps",ic:"arms",lvl:"beg",eq:"Munitio high pulley + rope",compound:false,
   for:"The classic triceps pushdown with a rope — constant tension and a strong squeeze at the bottom.",
   steps:["Attach a rope to the high pulley. Grip both ends, elbows tucked at your sides.","Keep your upper arms still.","Push the rope down and split the ends apart at the bottom.","Return slowly under control."],
   tip:"Elbows stay pinned to your sides — if they drift forward you're using your shoulders. Spread the rope at the bottom for a bigger squeeze."},
- {n:"Cable Rope Hammer Curl",grp:"arms",m:"Biceps, forearms",ic:"arms",lvl:"beg",eq:"Munitio low pulley + rope",compound:false,
-  for:"A hammer curl with the rope — builds the biceps and the brachialis for thicker-looking arms, with constant tension.",
-  steps:["Attach a rope to the low pulley, grip both ends, palms facing each other.","Elbows pinned to your sides.","Curl the rope up toward your shoulders, keeping the neutral grip.","Lower slowly."],
-  tip:"Keep your elbows still and let the cable keep the tension on at the bottom."},
- {n:"Cable Crunch",grp:"core",m:"Abs",ic:"core",lvl:"beg",eq:"Munitio high pulley + rope",compound:false,
-  for:"A weighted ab crunch — lets you progressively overload your abs like any other muscle.",
-  steps:["Attach a rope to the high pulley. Kneel facing the machine, rope held at your forehead.","Keep your hips still and hands fixed by your head.","Crunch down by rounding your spine, bringing your elbows toward your thighs.","Return slowly, controlling the stretch."],
-  tip:"Move from your abs, not your hips — think about curling your ribcage toward your pelvis. Don't just bow at the hips."},
  {n:"Cable Pallof Press",grp:"core",m:"Core (anti-rotation), obliques",ic:"core",lvl:"beg",eq:"Munitio cable (chest height)",compound:false,timed:true,
   t:{str:"3 × 8-10/side",end:"3 × 30s/side",fat:"3 × 12/side"},
   for:"An anti-rotation core exercise — you resist the cable trying to twist you. Builds serious deep-core stability.",
   steps:["Set the pulley at chest height, grip the handle with both hands, stand side-on.","Step out to create tension, hands at your chest.","Press the handle straight out in front of you and hold — resist the pull twisting you.","Bring it back to your chest. Finish reps, then switch sides."],
   tip:"The whole point is NOT rotating. Brace hard and keep your hips and shoulders square to the front."},
- {n:"Cable Romanian Deadlift",grp:"glutes",m:"Hamstrings, glutes",ic:"glutes",lvl:"beg",eq:"Munitio low pulley",compound:true,
-  for:"A hip hinge with cable resistance — easier on the lower back than the barbell version, with constant tension on the hamstrings.",
-  steps:["Set the pulley low, grip a bar or handle, stand facing the machine.","Soft knees, push your hips back and hinge forward with a flat back.","Feel the hamstring stretch as the cable pulls back.","Drive your hips forward to stand tall, squeezing your glutes."],
-  tip:"A good lighter alternative to barbell RDLs, or a second hamstring movement. Hinge at the hips, keep your back flat."},
-
-
 ];
 
 /* muscle filter groups */
@@ -1251,10 +1188,10 @@ const PROGRAM={
   desc:"Smith-forward Push / Pull / Legs · Mon–Fri · run it 5–6 weeks, add a little weight each week",
   days:{
     0:{label:"Legs — Quads",  ex:["Smith Machine Squat","Bulgarian Split Squat","Barbell Hip Thrust","Cable Pull-Through","Calf Raise","Plank"]},
-    1:{label:"Push",          ex:["Smith Machine Bench Press","Incline Dumbbell Press","Smith Machine Overhead Press","Lateral Raise","Cable Rope Pushdown","Overhead Tricep Extension"]},
-    2:{label:"Pull",          ex:["Lat Pulldown","Seated Cable Row","Smith Machine Bent-Over Row","Face Pull","Barbell Curl","Hammer Curl"]},
-    3:{label:"Legs — Glutes", ex:["Barbell Romanian Deadlift","Smith Machine Squat","Bulgarian Split Squat","Nordic Curl","Calf Raise","Hanging Knee Raise"]},
-    4:{label:"Upper + Core",  ex:["Smith Machine Incline Press","One-Arm Dumbbell Row","Cable Chest Fly","Cable Bicep Curl","Cable Rope Pushdown","Ab Wheel Rollout"]},
+    1:{label:"Push",          ex:["Bench Press","Incline Press","Overhead Press","Lateral Raise","Cable Rope Pushdown","Overhead Tricep Extension"]},
+    2:{label:"Pull",          ex:["Lat Pulldown","Seated Cable Row","Bent-Over Row","Face Pull","Barbell Curl","Hammer Curl"]},
+    3:{label:"Legs — Glutes", ex:["Romanian Deadlift","Smith Machine Squat","Bulgarian Split Squat","Nordic Curl","Calf Raise","Hanging Knee Raise"]},
+    4:{label:"Upper + Core",  ex:["Incline Press","One-Arm Dumbbell Row","Chest Fly","Bicep Curl","Cable Rope Pushdown","Ab Wheel Rollout"]},
   }
 };
 let program={active:false, startDate:null};   // whether the user is following it
@@ -1297,7 +1234,7 @@ function load(){ try{const p=localStorage.getItem(STORE_KEY);if(p)plans=JSON.par
 /* ---- MIT muscle map data (react-body-highlighter, MIT © GV79) ---- */
 const MM_ANT={"chest":["51.8367347 41.6326531 51.0204082 55.1020408 57.9591837 57.9591837 67.755102 55.5102041 70.6122449 47.3469388 62.0408163 41.6326531 ","29.7959184 46.5306122 31.4285714 55.5102041 40.8163265 57.9591837 48.1632653 55.1020408 47.755102 42.0408163 37.5510204 42.0408163"],"obliques":["68.5714286 63.2653061 67.3469388 57.1428571 58.7755102 59.5918367 60 64.0816327 60.4081633 83.2653061 65.7142857 78.7755102 66.5306122 69.7959184","33.877551 78.3673469 33.0612245 71.8367347 31.0204082 63.2653061 32.244898 57.1428571 40.8163265 59.1836735 39.1836735 63.2653061 39.1836735 83.6734694"],"abs":["56.3265306 59.1836735 57.9591837 64.0816327 58.3673469 77.9591837 58.3673469 92.6530612 56.3265306 98.3673469 55.1020408 104.081633 51.4285714 107.755102 51.0204082 84.4897959 50.6122449 67.3469388 51.0204082 57.1428571","43.6734694 58.7755102 48.5714286 57.1428571 48.9795918 67.3469388 48.5714286 84.4897959 48.1632653 107.346939 44.4897959 103.673469 40.8163265 91.4285714 40.8163265 78.3673469 41.2244898 64.4897959"],"biceps":["16.7346939 68.1632653 17.9591837 71.4285714 22.8571429 66.122449 28.9795918 53.877551 27.755102 49.3877551 20.4081633 55.9183673","71.4285714 49.3877551 70.2040816 54.6938776 76.3265306 66.122449 81.6326531 71.8367347 82.8571429 68.9795918 78.7755102 55.5102041"],"triceps":["69.3877551 55.5102041 69.3877551 61.6326531 75.9183673 72.6530612 77.5510204 70.2040816 75.5102041 67.3469388","22.4489796 69.3877551 29.7959184 55.5102041 29.7959184 60.8163265 22.8571429 73.0612245"],"neck":["55.5102041 23.6734694 50.6122449 33.4693878 50.6122449 39.1836735 61.6326531 40 70.6122449 44.8979592 69.3877551 36.7346939 63.2653061 35.1020408 58.3673469 30.6122449","28.9795918 44.8979592 30.2040816 37.1428571 36.3265306 35.1020408 41.2244898 30.2040816 44.4897959 24.4897959 48.9795918 33.877551 48.5714286 39.1836735 37.9591837 39.5918367"],"front-deltoids":["78.3673469 53.0612245 79.5918367 47.755102 79.1836735 41.2244898 75.9183673 37.9591837 71.0204082 36.3265306 72.244898 42.8571429 71.4285714 47.3469388","28.1632653 47.3469388 21.2244898 53.0612245 20 47.755102 20.4081633 40.8163265 24.4897959 37.1428571 28.5714286 37.1428571 26.9387755 43.2653061"],"head":["42.4489796 2.85714286 40 11.8367347 42.0408163 19.5918367 46.122449 23.2653061 49.7959184 25.3061224 54.6938776 22.4489796 57.5510204 19.1836735 59.1836735 10.2040816 57.1428571 2.44897959 49.7959184 0"],"abductors":["52.6530612 110.204082 54.2857143 124.897959 60 110.204082 62.0408163 100 64.8979592 94.2857143 60 92.6530612 56.7346939 104.489796","47.755102 110.612245 44.8979592 125.306122 42.0408163 115.918367 40.4081633 113.061224 39.5918367 107.346939 37.9591837 102.44898 34.6938776 93.877551 39.5918367 92.244898 41.6326531 99.1836735 43.6734694 105.306122"],"quadriceps":["34.6938776 98.7755102 37.1428571 108.163265 37.1428571 127.755102 34.2857143 137.142857 31.0204082 132.653061 29.3877551 120 28.1632653 111.428571 29.3877551 100.816327 32.244898 94.6938776","63.2653061 105.714286 64.4897959 100 66.9387755 94.6938776 70.2040816 101.22449 71.0204082 111.836735 68.1632653 133.061224 65.3061224 137.55102 62.4489796 128.571429 62.0408163 111.428571","38.7755102 129.387755 38.3673469 112.244898 41.2244898 118.367347 44.4897959 129.387755 42.8571429 135.102041 40 146.122449 36.3265306 146.530612 35.5102041 140","59.5918367 145.714286 55.5102041 128.979592 60.8163265 113.877551 61.2244898 130.204082 64.0816327 139.591837 62.8571429 146.530612","32.6530612 138.367347 26.5306122 145.714286 25.7142857 136.734694 25.7142857 127.346939 26.9387755 114.285714 29.3877551 133.469388","71.8367347 113.061224 73.877551 124.081633 73.877551 140.408163 72.6530612 145.714286 66.5306122 138.367347 70.2040816 133.469388"],"knees":["33.877551 140 34.6938776 143.265306 35.5102041 147.346939 36.3265306 151.020408 35.1020408 156.734694 29.7959184 156.734694 27.3469388 152.653061 27.3469388 147.346939 30.2040816 144.081633","65.7142857 140 72.244898 147.755102 72.244898 152.244898 69.7959184 157.142857 64.8979592 156.734694 62.8571429 151.020408"],"calves":["71.4285714 160.408163 73.4693878 153.469388 76.7346939 161.22449 79.5918367 167.755102 78.3673469 187.755102 79.5918367 195.510204 74.6938776 195.510204","24.8979592 194.693878 27.755102 164.897959 28.1632653 160.408163 26.122449 154.285714 24.8979592 157.55102 22.4489796 161.632653 20.8163265 167.755102 22.0408163 188.163265 20.8163265 195.510204","72.6530612 195.102041 69.7959184 159.183673 65.3061224 158.367347 64.0816327 162.44898 64.0816327 165.306122 65.7142857 177.142857","35.5102041 158.367347 35.9183673 162.44898 35.9183673 166.938776 35.1020408 172.244898 35.1020408 176.734694 32.244898 182.040816 30.6122449 187.346939 26.9387755 194.693878 27.3469388 187.755102 28.1632653 180.408163 28.5714286 175.510204 28.9795918 169.795918 29.7959184 164.081633 30.2040816 158.77551"],"forearm":["6.12244898 88.5714286 10.2040816 75.1020408 14.6938776 70.2040816 16.3265306 74.2857143 19.1836735 73.4693878 4.48979592 97.5510204 0 100","84.4897959 69.7959184 83.2653061 73.4693878 80 73.0612245 95.1020408 98.3673469 100 100.408163 93.4693878 89.3877551 89.7959184 76.3265306","77.5510204 72.244898 77.5510204 77.5510204 80.4081633 84.0816327 85.3061224 89.7959184 92.244898 101.22449 94.6938776 99.5918367","6.93877551 101.22449 13.4693878 90.6122449 18.7755102 84.0816327 21.6326531 77.1428571 21.2244898 71.8367347 4.89795918 98.7755102"]};
 const MM_POST={"head":["50.6382979 0 45.9574468 0.85106383 40.8510638 5.53191489 40.4255319 12.7659574 45.106383 20 55.7446809 20 59.1489362 13.6170213 59.5744681 4.68085106 55.7446809 1.27659574"],"trapezius":["44.6808511 21.7021277 47.6595745 21.7021277 47.2340426 38.2978723 47.6595745 64.6808511 38.2978723 53.1914894 35.3191489 40.8510638 31.0638298 36.5957447 39.1489362 33.1914894 43.8297872 27.2340426","52.3404255 21.7021277 55.7446809 21.7021277 56.5957447 27.2340426 60.8510638 32.7659574 68.9361702 36.5957447 64.6808511 40.4255319 61.7021277 53.1914894 52.3404255 64.6808511 53.1914894 38.2978723"],"back-deltoids":["29.3617021 37.0212766 22.9787234 39.1489362 17.4468085 44.2553191 18.2978723 53.6170213 24.2553191 49.3617021 27.2340426 46.3829787","71.0638298 37.0212766 78.2978723 39.5744681 82.5531915 44.6808511 81.7021277 53.6170213 74.893617 48.9361702 72.3404255 45.106383"],"upper-back":["31.0638298 38.7234043 28.0851064 48.9361702 28.5106383 55.3191489 34.0425532 75.3191489 47.2340426 71.0638298 47.2340426 66.3829787 36.5957447 54.0425532 33.6170213 41.2765957","68.9361702 38.7234043 71.9148936 49.3617021 71.4893617 56.1702128 65.9574468 75.3191489 52.7659574 71.0638298 52.7659574 66.3829787 63.4042553 54.4680851 66.3829787 41.7021277"],"triceps":["26.8085106 49.787234 17.8723404 55.7446809 14.4680851 72.3404255 16.5957447 81.7021277 21.7021277 63.8297872 26.8085106 55.7446809","73.6170213 50.212766 82.1276596 55.7446809 85.9574468 73.1914894 83.4042553 82.1276596 77.8723404 62.9787234 73.1914894 55.7446809","26.8085106 58.2978723 26.8085106 68.5106383 22.9787234 75.3191489 19.1489362 77.4468085 22.5531915 65.5319149","72.7659574 58.2978723 77.0212766 64.6808511 80.4255319 77.4468085 76.5957447 75.3191489 72.7659574 68.9361702"],"lower-back":["47.6595745 72.7659574 34.4680851 77.0212766 35.3191489 83.4042553 49.3617021 102.12766 46.8085106 82.9787234","52.3404255 72.7659574 65.5319149 77.0212766 64.6808511 83.4042553 50.6382979 102.12766 53.1914894 83.8297872"],"forearm":["86.3829787 75.7446809 91.0638298 83.4042553 93.1914894 94.0425532 100 106.382979 96.1702128 104.255319 88.0851064 89.3617021 84.2553191 83.8297872","13.6170213 75.7446809 8.93617021 83.8297872 6.80851064 93.6170213 0 106.382979 3.82978723 104.255319 12.3404255 88.5106383 15.7446809 82.9787234","81.2765957 79.5744681 77.4468085 77.8723404 79.1489362 84.6808511 91.0638298 103.829787 93.1914894 108.93617 94.4680851 104.680851","18.7234043 79.5744681 22.1276596 77.8723404 20.8510638 84.2553191 9.36170213 102.978723 6.80851064 108.510638 5.10638298 104.680851"],"gluteal":["44.6808511 99.5744681 30.212766 108.510638 29.787234 118.723404 31.4893617 125.957447 47.2340426 121.276596 49.3617021 114.893617","55.3191489 99.1489362 51.0638298 114.468085 52.3404255 120.851064 68.0851064 125.957447 69.787234 119.148936 69.3617021 108.510638"],"adductor":["48.0851064 122.978723 44.6808511 122.978723 41.2765957 125.531915 45.106383 144.255319 48.5106383 135.744681 48.9361702 129.361702","51.9148936 122.553191 55.7446809 123.404255 59.1489362 125.957447 54.893617 144.255319 51.9148936 136.170213 51.0638298 129.361702"],"hamstring":["28.9361702 122.12766 31.0638298 129.361702 36.5957447 125.957447 35.3191489 135.319149 34.4680851 150.212766 29.3617021 158.297872 28.9361702 146.808511 27.6595745 141.276596 27.2340426 131.489362","71.4893617 121.702128 69.3617021 128.93617 63.8297872 125.957447 65.5319149 136.595745 66.3829787 150.212766 71.0638298 158.297872 71.4893617 147.659574 72.7659574 142.12766 73.6170213 131.914894","38.7234043 125.531915 44.2553191 145.957447 40.4255319 166.808511 36.1702128 152.765957 37.0212766 135.319149","61.7021277 125.531915 63.4042553 136.170213 64.2553191 153.191489 60 166.808511 56.1702128 146.382979"],"knees":["34.4680851 153.191489 31.0638298 159.148936 33.6170213 166.382979 37.4468085 162.553191","66.3829787 153.617021 62.9787234 162.978723 66.8085106 166.382979 69.3617021 159.148936"],"calves":["29.3617021 160.425532 28.5106383 167.234043 24.6808511 179.574468 23.8297872 192.765957 25.5319149 197.021277 28.5106383 193.191489 29.787234 180 31.9148936 171.06383 31.9148936 166.808511","37.4468085 165.106383 35.3191489 167.659574 33.1914894 171.914894 31.0638298 180.425532 30.212766 191.914894 34.0425532 200 38.7234043 190.638298 39.1489362 168.93617","62.9787234 165.106383 61.2765957 168.510638 61.7021277 190.638298 66.3829787 199.574468 70.6382979 191.914894 68.9361702 179.574468 66.8085106 170.212766","70.6382979 160.425532 72.3404255 168.510638 75.7446809 179.148936 76.5957447 192.765957 74.4680851 196.595745 72.3404255 193.617021 70.6382979 179.574468 68.0851064 168.085106"],"left-soleus":["28.5106383 195.744681 30.212766 195.744681 33.6170213 201.702128 30.6382979 220 28.5106383 213.617021 26.8085106 198.297872"],"right-soleus":["69.787234 195.744681 71.9148936 195.744681 73.6170213 198.297872 71.9148936 213.191489 70.212766 219.574468 67.2340426 202.12766"]};
-const EX_MUS={"Bodyweight Squat":["quadriceps","gluteal","adductor"],"Goblet Squat":["quadriceps","gluteal","abs","adductor"],"Reverse Lunge":["quadriceps","gluteal","hamstring"],"Bulgarian Split Squat":["quadriceps","gluteal","hamstring"],"Step-Up":["quadriceps","gluteal"],"Calf Raise":["calves"],"Glute Bridge":["gluteal","hamstring"],"Single-Leg Glute Bridge":["gluteal","hamstring","abs"],"Romanian Deadlift":["hamstring","gluteal","lower-back"],"Kettlebell Swing":["gluteal","hamstring","lower-back","front-deltoids"],"Push-Up":["chest","triceps","front-deltoids"],"Dumbbell Chest Press":["chest","triceps","front-deltoids"],"Bench Press":["chest","triceps","front-deltoids"],"Incline Dumbbell Press":["chest","front-deltoids","triceps"],"Chest Fly":["chest"],"Dip":["chest","triceps"],"Lat Pulldown":["upper-back","lower-back","biceps"],"Seated Cable Row":["upper-back","lower-back","biceps","trapezius"],"One-Arm Dumbbell Row":["upper-back","lower-back","biceps"],"Resistance Band Row":["upper-back","biceps","trapezius"],"Assisted Pull-Up":["upper-back","lower-back","biceps","back-deltoids"],"Pull-Up":["upper-back","lower-back","biceps","back-deltoids","trapezius"],"Dumbbell Shoulder Press":["front-deltoids","triceps","trapezius"],"Lateral Raise":["front-deltoids","back-deltoids"],"Band Pull-Apart":["back-deltoids","upper-back","trapezius"],"Face Pull":["back-deltoids","upper-back","trapezius"],"Pike Push-Up":["front-deltoids","triceps","trapezius"],"Dumbbell Bicep Curl":["biceps","forearm"],"Hammer Curl":["biceps","forearm"],"Overhead Tricep Extension":["triceps"],"Tricep Dip (Bench)":["triceps"],"Cable Rope Pushdown":["triceps"],"Plank":["abs","obliques"],"Side Plank":["obliques","abs"],"Dead Bug":["abs"],"Hanging Knee Raise":["abs"],"Hanging Leg Raise":["abs"],"Russian Twist":["obliques","abs"],"Bike Intervals":["quadriceps","calves","hamstring"],"Treadmill Incline Walk":["quadriceps","gluteal","calves"],"Jump Rope":["calves","quadriceps"],"Boxing / Bag Work":["front-deltoids","obliques","abs"],"Kettlebell Circuit":["gluteal","quadriceps","upper-back","front-deltoids"],"Barbell Back Squat":["quadriceps","gluteal","adductor","abs","lower-back"],"Barbell Front Squat":["quadriceps","gluteal","abs","upper-back"],"Barbell Deadlift":["hamstring","gluteal","lower-back","upper-back","trapezius","forearm"],"Barbell Romanian Deadlift":["hamstring","gluteal","lower-back"],"Barbell Overhead Press":["front-deltoids","triceps","trapezius","abs"],"Barbell Bent-Over Row":["upper-back","lower-back","biceps","trapezius"],"Barbell Hip Thrust":["gluteal","hamstring"],"Close-Grip Bench Press":["triceps","chest","front-deltoids"],"Ab Wheel Rollout":["abs","obliques","upper-back","lower-back"],"Leg Extension":["quadriceps"],"Leg Curl":["hamstring"],"Barbell Lunge":["quadriceps","gluteal","hamstring","abs"],"Walking Lunge":["quadriceps","gluteal","hamstring"],"Wall Sit":["quadriceps"],"Split Squat":["quadriceps","gluteal"],"Barbell Calf Raise":["calves"],"Cable Kickback":["gluteal"],"Good Morning":["hamstring","gluteal","lower-back"],"Cable Chest Fly":["chest"],"Decline Push-Up":["chest","front-deltoids","triceps"],"Barbell Floor Press":["chest","triceps"],"Chin-Up":["upper-back","lower-back","biceps"],"Straight-Arm Pulldown":["upper-back","lower-back"],"Barbell Shrug":["trapezius"],"Dumbbell High Pull":["trapezius","back-deltoids","upper-back"],"Inverted Row":["upper-back","biceps","trapezius"],"Arnold Press":["front-deltoids","back-deltoids","triceps"],"Dumbbell Front Raise":["front-deltoids"],"Dumbbell Rear Delt Fly":["back-deltoids","upper-back"],"Upright Row":["front-deltoids","trapezius","biceps"],"Barbell Curl":["biceps","forearm"],"Incline Dumbbell Curl":["biceps"],"Concentration Curl":["biceps"],"Skull Crusher":["triceps"],"Cable Bicep Curl":["biceps"],"Tricep Kickback":["triceps"],"Wrist Curl":["forearm"],"Sit-Up":["abs"],"Crunch":["abs"],"Bicycle Crunch":["abs","obliques"],"Cable Woodchop":["obliques","abs"],"Mountain Climbers":["abs","front-deltoids","quadriceps"],"Farmer's Carry":["forearm","trapezius","abs","obliques"],"Suitcase Carry":["obliques","abs","forearm","trapezius"],"Hollow Hold":["abs"],"Burpees":["quadriceps","chest","front-deltoids","abs"],"Jumping Jacks":["calves","front-deltoids"],"Kettlebell Goblet Carry":["abs","quadriceps","forearm"],"Treadmill Intervals":["quadriceps","calves","hamstring"],"Smith Machine Squat":["quadriceps","gluteal","adductor","abs"],"Smith Machine Bench Press":["chest","triceps","front-deltoids"],"Smith Machine Overhead Press":["front-deltoids","triceps","trapezius"],"Smith Machine Bent-Over Row":["upper-back","lower-back","biceps","trapezius"],"Smith Machine Incline Press":["chest","front-deltoids","triceps"],"Cable Pull-Through":["gluteal","hamstring","lower-back"],"Nordic Curl":["hamstring","gluteal"],"Cable Crossover":["chest"],"Low Cable Fly":["chest"],"Single-Arm Cable Row":["upper-back","lower-back","biceps"],"Wide-Grip Lat Pulldown":["upper-back","lower-back","biceps"],"Close-Grip Pulldown":["upper-back","lower-back","biceps"],"Cable Lateral Raise":["front-deltoids","back-deltoids"],"Cable Front Raise":["front-deltoids"],"Cable Rear Delt Fly":["back-deltoids","upper-back"],"Cable Upright Row":["front-deltoids","trapezius"],"Cable Overhead Tricep Extension":["triceps"],"Cable Rope Hammer Curl":["biceps","forearm"],"Cable Crunch":["abs"],"Cable Pallof Press":["obliques","abs"],"Cable Romanian Deadlift":["hamstring","gluteal","lower-back"],"Band Tricep Pushdown":["triceps"]};
+const EX_MUS={"Bodyweight Squat":["quadriceps","gluteal","adductor"],"Goblet Squat":["quadriceps","gluteal","abs","adductor"],"Reverse Lunge":["quadriceps","gluteal","hamstring"],"Bulgarian Split Squat":["quadriceps","gluteal","hamstring"],"Step-Up":["quadriceps","gluteal"],"Calf Raise":["calves"],"Glute Bridge":["gluteal","hamstring"],"Single-Leg Glute Bridge":["gluteal","hamstring","abs"],"Romanian Deadlift":["hamstring","gluteal","lower-back"],"Kettlebell Swing":["gluteal","hamstring","lower-back","front-deltoids"],"Push-Up":["chest","triceps","front-deltoids"],"Dumbbell Chest Press":["chest","triceps","front-deltoids"],"Bench Press":["chest","triceps","front-deltoids"],"Chest Fly":["chest"],"Dip":["chest","triceps"],"Lat Pulldown":["upper-back","lower-back","biceps"],"Seated Cable Row":["upper-back","lower-back","biceps","trapezius"],"One-Arm Dumbbell Row":["upper-back","lower-back","biceps"],"Resistance Band Row":["upper-back","biceps","trapezius"],"Assisted Pull-Up":["upper-back","lower-back","biceps","back-deltoids"],"Pull-Up":["upper-back","lower-back","biceps","back-deltoids","trapezius"],"Dumbbell Shoulder Press":["front-deltoids","triceps","trapezius"],"Lateral Raise":["front-deltoids","back-deltoids"],"Band Pull-Apart":["back-deltoids","upper-back","trapezius"],"Face Pull":["back-deltoids","upper-back","trapezius"],"Pike Push-Up":["front-deltoids","triceps","trapezius"],"Hammer Curl":["biceps","forearm"],"Overhead Tricep Extension":["triceps"],"Tricep Dip (Bench)":["triceps"],"Cable Rope Pushdown":["triceps"],"Plank":["abs","obliques"],"Side Plank":["obliques","abs"],"Dead Bug":["abs"],"Hanging Knee Raise":["abs"],"Hanging Leg Raise":["abs"],"Russian Twist":["obliques","abs"],"Bike Intervals":["quadriceps","calves","hamstring"],"Treadmill Incline Walk":["quadriceps","gluteal","calves"],"Jump Rope":["calves","quadriceps"],"Boxing / Bag Work":["front-deltoids","obliques","abs"],"Kettlebell Circuit":["gluteal","quadriceps","upper-back","front-deltoids"],"Barbell Back Squat":["quadriceps","gluteal","adductor","abs","lower-back"],"Barbell Front Squat":["quadriceps","gluteal","abs","upper-back"],"Barbell Deadlift":["hamstring","gluteal","lower-back","upper-back","trapezius","forearm"],"Barbell Hip Thrust":["gluteal","hamstring"],"Close-Grip Bench Press":["triceps","chest","front-deltoids"],"Ab Wheel Rollout":["abs","obliques","upper-back","lower-back"],"Leg Extension":["quadriceps"],"Leg Curl":["hamstring"],"Barbell Lunge":["quadriceps","gluteal","hamstring","abs"],"Walking Lunge":["quadriceps","gluteal","hamstring"],"Wall Sit":["quadriceps"],"Split Squat":["quadriceps","gluteal"],"Cable Kickback":["gluteal"],"Good Morning":["hamstring","gluteal","lower-back"],"Decline Push-Up":["chest","front-deltoids","triceps"],"Barbell Floor Press":["chest","triceps"],"Chin-Up":["upper-back","lower-back","biceps"],"Straight-Arm Pulldown":["upper-back","lower-back"],"Barbell Shrug":["trapezius"],"Dumbbell High Pull":["trapezius","back-deltoids","upper-back"],"Inverted Row":["upper-back","biceps","trapezius"],"Arnold Press":["front-deltoids","back-deltoids","triceps"],"Upright Row":["front-deltoids","trapezius","biceps"],"Barbell Curl":["biceps","forearm"],"Incline Dumbbell Curl":["biceps"],"Concentration Curl":["biceps"],"Skull Crusher":["triceps"],"Tricep Kickback":["triceps"],"Wrist Curl":["forearm"],"Sit-Up":["abs"],"Crunch":["abs"],"Bicycle Crunch":["abs","obliques"],"Cable Woodchop":["obliques","abs"],"Mountain Climbers":["abs","front-deltoids","quadriceps"],"Farmer's Carry":["forearm","trapezius","abs","obliques"],"Suitcase Carry":["obliques","abs","forearm","trapezius"],"Hollow Hold":["abs"],"Burpees":["quadriceps","chest","front-deltoids","abs"],"Jumping Jacks":["calves","front-deltoids"],"Kettlebell Goblet Carry":["abs","quadriceps","forearm"],"Treadmill Intervals":["quadriceps","calves","hamstring"],"Smith Machine Squat":["quadriceps","gluteal","adductor","abs"],"Cable Pull-Through":["gluteal","hamstring","lower-back"],"Nordic Curl":["hamstring","gluteal"],"Cable Crossover":["chest"],"Low Cable Fly":["chest"],"Single-Arm Cable Row":["upper-back","lower-back","biceps"],"Wide-Grip Lat Pulldown":["upper-back","lower-back","biceps"],"Close-Grip Pulldown":["upper-back","lower-back","biceps"],"Cable Pallof Press":["obliques","abs"],"Band Tricep Pushdown":["triceps"],"Bent-Over Row":["upper-back","lower-back","biceps","trapezius"],"Bicep Curl":["biceps","forearm"],"Front Raise":["front-deltoids"],"Incline Press":["chest","front-deltoids","triceps"],"Overhead Press":["front-deltoids","triceps","trapezius","abs"],"Rear Delt Fly":["back-deltoids","upper-back"]};
 
 /* Render a muscle map (front+back) highlighting the muscles worked.
    muscles: array of slugs. Returns HTML string. compact=smaller for cards. */
@@ -1333,7 +1270,7 @@ function musclesForDay(di){
 
 /* ---- EQUIPMENT BROWSER ---- */
 const EQUIP=[["floor","Floor / Bodyweight","No equipment \u2014 just you and the mat"],["dumbbells","Adjustable Dumbbells","Your main free weights"],["barbell","Barbell + Plates","The bar and your weight plates"],["squatrack","Munitio Rack & Smith","Smith machine, half rack, safety arms"],["benchpress","Bench Press","Dedicated bench press station"],["bench","Adjustable Bench","Flat / incline bench"],["kettlebell","Kettlebells","Swings, carries, circuits"],["bands","Resistance Bands","Portable, joint-friendly"],["stack","Munitio Cable Stack","Dual pulleys, high & low cables"],["tower","Marcy Power Tower","Pull-up bar, dips, VKR, push-up handles"],["abwheel","Ab Wheel","Rollouts"],["bag","Punching Bag","Boxing / conditioning"],["rope","Jump Rope","Cardio + coordination"],["bike","Training Bike","Low-impact cardio"],["treadmill","Treadmill","Walking / incline / intervals"]];
-const EX_EQ={"Bodyweight Squat":["floor"],"Goblet Squat":["dumbbells","kettlebell"],"Reverse Lunge":["dumbbells","floor"],"Bulgarian Split Squat":["bench","dumbbells"],"Step-Up":["bench","dumbbells"],"Calf Raise":["dumbbells","floor"],"Glute Bridge":["dumbbells","floor"],"Single-Leg Glute Bridge":["floor"],"Romanian Deadlift":["dumbbells"],"Kettlebell Swing":["kettlebell"],"Push-Up":["floor","tower"],"Dumbbell Chest Press":["bench","dumbbells"],"Bench Press":["benchpress"],"Incline Dumbbell Press":["bench","dumbbells"],"Chest Fly":["bench","dumbbells"],"Dip":["tower"],"Lat Pulldown":["stack"],"Seated Cable Row":["stack"],"One-Arm Dumbbell Row":["bench","dumbbells"],"Resistance Band Row":["bands"],"Assisted Pull-Up":["bands","tower"],"Pull-Up":["tower"],"Dumbbell Shoulder Press":["bench","dumbbells"],"Lateral Raise":["dumbbells"],"Band Pull-Apart":["bands"],"Face Pull":["bands","stack"],"Pike Push-Up":["floor"],"Dumbbell Bicep Curl":["dumbbells"],"Hammer Curl":["dumbbells"],"Overhead Tricep Extension":["dumbbells"],"Tricep Dip (Bench)":["bench"],"Cable Rope Pushdown":["bands","stack"],"Plank":["floor"],"Side Plank":["floor"],"Dead Bug":["floor"],"Hanging Knee Raise":["tower"],"Hanging Leg Raise":["tower"],"Russian Twist":["dumbbells","floor"],"Bike Intervals":["bike"],"Treadmill Incline Walk":["treadmill"],"Jump Rope":["rope"],"Boxing / Bag Work":["bag"],"Kettlebell Circuit":["kettlebell"],"Barbell Back Squat":["barbell","squatrack"],"Barbell Front Squat":["barbell","squatrack"],"Barbell Deadlift":["barbell"],"Barbell Romanian Deadlift":["barbell"],"Barbell Overhead Press":["barbell","squatrack"],"Barbell Bent-Over Row":["barbell"],"Barbell Hip Thrust":["barbell","bench"],"Close-Grip Bench Press":["barbell","benchpress"],"Ab Wheel Rollout":["abwheel"],"Leg Extension":["stack"],"Leg Curl":["stack"],"Barbell Lunge":["barbell","squatrack"],"Walking Lunge":["dumbbells","floor"],"Wall Sit":["floor"],"Split Squat":["dumbbells","floor"],"Barbell Calf Raise":["barbell","squatrack"],"Cable Kickback":["stack"],"Good Morning":["barbell","squatrack"],"Cable Chest Fly":["stack"],"Decline Push-Up":["bench","floor"],"Barbell Floor Press":["barbell"],"Chin-Up":["tower"],"Straight-Arm Pulldown":["stack"],"Barbell Shrug":["barbell"],"Dumbbell High Pull":["dumbbells","kettlebell"],"Inverted Row":["barbell","squatrack"],"Arnold Press":["dumbbells"],"Dumbbell Front Raise":["dumbbells"],"Dumbbell Rear Delt Fly":["bench","dumbbells"],"Upright Row":["barbell","dumbbells"],"Barbell Curl":["barbell"],"Incline Dumbbell Curl":["bench","dumbbells"],"Concentration Curl":["bench","dumbbells"],"Skull Crusher":["barbell","bench","dumbbells"],"Cable Bicep Curl":["stack"],"Tricep Kickback":["bench","dumbbells"],"Wrist Curl":["barbell","bench","dumbbells"],"Sit-Up":["floor"],"Crunch":["floor"],"Bicycle Crunch":["floor"],"Cable Woodchop":["stack"],"Mountain Climbers":["floor"],"Farmer's Carry":["dumbbells","kettlebell"],"Suitcase Carry":["dumbbells","kettlebell"],"Hollow Hold":["floor"],"Burpees":["floor"],"Jumping Jacks":["floor"],"Kettlebell Goblet Carry":["kettlebell"],"Treadmill Intervals":["treadmill"],"Smith Machine Squat":["squatrack"],"Smith Machine Bench Press":["squatrack"],"Smith Machine Overhead Press":["squatrack"],"Smith Machine Bent-Over Row":["squatrack"],"Smith Machine Incline Press":["squatrack"],"Cable Pull-Through":["stack"],"Nordic Curl":["bench"],"Cable Crossover":["stack"],"Low Cable Fly":["stack"],"Single-Arm Cable Row":["stack"],"Wide-Grip Lat Pulldown":["stack"],"Close-Grip Pulldown":["stack"],"Cable Lateral Raise":["stack"],"Cable Front Raise":["stack"],"Cable Rear Delt Fly":["stack"],"Cable Upright Row":["stack"],"Cable Overhead Tricep Extension":["stack"],"Cable Rope Pushdown":["stack"],"Cable Rope Hammer Curl":["stack"],"Cable Crunch":["stack"],"Cable Pallof Press":["stack"],"Cable Romanian Deadlift":["stack"]};
+const EX_EQ={"Bodyweight Squat":["floor"],"Goblet Squat":["dumbbells","kettlebell"],"Reverse Lunge":["floor","dumbbells","squatrack"],"Bulgarian Split Squat":["dumbbells","bench","squatrack"],"Step-Up":["floor","dumbbells","bench"],"Calf Raise":["floor","dumbbells","barbell","squatrack"],"Barbell Back Squat":["barbell","squatrack"],"Barbell Front Squat":["barbell","squatrack"],"Barbell Lunge":["barbell","squatrack"],"Walking Lunge":["floor","dumbbells"],"Wall Sit":["floor"],"Split Squat":["floor","dumbbells"],"Leg Extension":[],"Leg Curl":[],"Smith Machine Squat":["squatrack"],"Glute Bridge":["floor","dumbbells"],"Single-Leg Glute Bridge":["floor"],"Romanian Deadlift":["dumbbells","barbell","squatrack","stack"],"Kettlebell Swing":["kettlebell"],"Barbell Deadlift":["barbell"],"Barbell Hip Thrust":["barbell","bench","squatrack"],"Cable Kickback":["stack"],"Good Morning":["barbell","squatrack"],"Cable Pull-Through":["stack"],"Nordic Curl":["bench","floor"],"Push-Up":["floor"],"Dumbbell Chest Press":["dumbbells","bench"],"Bench Press":["barbell","benchpress","squatrack","bench"],"Chest Fly":["dumbbells","bench","stack"],"Dip":["tower"],"Decline Push-Up":["floor","bench"],"Barbell Floor Press":["barbell"],"Cable Crossover":["stack"],"Low Cable Fly":["stack"],"Lat Pulldown":["stack"],"Seated Cable Row":["stack"],"One-Arm Dumbbell Row":["dumbbells","bench"],"Resistance Band Row":["bands"],"Assisted Pull-Up":["tower","bands"],"Pull-Up":["tower","squatrack"],"Chin-Up":["tower","squatrack"],"Straight-Arm Pulldown":["stack"],"Barbell Shrug":["barbell","squatrack"],"Dumbbell High Pull":["dumbbells","kettlebell"],"Inverted Row":["squatrack"],"Single-Arm Cable Row":["stack"],"Wide-Grip Lat Pulldown":["stack"],"Close-Grip Pulldown":["stack"],"Dumbbell Shoulder Press":["dumbbells","bench"],"Lateral Raise":["dumbbells","stack"],"Band Pull-Apart":["bands"],"Face Pull":["stack","bands"],"Pike Push-Up":["floor"],"Arnold Press":["dumbbells","bench"],"Upright Row":["dumbbells","barbell","stack"],"Hammer Curl":["dumbbells","stack"],"Overhead Tricep Extension":["dumbbells","stack"],"Tricep Dip (Bench)":["bench","tower"],"Band Tricep Pushdown":["bands"],"Close-Grip Bench Press":["barbell","benchpress","squatrack","bench"],"Barbell Curl":["barbell","stack"],"Incline Dumbbell Curl":["dumbbells","bench"],"Concentration Curl":["dumbbells","bench","stack"],"Skull Crusher":["dumbbells","barbell","bench"],"Tricep Kickback":["dumbbells","stack","bench"],"Wrist Curl":["dumbbells","barbell","bench"],"Cable Rope Pushdown":["stack"],"Plank":["floor"],"Side Plank":["floor"],"Dead Bug":["floor"],"Hanging Knee Raise":["tower","squatrack"],"Hanging Leg Raise":["tower","squatrack"],"Russian Twist":["floor","dumbbells","stack"],"Ab Wheel Rollout":["abwheel"],"Sit-Up":["floor"],"Crunch":["floor","stack"],"Bicycle Crunch":["floor"],"Cable Woodchop":["stack"],"Mountain Climbers":["floor"],"Farmer's Carry":["dumbbells","kettlebell"],"Suitcase Carry":["dumbbells","kettlebell"],"Hollow Hold":["floor"],"Cable Pallof Press":["stack"],"Bike Intervals":["bike"],"Treadmill Incline Walk":["treadmill"],"Jump Rope":["rope"],"Boxing / Bag Work":["bag"],"Kettlebell Circuit":["kettlebell"],"Burpees":["floor"],"Jumping Jacks":["floor"],"Kettlebell Goblet Carry":["kettlebell"],"Treadmill Intervals":["treadmill"],"Bent-Over Row":["barbell","squatrack"],"Bicep Curl":["dumbbells","stack"],"Front Raise":["dumbbells","stack"],"Incline Press":["dumbbells","bench","squatrack"],"Overhead Press":["barbell","squatrack"],"Rear Delt Fly":["dumbbells","bench","stack"]};
 let curEquip=null;   // null = normal library view
 
 function equipIcon(id){
@@ -1359,7 +1296,7 @@ function openEquip(id){curEquip=id;renderLib();window.scrollTo({top:0,behavior:"
 function closeEquip(){curEquip=null;renderLib();window.scrollTo({top:0,behavior:"smooth"});}
 
 
-const EX_PAT={"Bodyweight Squat":"legs","Goblet Squat":"legs","Reverse Lunge":"legs","Bulgarian Split Squat":"legs","Step-Up":"legs","Calf Raise":"legs","Glute Bridge":"legs","Single-Leg Glute Bridge":"legs","Romanian Deadlift":"legs","Kettlebell Swing":"legs","Push-Up":"push","Dumbbell Chest Press":"push","Bench Press":"push","Incline Dumbbell Press":"push","Chest Fly":"push","Dip":"push","Lat Pulldown":"pull","Seated Cable Row":"pull","One-Arm Dumbbell Row":"pull","Resistance Band Row":"pull","Assisted Pull-Up":"pull","Pull-Up":"pull","Dumbbell Shoulder Press":"push","Lateral Raise":"push","Band Pull-Apart":"push","Face Pull":"pull","Pike Push-Up":"push","Dumbbell Bicep Curl":"pull","Hammer Curl":"pull","Overhead Tricep Extension":"push","Tricep Dip (Bench)":"push","Band Tricep Pushdown":"push","Plank":"core","Side Plank":"core","Dead Bug":"core","Hanging Knee Raise":"core","Hanging Leg Raise":"core","Russian Twist":"core","Bike Intervals":"cardio","Treadmill Incline Walk":"cardio","Jump Rope":"cardio","Boxing / Bag Work":"cardio","Kettlebell Circuit":"cardio","Barbell Back Squat":"legs","Barbell Front Squat":"legs","Barbell Deadlift":"legs","Barbell Romanian Deadlift":"legs","Barbell Overhead Press":"push","Barbell Bent-Over Row":"pull","Barbell Hip Thrust":"legs","Close-Grip Bench Press":"push","Ab Wheel Rollout":"core","Leg Extension":"legs","Leg Curl":"legs","Barbell Lunge":"legs","Walking Lunge":"legs","Wall Sit":"legs","Split Squat":"legs","Barbell Calf Raise":"legs","Cable Kickback":"legs","Good Morning":"legs","Cable Chest Fly":"push","Decline Push-Up":"push","Barbell Floor Press":"push","Chin-Up":"pull","Straight-Arm Pulldown":"pull","Barbell Shrug":"pull","Dumbbell High Pull":"pull","Inverted Row":"pull","Arnold Press":"push","Dumbbell Front Raise":"push","Dumbbell Rear Delt Fly":"pull","Upright Row":"pull","Barbell Curl":"pull","Incline Dumbbell Curl":"pull","Concentration Curl":"pull","Skull Crusher":"push","Cable Bicep Curl":"pull","Tricep Kickback":"push","Wrist Curl":"pull","Sit-Up":"core","Crunch":"core","Bicycle Crunch":"core","Cable Woodchop":"core","Mountain Climbers":"core","Farmer's Carry":"core","Suitcase Carry":"core","Hollow Hold":"core","Burpees":"cardio","Jumping Jacks":"cardio","Kettlebell Goblet Carry":"cardio","Treadmill Intervals":"cardio","Smith Machine Squat":"legs","Smith Machine Bench Press":"push","Smith Machine Overhead Press":"push","Smith Machine Bent-Over Row":"pull","Smith Machine Incline Press":"push","Cable Pull-Through":"legs","Nordic Curl":"legs","Cable Crossover":"push","Low Cable Fly":"push","Single-Arm Cable Row":"pull","Wide-Grip Lat Pulldown":"pull","Close-Grip Pulldown":"pull","Cable Lateral Raise":"push","Cable Front Raise":"push","Cable Rear Delt Fly":"pull","Cable Upright Row":"pull","Cable Overhead Tricep Extension":"push","Cable Rope Pushdown":"push","Cable Rope Hammer Curl":"pull","Cable Crunch":"core","Cable Pallof Press":"core","Cable Romanian Deadlift":"legs"};
+const EX_PAT={"Bodyweight Squat":"legs","Goblet Squat":"legs","Reverse Lunge":"legs","Bulgarian Split Squat":"legs","Step-Up":"legs","Calf Raise":"legs","Glute Bridge":"legs","Single-Leg Glute Bridge":"legs","Romanian Deadlift":"legs","Kettlebell Swing":"legs","Push-Up":"push","Dumbbell Chest Press":"push","Bench Press":"push","Chest Fly":"push","Dip":"push","Lat Pulldown":"pull","Seated Cable Row":"pull","One-Arm Dumbbell Row":"pull","Resistance Band Row":"pull","Assisted Pull-Up":"pull","Pull-Up":"pull","Dumbbell Shoulder Press":"push","Lateral Raise":"push","Band Pull-Apart":"push","Face Pull":"pull","Pike Push-Up":"push","Hammer Curl":"pull","Overhead Tricep Extension":"push","Tricep Dip (Bench)":"push","Band Tricep Pushdown":"push","Plank":"core","Side Plank":"core","Dead Bug":"core","Hanging Knee Raise":"core","Hanging Leg Raise":"core","Russian Twist":"core","Bike Intervals":"cardio","Treadmill Incline Walk":"cardio","Jump Rope":"cardio","Boxing / Bag Work":"cardio","Kettlebell Circuit":"cardio","Barbell Back Squat":"legs","Barbell Front Squat":"legs","Barbell Deadlift":"legs","Barbell Hip Thrust":"legs","Close-Grip Bench Press":"push","Ab Wheel Rollout":"core","Leg Extension":"legs","Leg Curl":"legs","Barbell Lunge":"legs","Walking Lunge":"legs","Wall Sit":"legs","Split Squat":"legs","Cable Kickback":"legs","Good Morning":"legs","Decline Push-Up":"push","Barbell Floor Press":"push","Chin-Up":"pull","Straight-Arm Pulldown":"pull","Barbell Shrug":"pull","Dumbbell High Pull":"pull","Inverted Row":"pull","Arnold Press":"push","Upright Row":"pull","Barbell Curl":"pull","Incline Dumbbell Curl":"pull","Concentration Curl":"pull","Skull Crusher":"push","Tricep Kickback":"push","Wrist Curl":"pull","Sit-Up":"core","Crunch":"core","Bicycle Crunch":"core","Cable Woodchop":"core","Mountain Climbers":"core","Farmer's Carry":"core","Suitcase Carry":"core","Hollow Hold":"core","Burpees":"cardio","Jumping Jacks":"cardio","Kettlebell Goblet Carry":"cardio","Treadmill Intervals":"cardio","Smith Machine Squat":"legs","Cable Pull-Through":"legs","Nordic Curl":"legs","Cable Crossover":"push","Low Cable Fly":"push","Single-Arm Cable Row":"pull","Wide-Grip Lat Pulldown":"pull","Close-Grip Pulldown":"pull","Cable Rope Pushdown":"push","Cable Pallof Press":"core","Bent-Over Row":"pull","Bicep Curl":"pull","Front Raise":"push","Incline Press":"push","Overhead Press":"push","Rear Delt Fly":"pull"};
 function exByName(n){return LIB.find(e=>e.n===n);}
 
 /* ---------------- MUSCLEWIKI VIDEO INTEGRATION ----------------
@@ -1582,12 +1519,34 @@ function libCardHTML(e){
         <ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
         <div class="tip"><b>Tip:</b> ${e.tip}</div>
         <span class="equiptag">🏋 ${e.eq}</span>
-        <a class="demo" style="margin-top:8px" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' exercise how to form')}" target="_blank" rel="noopener">▶ Watch form demo${mwKey?' (or use inline demo above)':''}</a>
+        ${demoLinks(e)}
         ${logBlock(e)}
       </div></div>
     </div>`;
 }
 function enc(s){return s.replace(/'/g,"\\'");}
+// Video demo links — one per equipment the exercise works on
+const EQ_VIDEO={floor:"bodyweight",dumbbells:"dumbbell",barbell:"barbell",squatrack:"smith machine",
+ benchpress:"barbell",bench:"dumbbell",kettlebell:"kettlebell",bands:"resistance band",
+ stack:"cable",tower:"",abwheel:"",bag:"",rope:"",bike:"",treadmill:""};
+const EQ_SHORT={floor:"Bodyweight",dumbbells:"Dumbbell",barbell:"Barbell",squatrack:"Smith/Rack",
+ benchpress:"Barbell",bench:"Bench",kettlebell:"Kettlebell",bands:"Band",
+ stack:"Cable",tower:"Bar",abwheel:"Ab wheel",bag:"Bag",rope:"Rope",bike:"Bike",treadmill:"Treadmill"};
+function ytLink(term){return `https://www.youtube.com/results?search_query=${encodeURIComponent(term)}`;}
+function demoLinks(e){
+  const tags=(EX_EQ[e.n]||[]);
+  // unique equipment "flavours" for video search
+  const seen=new Set(); const links=[];
+  tags.forEach(t=>{
+    const flav=EQ_VIDEO[t]; const label=EQ_SHORT[t]||"";
+    const key=flav||"generic";
+    if(seen.has(key))return; seen.add(key);
+    const term = flav ? `${e.n} ${flav} exercise form` : `${e.n} exercise form`;
+    links.push(`<a class="demo" href="${ytLink(term)}" target="_blank" rel="noopener">▶ ${label||"Demo"} video</a>`);
+  });
+  if(!links.length) links.push(`<a class="demo" href="${ytLink(e.n+' exercise form')}" target="_blank" rel="noopener">▶ Watch form demo</a>`);
+  return `<div class="demorow">${links.join("")}</div>`;
+}
 // Shared expandable detail body used by Library, Build and Planner cards.
 function exDetailBody(e,withMedia){
   const media = withMedia ? `<div class="mediaslot" id="media-${cssId(e.n)}"></div>` : "";
@@ -1598,7 +1557,7 @@ function exDetailBody(e,withMedia){
     <ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
     <div class="tip"><b>Tip:</b> ${e.tip}</div>
     <span class="equiptag">🏋 ${e.eq}</span>
-    <a class="demo" style="margin-top:8px" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' exercise how to form')}" target="_blank" rel="noopener">▶ Watch form demo</a>
+    ${demoLinks(e)}
     ${logBlock(e)}
   </div></div>`;
 }
@@ -2008,6 +1967,7 @@ const BUILD_PARTS=[
 const TIME_OPTS=[{min:20},{min:30},{min:45},{min:60}];
 let buildSel=[];         // chosen part ids (max 2)
 let buildTime=30;        // minutes
+let buildEquip=[];       // chosen equipment ids (empty = all)
 let session=[];          // generated: [{n, area}]
 
 function renderBuildControls(){
@@ -2020,7 +1980,20 @@ function renderBuildControls(){
   }).join("");
   document.getElementById("buildTimes").innerHTML=TIME_OPTS.map(t=>
     `<div class="tbtn ${t.min===buildTime?'on':''}" onclick="setBuildTime(${t.min})"><b>${t.min}</b><span>min</span></div>`).join("");
+  // equipment chips (All + each piece)
+  const eqEl=document.getElementById("buildEquip");
+  if(eqEl){
+    const all=`<button class="chip ${buildEquip.length===0?'on':''}" onclick="setBuildEquipAll()">All my gear</button>`;
+    eqEl.innerHTML=all+EQUIP.map(([id,name])=>
+      `<button class="chip ${buildEquip.includes(id)?'on':''}" onclick="toggleBuildEquip('${id}')">${name}</button>`).join("");
+  }
 }
+function toggleBuildEquip(id){
+  const i=buildEquip.indexOf(id);
+  if(i>=0)buildEquip.splice(i,1); else buildEquip.push(id);
+  renderBuildControls();
+}
+function setBuildEquipAll(){buildEquip=[];renderBuildControls();}
 function toggleBuildPart(id){
   const i=buildSel.indexOf(id);
   if(i>=0)buildSel.splice(i,1);
@@ -2033,6 +2006,10 @@ function setBuildTime(m){buildTime=m;renderBuildControls();}
 // compounds before isolation, avoiding duplicates
 function pickForArea(area,n,exclude){
   let pool=LIB.filter(e=>e.grp===area && !exclude.includes(e.n));
+  // restrict to chosen equipment if any selected
+  if(buildEquip.length){
+    pool=pool.filter(e=>(EX_EQ[e.n]||[]).some(t=>buildEquip.includes(t)));
+  }
   // order: beginner compounds, beginner iso, intermediate, advanced
   const rank=e=>(e.lvl==="beg"?0:e.lvl==="int"?1:2)*10 + (e.compound?0:3);
   pool.sort((a,b)=>rank(a)-rank(b));
@@ -2533,7 +2510,7 @@ function renderTrain(){
       <div class="trsug">${suggestFor(e)}</div>
       <div class="trmus">${e.m}</div>
       ${logBlock(e,"-tr")}
-      <a class="demo" style="margin-top:10px" href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.n+' exercise how to form')}" target="_blank" rel="noopener">▶ Watch form demo</a>
+      ${demoLinks(e)}
     </div>
     <div class="trnav">
       <button class="btn ghost" onclick="trainPrev()" ${train.idx===0?'disabled':''}>‹ Prev</button>
@@ -2953,7 +2930,7 @@ const TITLES={plan:["Plan","Build a session or review history"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v18"]};
+ data:["Save & Settings","Backup your data · v21"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
