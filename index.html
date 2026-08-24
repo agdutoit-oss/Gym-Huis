@@ -2009,6 +2009,17 @@ let session=[];          // generated: [{n, area}]
 
 function partById(id){return BUILD_PARTS.find(p=>p.id===id)||{};}
 
+// Equipment match: an exercise qualifies if it shares a selected tag —
+// but "floor" (bodyweight) only counts when the user explicitly selected it,
+// so picking e.g. dumbbells doesn't pull in bodyweight-capable moves.
+function eqMatches(e, selected){
+  const tags=EX_EQ[e.n]||[];
+  return tags.some(t=>{
+    if(t==="floor") return selected.includes("floor");  // floor only matches if explicitly picked
+    return selected.includes(t);
+  });
+}
+
 function renderBuildControls(){
   document.getElementById("buildParts").innerHTML=BUILD_PARTS.map(p=>{
     const on=buildSel.includes(p.id);
@@ -2083,7 +2094,7 @@ function pickForArea(partId,n,exclude){
     return true;
   });
   if(buildEquip.length){
-    pool=pool.filter(e=>(EX_EQ[e.n]||[]).some(t=>buildEquip.includes(t)));
+    pool=pool.filter(e=>eqMatches(e,buildEquip));
   }
   const rank=e=>(e.lvl==="beg"?0:e.lvl==="int"?1:2)*10 + (e.compound?0:3);
   pool.sort((a,b)=>rank(a)-rank(b));
@@ -3011,7 +3022,7 @@ const TITLES={plan:["Plan","Build a session or review history"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v22"]};
+ data:["Save & Settings","Backup your data · v23"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
