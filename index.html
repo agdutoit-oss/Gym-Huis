@@ -423,7 +423,16 @@
   .bsec{margin-bottom:18px}
   .blab{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:9px}
   .bgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .bpart{padding:13px 10px;border-radius:12px;background:var(--card2);border:1.5px solid transparent;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s}
+  .bpart{padding:13px 10px;border-radius:12px;background:var(--card2);border:1.5px solid transparent;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s;position:relative}
+  .bpart.suggested{border-color:var(--good)}
+  .bpart.bad{opacity:.5}
+  .pairtag{position:absolute;top:-7px;right:6px;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;background:var(--good);color:#04110a;padding:2px 6px;border-radius:7px}
+  .bguide{border-radius:11px;padding:11px 13px;font-size:12.5px;line-height:1.5;margin:10px 0 4px}
+  .bguide.tip{background:var(--card2);color:var(--dim)}
+  .bguide.good{background:rgba(62,192,122,.1);border:1px solid rgba(62,192,122,.35);color:#bfe6cf}
+  .bguide.good b{color:var(--good)}
+  .bguide.warn{background:rgba(255,184,77,.1);border:1px solid rgba(255,184,77,.4);color:#e8ddc8}
+  .bguide.warn b{color:var(--amber)}
   .bpart.on{border-color:var(--accent);background:rgba(232,80,46,.12)}
   .bpart.dis{opacity:.4;pointer-events:none}
   .bpart svg{width:22px;height:22px;fill:var(--accent2);flex:0 0 auto}
@@ -511,8 +520,9 @@
     <!-- BUILD sub-panel -->
     <div id="planBuild">
       <div class="bsec">
-        <div class="blab">1 · Pick up to 2 areas to train</div>
+        <div class="blab">1 · Pick 1–3 muscles that work together</div>
         <div class="bgrid" id="buildParts"></div>
+        <div id="buildGuide"></div>
       </div>
       <div class="bsec">
         <div class="blab">2 · How long have you got?</div>
@@ -1958,35 +1968,94 @@ function clearMwKey(){
 
 /* ---------------- BUILD SESSION ---------------- */
 // selectable areas (muscle groups, cardio included)
+// Specific muscle targets. Each maps to a filter (grp + optional sub-muscle slug),
+// a movement pattern, and pairing science.
 const BUILD_PARTS=[
- {id:"legs",name:"Legs"},{id:"glutes",name:"Glutes/Ham"},{id:"chest",name:"Chest"},
- {id:"back",name:"Back"},{id:"shoulders",name:"Shoulders"},{id:"arms",name:"Arms"},
- {id:"core",name:"Core"},{id:"cardio",name:"Cardio"},
+ {id:"chest",     name:"Chest",      grp:"chest",     pat:"push"},
+ {id:"lats",      name:"Back/Lats",  grp:"back",      sub:"upper-back", pat:"pull"},
+ {id:"traps",     name:"Traps",      grp:"back",      sub:"trapezius",  pat:"pull"},
+ {id:"frontdelt", name:"Front/Side Delts", grp:"shoulders", sub:"front-deltoids", pat:"push"},
+ {id:"reardelt",  name:"Rear Delts", grp:"shoulders", sub:"back-deltoids",  pat:"pull"},
+ {id:"triceps",   name:"Triceps",    grp:"arms",      sub:"triceps",  pat:"push"},
+ {id:"biceps",    name:"Biceps",     grp:"arms",      sub:"biceps",   pat:"pull"},
+ {id:"quads",     name:"Quads",      grp:"legs",      sub:"quadriceps", pat:"legs"},
+ {id:"hamsglutes",name:"Hams/Glutes",grp:"glutes",   pat:"legs"},
+ {id:"calves",    name:"Calves",     grp:"legs",      sub:"calves",   pat:"legs"},
+ {id:"core",      name:"Core",       grp:"core",      pat:"core"},
+ {id:"cardio",    name:"Cardio",     grp:"cardio",    pat:"cardio"},
 ];
+// Good pairings (same movement pattern = synergy). key -> array of ids that pair well.
+const GOOD_PAIRS={
+ chest:["triceps","frontdelt"], frontdelt:["triceps","chest"], triceps:["chest","frontdelt"],
+ lats:["biceps","reardelt","traps"], biceps:["lats","reardelt","traps"], reardelt:["lats","biceps","traps"], traps:["lats","biceps","reardelt"],
+ quads:["hamsglutes","calves"], hamsglutes:["quads","calves"], calves:["quads","hamsglutes"],
+ core:["chest","lats","quads","hamsglutes"], cardio:[],
+};
+// Bad pairings: push muscle + pull muscle from different chains (splits synergy, recovery conflict).
+function isBadPair(a,b){
+  const pa=(BUILD_PARTS.find(p=>p.id===a)||{}).pat;
+  const pb=(BUILD_PARTS.find(p=>p.id===b)||{}).pat;
+  if(!pa||!pb)return false;
+  // push + pull is the classic mistake (e.g. chest + biceps, back + triceps)
+  const clash=(pa==="push"&&pb==="pull")||(pa==="pull"&&pb==="push");
+  return clash;
+}
 // time options in minutes (session fills to fit this budget)
 const TIME_OPTS=[{min:20},{min:30},{min:45},{min:60}];
-let buildSel=[];         // chosen part ids (max 2)
+let buildSel=[];         // chosen muscle ids (max 3 now)
 let buildTime=30;        // minutes
 let buildEquip=[];       // chosen equipment ids (empty = all)
 let session=[];          // generated: [{n, area}]
 
+function partById(id){return BUILD_PARTS.find(p=>p.id===id)||{};}
+
 function renderBuildControls(){
   document.getElementById("buildParts").innerHTML=BUILD_PARTS.map(p=>{
     const on=buildSel.includes(p.id);
-    const dis=!on&&buildSel.length>=2;
+    const dis=!on&&buildSel.length>=3;
     const pos=buildSel.indexOf(p.id)+1;
-    return `<div class="bpart ${on?'on':''} ${dis?'dis':''}" onclick="toggleBuildPart('${p.id}')">
-      ${I[p.id]||I.fullbody}<b>${p.name}</b>${on?`<span class="num">${pos}</span>`:''}</div>`;
+    // is this a good pairing with what's already chosen?
+    const suggested = !on && buildSel.length>0 && buildSel.some(s=>(GOOD_PAIRS[s]||[]).includes(p.id));
+    const bad = !on && buildSel.some(s=>isBadPair(s,p.id));
+    return `<div class="bpart ${on?'on':''} ${dis?'dis':''} ${suggested?'suggested':''} ${bad?'bad':''}" onclick="toggleBuildPart('${p.id}')">
+      ${I[partIcon(p)]||I.fullbody}<b>${p.name}</b>${on?`<span class="num">${pos}</span>`:suggested?'<span class="pairtag">pairs well</span>':''}</div>`;
   }).join("");
+
+  // guidance line
+  const guide=document.getElementById("buildGuide");
+  if(guide){
+    if(buildSel.length===0){
+      guide.innerHTML=`<div class="bguide tip">Pick 1–3 muscles that work together. Push muscles (chest, shoulders, triceps) pair up; pull muscles (back, biceps, rear delts) pair up. Tap one and I'll suggest good partners.</div>`;
+    }else{
+      // any bad pairs currently selected?
+      let bad=null;
+      for(let i=0;i<buildSel.length;i++)for(let j=i+1;j<buildSel.length;j++){
+        if(isBadPair(buildSel[i],buildSel[j])){bad=[buildSel[i],buildSel[j]];break;}
+      }
+      if(bad){
+        const a=partById(bad[0]).name,b=partById(bad[1]).name;
+        guide.innerHTML=`<div class="bguide warn"><b>⚠ ${a} + ${b} isn't ideal.</b> You're mixing a pushing muscle with a pulling one — they don't assist each other and it splits your recovery. Better: pair pushing muscles together (chest·shoulders·triceps) or pulling muscles together (back·biceps·rear delts).</div>`;
+      }else{
+        const names=buildSel.map(s=>partById(s).name).join(" + ");
+        guide.innerHTML=`<div class="bguide good">✓ <b>${names}</b> — these work well together.</div>`;
+      }
+    }
+  }
+
   document.getElementById("buildTimes").innerHTML=TIME_OPTS.map(t=>
     `<div class="tbtn ${t.min===buildTime?'on':''}" onclick="setBuildTime(${t.min})"><b>${t.min}</b><span>min</span></div>`).join("");
-  // equipment chips (All + each piece)
   const eqEl=document.getElementById("buildEquip");
   if(eqEl){
     const all=`<button class="chip ${buildEquip.length===0?'on':''}" onclick="setBuildEquipAll()">All my gear</button>`;
     eqEl.innerHTML=all+EQUIP.map(([id,name])=>
       `<button class="chip ${buildEquip.includes(id)?'on':''}" onclick="toggleBuildEquip('${id}')">${name}</button>`).join("");
   }
+}
+function partIcon(p){
+  // map to an existing icon
+  const m={chest:"chest",lats:"back",traps:"back",frontdelt:"shoulders",reardelt:"shoulders",
+   triceps:"arms",biceps:"arms",quads:"legs",hamsglutes:"glutes",calves:"legs",core:"core",cardio:"cardio"};
+  return m[p.id]||"fullbody";
 }
 function toggleBuildEquip(id){
   const i=buildEquip.indexOf(id);
@@ -1997,20 +2066,25 @@ function setBuildEquipAll(){buildEquip=[];renderBuildControls();}
 function toggleBuildPart(id){
   const i=buildSel.indexOf(id);
   if(i>=0)buildSel.splice(i,1);
-  else{if(buildSel.length>=2){buildSel.shift();}buildSel.push(id);}
+  else{if(buildSel.length>=3){buildSel.shift();}buildSel.push(id);}
   renderBuildControls();
 }
 function setBuildTime(m){buildTime=m;renderBuildControls();}
 
-// pick n exercises for an area, preferring the user's level ramp (beg first for beginners),
-// compounds before isolation, avoiding duplicates
-function pickForArea(area,n,exclude){
-  let pool=LIB.filter(e=>e.grp===area && !exclude.includes(e.n));
-  // restrict to chosen equipment if any selected
+// pick n exercises for a part id (specific muscle), preferring level ramp + compounds first
+function pickForArea(partId,n,exclude){
+  const p=partById(partId);
+  const grp=p.grp||partId;
+  const sub=p.sub;
+  let pool=LIB.filter(e=>{
+    if(e.grp!==grp) return false;
+    if(exclude.includes(e.n)) return false;
+    if(sub && !((EX_MUS[e.n]||[]).includes(sub))) return false;   // specific muscle filter
+    return true;
+  });
   if(buildEquip.length){
     pool=pool.filter(e=>(EX_EQ[e.n]||[]).some(t=>buildEquip.includes(t)));
   }
-  // order: beginner compounds, beginner iso, intermediate, advanced
   const rank=e=>(e.lvl==="beg"?0:e.lvl==="int"?1:2)*10 + (e.compound?0:3);
   pool.sort((a,b)=>rank(a)-rank(b));
   return pool.slice(0,n);
@@ -2235,7 +2309,14 @@ function toggleSwap(i){
   if(open)return;
   const cur=session[i];
   const inSession=session.map(s=>s.n);
-  const alts=LIB.filter(e=>e.grp===cur.area && !inSession.includes(e.n));
+  const p=partById(cur.area);
+  const grp=p.grp||cur.area, sub=p.sub;
+  const alts=LIB.filter(e=>{
+    if(e.grp!==grp||inSession.includes(e.n))return false;
+    if(sub && !((EX_MUS[e.n]||[]).includes(sub)))return false;
+    if(buildEquip.length && !(EX_EQ[e.n]||[]).some(t=>buildEquip.includes(t)))return false;
+    return true;
+  });
   if(!alts.length){box.innerHTML=`<div class="swaplab">No other ${areaName(cur.area)} exercises available.</div>`;box.classList.add("open");return;}
   box.innerHTML=`<div class="swaplab">Swap for another ${areaName(cur.area)} exercise:</div>`+
     alts.map(e=>`<button class="swapopt" onclick="doSwap(${i},'${enc(e.n)}')">${e.n}<span class="lvl ${e.lvl} sl">${e.lvl}</span></button>`).join("");
@@ -2930,7 +3011,7 @@ const TITLES={plan:["Plan","Build a session or review history"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v21"]};
+ data:["Save & Settings","Backup your data · v22"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
