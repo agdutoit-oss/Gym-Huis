@@ -1604,7 +1604,6 @@ function logType(e){
   // Pure bodyweight / not-loadable moves log reps only.
   if(/Bodyweight Squat|^Push-Up|Decline Push-Up|Plank|Side Plank|Dead Bug|Single-Leg Glute Bridge|^Pull-Up|Chin-Up|Assisted Pull-Up|Inverted Row|^Dip$|Hanging|Pike Push-Up|Ab Wheel|Sit-Up|Crunch|Hollow Hold|Mountain Climbers|Wall Sit|Nordic Curl|Band |Burpees|Jumping Jacks/.test(e.n))
     return e.timed?"timed":"bodyweight";
-    return e.timed?"timed":"bodyweight";
   if(e.timed) return "timed";
   return "weight";                            // weight + reps
 }
@@ -3093,7 +3092,7 @@ const TITLES={plan:["Plan","Build a session or review history"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v25"]};
+ data:["Save & Settings","Backup your data · v26"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
