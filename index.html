@@ -398,6 +398,8 @@
   .trcard .loglast{text-align:left}
   .trcard .loghint{text-align:left}
   .trnav{display:flex;gap:8px;margin-top:12px}
+  .trshuffle{background:rgba(77,159,255,.12);border:1px solid rgba(77,159,255,.4);color:var(--blue);font-size:12px;font-weight:700;padding:7px 14px;border-radius:9px;cursor:pointer;margin:2px 0 8px}
+  .trshuffle:active{background:rgba(77,159,255,.22)}
   .trnav .btn{flex:1;padding:13px 6px;font-size:13px}
   .trlist{margin-top:18px}
   .truphead{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px}
@@ -2669,6 +2671,7 @@ function renderTrain(){
         ${lastWeightBadge(e)}
       </div>
       <h2 class="trname">${e.n} <span class="lvl ${e.lvl}" style="font-size:9px">${e.lvl}</span></h2>
+      <button class="trshuffle" onclick="shuffleCurrent()">⇄ Swap this exercise</button>
       <div class="trsug">${suggestFor(e)}</div>
       <div class="trmus">${e.m}</div>
       ${logBlock(e,"-tr")}
@@ -2724,6 +2727,28 @@ function trainNext(){
 }
 function trainPrev(){if(train.idx>0){train.idx--;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}}
 function trainJump(i){train.idx=i;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}
+// Swap the current exercise for another that trains the same muscle
+function shuffleCurrent(){
+  const cur=train.list[train.idx];
+  const e=exByName(cur.n);
+  if(!e){toast("Can't swap this one");return;}
+  const curSub=EX_MUS[e.n]||[];
+  const inWorkout=new Set(train.list.map(x=>x.n));
+  // candidates: same muscle group, not already in the workout
+  let pool=LIB.filter(x=>x.grp===e.grp && !inWorkout.has(x.n));
+  // prefer ones sharing a specific sub-muscle with the current exercise
+  const shared=pool.filter(x=>(EX_MUS[x.n]||[]).some(m=>curSub.includes(m)));
+  if(shared.length)pool=shared;
+  if(!pool.length){toast("No other "+e.grp+" exercise to swap in");return;}
+  // pick a random one for variety
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  // keep superset tag + done state position, just change the name
+  train.list[train.idx]={...cur, n:pick.n};
+  // if it was marked done, clear that (it's a different exercise now)
+  delete train.done[train.idx];
+  renderTrain();
+  toast(`Swapped in ${pick.n}`);
+}
 function endTraining(finished){
   const nDone=Object.keys(train.done||{}).length;
   const total=train.list.length;
@@ -3092,7 +3117,7 @@ const TITLES={plan:["Plan","Build a session or review history"],
  lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v26"]};
+ data:["Save & Settings","Backup your data · v27"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
