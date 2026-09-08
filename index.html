@@ -71,6 +71,9 @@
   .lvl.adv{background:rgba(233,80,46,.16);color:var(--accent2)}
   .ex-info .mus{font-size:11.5px;color:var(--dim);margin-top:2px}
   .ex-info .suggest{font-size:12px;color:var(--accent2);font-weight:600;margin-top:3px}
+  .lasttag{color:var(--good);font-weight:600}
+  .lasttag b{color:var(--good)}
+  .lastline{font-size:11.5px;color:var(--good);font-weight:600;margin-top:2px}
   .addbtn{flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:var(--card2);border:none;color:var(--accent2);font-size:20px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .addbtn.added{background:var(--good);color:#fff}
   .chev{color:var(--dim);font-size:19px;transition:.25s;flex:0 0 auto;margin-left:2px}
@@ -238,6 +241,30 @@
   .hxn{font-size:13.5px;font-weight:700}
   .hxs{font-size:11.5px;color:var(--dim)}
   .hxfeel{flex:0 0 auto;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .hxval{flex:0 0 auto;font-size:14px;font-weight:800;color:var(--accent2)}
+  /* frequency card */
+  .freqcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:16px}
+  .freqhead{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:10px}
+  .freqrow{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .freqrow:last-child{border-bottom:none}
+  .freqname{font-weight:600}
+  .freqval{font-size:12px;font-weight:700}
+  .freqrow.freqok .freqval{color:var(--good)}
+  .freqrow.freqlow .freqval{color:var(--amber)}
+  .freqrow.freqnone .freqval{color:var(--dim)}
+  /* progress cards */
+  .proghint,.chint{font-size:12px;color:var(--dim);margin-bottom:12px}
+  .progcard{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:10px}
+  .proghd{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .progn{font-size:14px;font-weight:700}
+  .progtrend{font-size:12px;font-weight:700}
+  .progtrend .up{color:var(--good)}
+  .progtrend .down{color:var(--accent2)}
+  .progtrend .flat{color:var(--dim)}
+  .prognow{font-size:24px;font-weight:800;margin-bottom:6px}
+  .prognow small{font-size:13px;color:var(--dim);font-weight:600}
+  .progmeta{font-size:11px;color:var(--dim);font-weight:500;margin-left:6px}
+  .spark{width:100%;height:auto;display:block}
   .hss{border:1px solid var(--accent);border-radius:10px;padding:6px 8px;margin:8px 0;background:rgba(232,80,46,.05)}
   .hsslbl{font-size:9.5px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
   .hss .hxrow:first-of-type{border-top:none}
@@ -534,10 +561,6 @@
 
   <!-- PLAN (Build + My Week combined) -->
   <div class="view on" id="v-plan">
-    <div class="subtabs">
-      <button class="subtab on" id="sub-build" onclick="setPlanSub('build')">Build</button>
-      <button class="subtab" id="sub-hist" onclick="setPlanSub('hist')">History</button>
-    </div>
 
     <!-- BUILD sub-panel -->
     <div id="planBuild">
@@ -561,12 +584,6 @@
       </div>
       <button class="btn primary" style="width:100%;margin-top:4px" onclick="generateSession()">Build my session</button>
       <div id="buildResult" style="margin-top:16px"></div>
-    </div>
-
-    <!-- HISTORY sub-panel -->
-    <div id="planHist" style="display:none">
-      <div id="histStats" class="histstats"></div>
-      <div id="histList"></div>
     </div>
   </div>
 
@@ -682,6 +699,18 @@
     </div>
   </div>
 
+  <!-- HISTORY -->
+  <div class="view" id="v-history">
+    <div id="histStatsTop" class="histstats"></div>
+    <div id="histFreq"></div>
+    <div class="subtabs" style="margin-bottom:14px">
+      <button class="subtab on" id="hsub-sessions" onclick="setHistSub('sessions')">Sessions</button>
+      <button class="subtab" id="hsub-progress" onclick="setHistSub('progress')">Progress</button>
+    </div>
+    <div id="histSessions"></div>
+    <div id="histProgress" style="display:none"></div>
+  </div>
+
   <!-- SAVE/DATA -->
   <div class="view" id="v-data">
     <button class="eqback" onclick="toggleSettings()">‹ Back</button>
@@ -717,8 +746,8 @@
     <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg>Library</button>
   <button id="nav-timer" onclick="switchView('timer')">
     <svg viewBox="0 0 24 24"><path d="M12 6a9 9 0 109 9 9 9 0 00-9-9zm1 10h-2V9h2zM9 1h6v2H9z"/></svg>Timer</button>
-  <button id="nav-food" onclick="switchView('food')">
-    <svg viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>Food</button>
+  <button id="nav-history" onclick="switchView('history')">
+    <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 00-9 9H1l3.9 3.9.1.1L9 12H6a7 7 0 117 7 6.9 6.9 0 01-5-2l-1.4 1.4A9 9 0 1013 3zm-1 5v5l4.3 2.5.7-1.2-3.5-2.1V8z"/></svg>History</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1544,7 +1573,7 @@ function libCardHTML(e){
         <div class="ex-info" onclick="tog(this)">
           <h3>${e.n} <span class="lvl ${e.lvl}">${e.lvl}</span></h3>
           <div class="mus">${e.m}</div>
-          <div class="suggest">${suggestFor(e)}</div>
+          <div class="suggest">${suggestFor(e)}${lastTag(e)?' · '+lastTag(e):''}</div>
         </div>
         <button class="addbtn ${inplan?'added':''}" onclick="quickAdd('${enc(e.n)}',this)">${inplan?'✓':'+'}</button>
         <div class="chev" onclick="tog(this)">›</div>
@@ -1610,6 +1639,13 @@ function logType(e){
   return "weight";                            // weight + reps
 }
 function lastLog(name){const a=logs[name];return a&&a.length?a[a.length-1]:null;}
+// Compact inline "last: 60kg · 3 days ago" tag for list rows
+function lastTag(e){
+  const last=lastLog(e.n);
+  if(!last)return "";
+  const t=logType(e);
+  return `<span class="lasttag">last: <b>${logSummary(t,last)}</b> · ${daysAgo(last.date)}</span>`;
+}
 // Corner badge showing the last weight used, for the workout muscle-map sketch
 function lastWeightBadge(e){
   const last=lastLog(e.n);
@@ -1886,6 +1922,7 @@ function planItemHTML(x,i){
           <h4>${e.n} <span class="lvl ${e.lvl}" style="font-size:8px">${e.lvl}</span></h4>
           <div class="pm">${e.m}</div>
           <div class="ps">${suggestFor(e)}</div>
+          ${lastTag(e)?`<div class="lastline">${lastTag(e)}</div>`:''}
         </div>
         <div class="chev" onclick="togCard(this)">›</div>
         <button class="rm" onclick="removeFromDay(${i})">×</button>
@@ -3112,55 +3149,41 @@ function loadFood(){try{
 }catch(e){}}
 
 /* ---------------- NAV ---------------- */
-const TITLES={plan:["Plan","Build a session or review history"],
+const TITLES={plan:["Plan","Build a session or pick a workout type"],
  train:["Train","Pick a day, then start your workout"],
- lib:["Exercise Library","Browse by muscle · tap + to add to a day plan"],
+ lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
- food:["Food","Carnivore macros · protein, fat, calories"],
- data:["Save & Settings","Backup your data · v27"]};
+ history:["History","Your sessions, progress & weekly frequency"],
+ data:["Save & Settings","Backup your data · v29"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
   if(onSettings){switchView(lastView||"plan");}
   else{
-    // remember where we were
-    ["plan","train","lib","timer","food"].forEach(x=>{
+    ["plan","train","lib","timer","history"].forEach(x=>{
       if(document.getElementById("v-"+x).classList.contains("on"))lastView=x;
     });
     switchView("data");
   }
 }
 function switchView(v){
-  ["plan","train","lib","timer","food","data"].forEach(x=>{
+  ["plan","train","lib","timer","history","data"].forEach(x=>{
     const view=document.getElementById("v-"+x);
     if(view)view.classList.toggle("on",x===v);
-    const btn=document.getElementById("nav-"+x);   // "data" has no nav button (it's the header gear)
+    const btn=document.getElementById("nav-"+x);
     if(btn)btn.classList.toggle("on",x===v);
   });
-  // highlight the gear when Settings is open
   const gear=document.querySelector(".gearbtn");
   if(gear)gear.classList.toggle("on",v==="data");
-  // Training goal only matters where rep suggestions are shown
   const gb=document.getElementById("goalBar");
   if(gb)gb.style.display = (v==="plan"||v==="train"||v==="lib") ? "block" : "none";
   document.getElementById("hTitle").textContent=TITLES[v][0];
   document.getElementById("hSub").textContent=TITLES[v][1];
   window.scrollTo({top:0,behavior:"smooth"});
-  if(v==="plan"){setPlanSub(planSub);}
   if(v==="train"){renderTrain();}
   if(v==="data"){initMwUI();}
-  if(v==="food"){setFoodSub(foodSub);}
+  if(v==="history"){setHistSub(histSub);renderHistory();}
   if(v==="timer" && !tState.seq.length){resetTimer();}
-}
-// Plan sub-tabs (Build + History)
-let planSub="build";
-function setPlanSub(s){
-  planSub=s;
-  document.getElementById("sub-build").classList.toggle("on",s==="build");
-  document.getElementById("sub-hist").classList.toggle("on",s==="hist");
-  document.getElementById("planBuild").style.display = s==="build"?"block":"none";
-  document.getElementById("planHist").style.display = s==="hist"?"block":"none";
-  if(s==="hist"){renderHistory();}
 }
 
 /* ---------------- WORKOUT HISTORY ---------------- */
@@ -3195,57 +3218,100 @@ function prettyDate(key){
   if(diff<7)return wd;
   return dt.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
 }
+let histSub="sessions";
+function setHistSub(s){
+  histSub=s;
+  document.getElementById("hsub-sessions").classList.toggle("on",s==="sessions");
+  document.getElementById("hsub-progress").classList.toggle("on",s==="progress");
+  document.getElementById("histSessions").style.display=s==="sessions"?"block":"none";
+  document.getElementById("histProgress").style.display=s==="progress"?"block":"none";
+  if(s==="progress")renderHistProgress();
+}
+// Approx session length: minutes between first and last logged set that day
+function sessionLength(items){
+  if(items.length<2)return null;
+  const times=items.map(it=>new Date(it.entry.date).getTime()).sort((a,b)=>a-b);
+  const mins=Math.round((times[times.length-1]-times[0])/60000);
+  return mins>0?mins:null;
+}
 function renderHistory(){
   const days=historyByDay();
-  const keys=Object.keys(days).sort().reverse();  // newest first
-  const statsEl=document.getElementById("histStats");
-  const listEl=document.getElementById("histList");
+  const keys=Object.keys(days).sort().reverse();
+  const statsEl=document.getElementById("histStatsTop");
+  const freqEl=document.getElementById("histFreq");
+  const listEl=document.getElementById("histSessions");
 
   if(!keys.length){
-    statsEl.innerHTML="";
-    listEl.innerHTML=`<div class="addhint">No workouts logged yet.<br>Log your sets while training and they'll appear here.</div>`;
+    if(statsEl)statsEl.innerHTML="";
+    if(freqEl)freqEl.innerHTML="";
+    listEl.innerHTML=`<div class="addhint">No workouts logged yet.<br>Log your weights while training and they'll appear here.</div>`;
     return;
   }
 
-  // quick stats
+  // ---- top stats: total sessions, this week, streak ----
   const totalSessions=keys.length;
-  let totalEx=0, totalSets=0;
-  keys.forEach(k=>{days[k].forEach(it=>{totalEx++;totalSets+=entrySets(it.entry).length;});});
-  // this week count
   const now=new Date(); const weekAgo=new Date(now.getTime()-7*86400000);
-  const thisWeek=keys.filter(k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)>=weekAgo;}).length;
-
+  const thisWeek=keys.filter(k=>dateOf(k)>=weekAgo).length;
+  // streak: consecutive days-with-training counting back from today/yesterday
+  let streak=0;{
+    const set=new Set(keys);
+    let d=new Date(); d.setHours(0,0,0,0);
+    // allow today OR yesterday to start the streak
+    if(!set.has(keyOf(d))) d.setDate(d.getDate()-1);
+    while(set.has(keyOf(d))){streak++; d.setDate(d.getDate()-1);}
+  }
   statsEl.innerHTML=`
-    <div class="hstat"><b>${totalSessions}</b><span>days trained</span></div>
+    <div class="hstat"><b>${totalSessions}</b><span>sessions</span></div>
     <div class="hstat"><b>${thisWeek}</b><span>this week</span></div>
-    <div class="hstat"><b>${totalSets}</b><span>total sets</span></div>`;
+    <div class="hstat"><b>${streak}</b><span>day streak</span></div>`;
 
+  // ---- weekly frequency: did each major muscle get hit 2x this week? ----
+  const weekKeys=keys.filter(k=>dateOf(k)>=weekAgo);
+  const muscleCount={};
+  weekKeys.forEach(k=>{
+    // count each muscle GROUP once per day
+    const groupsHit=new Set();
+    days[k].forEach(it=>{const e=exByName(it.name); if(e)groupsHit.add(e.grp);});
+    groupsHit.forEach(g=>muscleCount[g]=(muscleCount[g]||0)+1);
+  });
+  const majorGroups=[["chest","Chest"],["back","Back"],["shoulders","Shoulders"],["arms","Arms"],["legs","Legs"],["glutes","Glutes"],["core","Core"]];
+  const freqRows=majorGroups.map(([id,name])=>{
+    const c=muscleCount[id]||0;
+    const cls=c>=2?"freqok":c===1?"freqlow":"freqnone";
+    const label=c>=2?"✓ 2×+":c===1?"1× — aim for 2":"—";
+    return `<div class="freqrow ${cls}"><span class="freqname">${name}</span><span class="freqval">${label}</span></div>`;
+  }).join("");
+  freqEl.innerHTML=`<div class="freqcard">
+    <div class="freqhead">This week's frequency · aim for 2×+ per muscle</div>
+    ${freqRows}
+  </div>`;
+
+  // ---- session list ----
   listEl.innerHTML=keys.map(k=>{
     const items=days[k];
-    // muscles hit that day
     const mus=new Set();
     items.forEach(it=>{(EX_MUS[it.name]||[]).forEach(m=>mus.add(m));});
+    const len=sessionLength(items);
+    const firstTime=new Date(Math.min(...items.map(it=>new Date(it.entry.date).getTime())));
+    const timeStr=firstTime.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
 
     const rowFor=it=>{
       const e=exByName(it.name);
       const t=e?logType(e):"weight";
       const sets=entrySets(it.entry);
-      const setStr=sets.map(s=>{
-        if(t==="weight")return `${s.w||"?"}kg×${s.r||"?"}`;
-        if(t==="timed")return `${s.r||"?"}s`;
-        return `${s.r||"?"}`;
-      }).join(", ");
+      const s=sets[sets.length-1];
+      let val;
+      if(t==="weight")val=`${s.w||"?"}kg`;
+      else if(t==="timed")val=`${s.r||"?"}s`;
+      else if(t==="bodyweight")val=`${s.r||"?"} reps`;
+      else val=`${s.r||"?"}`;
       return `<div class="hxrow">
         <div class="hxic">${e?(I[e.ic]||I.fullbody):""}</div>
-        <div class="hxinfo">
-          <div class="hxn">${it.name}</div>
-          <div class="hxs">${sets.length} set${sets.length!==1?"s":""} · ${setStr}</div>
-        </div>
-        <span class="hxfeel feel-${it.entry.feel}">${it.entry.feel}</span>
+        <div class="hxinfo"><div class="hxn">${it.name}</div></div>
+        <span class="hxval">${val}</span>
       </div>`;
     };
 
-    // render, grouping consecutive items that shared a superset id
     let exRows="";let i=0;
     while(i<items.length){
       const it=items[i];
@@ -3260,7 +3326,7 @@ function renderHistory(){
 
     return `<div class="hday">
       <div class="hdhead">
-        <div><div class="hdname">${prettyDate(k)}</div><div class="hddate">${new Date(k).toLocaleDateString()}</div></div>
+        <div><div class="hdname">${prettyDate(k)}</div><div class="hddate">${new Date(k).toLocaleDateString()} · ${timeStr}${len?` · ${len} min`:""}</div></div>
         <span class="hdcount">${items.length} exercise${items.length!==1?"s":""}</span>
       </div>
       ${mus.size?`<div class="hdmap">${muscleMapSVG([...mus],{h:95})}</div>`:""}
@@ -3272,6 +3338,44 @@ function renderHistory(){
       <div class="hdaypick" id="hdp-${k}"></div>
     </div>`;
   }).join("");
+}
+
+// ---- Progress: weight-over-time per exercise ----
+function renderHistProgress(){
+  const el=document.getElementById("histProgress");
+  // exercises that have at least 2 weight entries
+  const withData=Object.keys(logs).filter(n=>{
+    const e=exByName(n); if(!e||logType(e)!=="weight")return false;
+    return (logs[n]||[]).length>=1;
+  }).sort();
+  if(!withData.length){
+    el.innerHTML=`<div class="addhint">No weight progress yet.<br>Log a few sessions and your strength trend will show here.</div>`;
+    return;
+  }
+  el.innerHTML=`<div class="proghint">Your logged weight over time. More sessions = clearer trend.</div>`+
+    withData.map(n=>{
+      const entries=(logs[n]||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+      const pts=entries.map(en=>{const s=entrySets(en);const w=parseFloat(s[s.length-1].w);return {date:en.date,w:isNaN(w)?null:w};}).filter(p=>p.w!=null);
+      if(pts.length<1)return "";
+      const first=pts[0].w, last=pts[pts.length-1].w;
+      const diff=last-first;
+      const trend = pts.length>1 ? (diff>0?`<span class="up">▲ +${diff.toFixed(1)}kg</span>`:diff<0?`<span class="down">▼ ${diff.toFixed(1)}kg</span>`:`<span class="flat">no change</span>`) : `<span class="flat">1 entry</span>`;
+      return `<div class="progcard">
+        <div class="proghd"><span class="progn">${n}</span><span class="progtrend">${trend}</span></div>
+        <div class="prognow">${last}<small>kg</small> <span class="progmeta">latest · ${pts.length} log${pts.length!==1?"s":""}</span></div>
+        ${pts.length>1?progSparkline(pts):""}
+      </div>`;
+    }).join("");
+}
+function progSparkline(pts){
+  const W=280,H=54,pad=6;
+  const ws=pts.map(p=>p.w);
+  const min=Math.min(...ws), max=Math.max(...ws), span=(max-min)||1;
+  const t0=new Date(pts[0].date).getTime(), t1=new Date(pts[pts.length-1].date).getTime(), tspan=(t1-t0)||1;
+  const xy=p=>[pad+((new Date(p.date).getTime()-t0)/tspan)*(W-pad*2), H-pad-((p.w-min)/span)*(H-pad*2)];
+  const path=pts.map((p,i)=>{const[x,y]=xy(p);return (i?"L":"M")+x.toFixed(1)+","+y.toFixed(1);}).join(" ");
+  const dots=pts.map(p=>{const[x,y]=xy(p);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.5" fill="#e8502e"/>`;}).join("");
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><path d="${path}" fill="none" stroke="#e8502e" stroke-width="2" stroke-linejoin="round"/>${dots}</svg>`;
 }
 
 /* ---- repeat a past workout ---- */
