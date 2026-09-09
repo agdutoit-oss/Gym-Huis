@@ -118,6 +118,8 @@
   .plan-item .pm{font-size:11px;color:var(--dim)}
   .plan-item .ps{font-size:12.5px;color:var(--accent2);font-weight:600;margin-top:2px}
   .rm{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--card2);border:none;color:var(--dim);font-size:17px;cursor:pointer}
+  .rm.swap{color:var(--blue);font-size:15px;font-weight:800}
+  .rm.swap:active{background:rgba(77,159,255,.18)}
   .planactions{display:flex;gap:8px;margin-top:14px}
   .btn{flex:1;padding:12px;border-radius:12px;border:none;font-size:13.5px;font-weight:700;cursor:pointer}
   .btn.primary{background:var(--accent);color:#fff}
@@ -1925,10 +1927,27 @@ function planItemHTML(x,i){
           ${lastTag(e)?`<div class="lastline">${lastTag(e)}</div>`:''}
         </div>
         <div class="chev" onclick="togCard(this)">›</div>
+        <button class="rm swap" onclick="swapInDay(${i})" title="Swap">⇄</button>
         <button class="rm" onclick="removeFromDay(${i})">×</button>
       </div>
       ${exDetailBody(e,false)}
     </div>`;
+}
+// Swap an exercise in the saved day plan for a same-muscle alternative
+function swapInDay(i){
+  const arr=plans[curDay]; if(!arr||!arr[i])return;
+  const cur=arr[i];
+  const e=exByName(cur.n); if(!e){toast("Can't swap this one");return;}
+  const curSub=EX_MUS[e.n]||[];
+  const inDay=new Set(arr.map(x=>x.n));
+  let pool=LIB.filter(x=>x.grp===e.grp && !inDay.has(x.n));
+  const shared=pool.filter(x=>(EX_MUS[x.n]||[]).some(m=>curSub.includes(m)));
+  if(shared.length)pool=shared;
+  if(!pool.length){toast("No other "+e.grp+" exercise to swap in");return;}
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  arr[i]={...cur, n:pick.n};   // keep superset tag, change name
+  save();renderPlan();renderDaySelect();renderLib();
+  toast(`Swapped in ${pick.n}`);
 }
 function removeFromDay(i){plans[curDay].splice(i,1);if(!plans[curDay].length)delete plans[curDay];save();renderPlan();renderDaySelect();renderLib();}
 function clearDay(){if(!plans[curDay]||!plans[curDay].length)return;if(confirm(`Clear all exercises from ${DAYNAMES[curDay]}?`)){delete plans[curDay];save();renderPlan();renderDaySelect();renderLib();}}
@@ -3154,7 +3173,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v29"]};
+ data:["Save & Settings","Backup your data · v30"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
