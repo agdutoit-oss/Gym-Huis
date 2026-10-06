@@ -1939,13 +1939,23 @@ function swapInDay(i){
   const cur=arr[i];
   const e=exByName(cur.n); if(!e){toast("Can't swap this one");return;}
   const curSub=EX_MUS[e.n]||[];
-  const inDay=new Set(arr.map(x=>x.n));
-  let pool=LIB.filter(x=>x.grp===e.grp && !inDay.has(x.n));
+  // remember everything already shown in this slot so we don't loop back to it
+  const seen=new Set(cur.sw||[]); seen.add(cur.n);
+  const inDay=new Set(arr.map((x,idx)=>idx===i?null:x.n));  // other exercises in the day
+  const eligible=x=>x.grp===e.grp && !inDay.has(x.n);
+  let pool=LIB.filter(x=>eligible(x) && !seen.has(x.n));
+  let history=[...seen];
+  if(!pool.length){
+    // cycled through them all — start over, excluding only the current one
+    pool=LIB.filter(x=>eligible(x) && x.n!==cur.n);
+    history=[cur.n];
+    if(!pool.length){toast("No other "+e.grp+" exercise to swap in");return;}
+    toast("Shown them all — starting over");
+  }
   const shared=pool.filter(x=>(EX_MUS[x.n]||[]).some(m=>curSub.includes(m)));
   if(shared.length)pool=shared;
-  if(!pool.length){toast("No other "+e.grp+" exercise to swap in");return;}
   const pick=pool[Math.floor(Math.random()*pool.length)];
-  arr[i]={...cur, n:pick.n};   // keep superset tag, change name
+  arr[i]={...cur, n:pick.n, sw:[...history, pick.n]};   // keep tag, record history
   save();renderPlan();renderDaySelect();renderLib();
   toast(`Swapped in ${pick.n}`);
 }
@@ -2785,23 +2795,28 @@ function trainPrev(){if(train.idx>0){train.idx--;renderTrain();window.scrollTo({
 function trainJump(i){train.idx=i;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}
 // Swap the current exercise for another that trains the same muscle
 function shuffleCurrent(){
-  const cur=train.list[train.idx];
+  const i=train.idx;
+  const cur=train.list[i];
   const e=exByName(cur.n);
   if(!e){toast("Can't swap this one");return;}
   const curSub=EX_MUS[e.n]||[];
-  const inWorkout=new Set(train.list.map(x=>x.n));
-  // candidates: same muscle group, not already in the workout
-  let pool=LIB.filter(x=>x.grp===e.grp && !inWorkout.has(x.n));
-  // prefer ones sharing a specific sub-muscle with the current exercise
+  // remember what's already been shown in this slot so we don't loop back
+  const seen=new Set(cur.sw||[]); seen.add(cur.n);
+  const inWorkout=new Set(train.list.map((x,idx)=>idx===i?null:x.n));
+  const eligible=x=>x.grp===e.grp && !inWorkout.has(x.n);
+  let pool=LIB.filter(x=>eligible(x) && !seen.has(x.n));
+  let history=[...seen];
+  if(!pool.length){
+    pool=LIB.filter(x=>eligible(x) && x.n!==cur.n);
+    history=[cur.n];
+    if(!pool.length){toast("No other "+e.grp+" exercise to swap in");return;}
+    toast("Shown them all — starting over");
+  }
   const shared=pool.filter(x=>(EX_MUS[x.n]||[]).some(m=>curSub.includes(m)));
   if(shared.length)pool=shared;
-  if(!pool.length){toast("No other "+e.grp+" exercise to swap in");return;}
-  // pick a random one for variety
   const pick=pool[Math.floor(Math.random()*pool.length)];
-  // keep superset tag + done state position, just change the name
-  train.list[train.idx]={...cur, n:pick.n};
-  // if it was marked done, clear that (it's a different exercise now)
-  delete train.done[train.idx];
+  train.list[i]={...cur, n:pick.n, sw:[...history, pick.n]};
+  delete train.done[i];   // different exercise now
   renderTrain();
   toast(`Swapped in ${pick.n}`);
 }
@@ -3173,7 +3188,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v30"]};
+ data:["Save & Settings","Backup your data · v31"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
