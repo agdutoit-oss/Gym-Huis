@@ -2888,6 +2888,7 @@ function shuffleCurrent(){
   toast(`Swapped in ${pick.n}`);
 }
 function endTraining(finished){
+  autoLogCurrent();   // capture the exercise currently on screen, so it's never missed
   const nDone=Object.keys(train.done||{}).length;
   const total=train.list.length;
   train.active=false;
@@ -3431,7 +3432,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v33"]};
+ data:["Save & Settings","Backup your data · v34"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
