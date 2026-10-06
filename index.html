@@ -17,7 +17,7 @@
     --good:#3ec07a; --blue:#4d9fff; --purple:#a97bff; --amber:#ffb84d;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);padding-bottom:80px;line-height:1.5;font-size:15px}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);padding-bottom:calc(96px + env(safe-area-inset-bottom));line-height:1.5;font-size:15px}
   .wrap{max-width:600px;margin:0 auto}
 
   header{padding:20px 18px 14px;background:linear-gradient(135deg,#1a2129,#0f1419);position:relative;overflow:hidden}
@@ -39,7 +39,7 @@
   .goal span{font-size:9.5px;color:var(--dim)}
 
   /* bottom nav */
-  .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,33,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:100;max-width:600px;margin:0 auto;padding:0 6px}
+  .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,33,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:100;max-width:600px;margin:0 auto;padding:0 6px env(safe-area-inset-bottom)}
   .nav button{flex:1;max-width:110px;background:none;border:none;color:var(--dim);padding:10px 4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
   .nav button.on{color:var(--accent2)}
   .nav svg{width:21px;height:21px;fill:currentColor}
@@ -78,13 +78,19 @@
   .addbtn.added{background:var(--good);color:#fff}
   .chev{color:var(--dim);font-size:19px;transition:.25s;flex:0 0 auto;margin-left:2px}
   .ex.open .chev{transform:rotate(90deg)}
-  .ex-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
-  .ex.open .ex-body{max-height:900px}
-  .exp .ex-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
-  .exp.open .ex-body{max-height:1200px}
+  .ex-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+  .ex-body>*{min-height:0;overflow:hidden}
+  .ex.open .ex-body,.exp.open .ex-body{grid-template-rows:1fr}
   .exp .chev{color:var(--dim);font-size:19px;transition:.25s;flex:0 0 auto;cursor:pointer}
   .exp.open .chev{transform:rotate(90deg)}
-  .ex-pad{padding:0 13px 14px}
+  .ex-pad{padding:0 13px}
+  .ex-pad::after{content:"";display:block;height:14px}
+  .exinfo{margin-bottom:10px}
+  .exinfo summary{list-style:none;cursor:pointer;background:var(--card2);border-radius:9px;padding:10px 12px;font-size:12.5px;font-weight:700;color:var(--accent2);display:flex;justify-content:space-between;align-items:center}
+  .exinfo summary::-webkit-details-marker{display:none}
+  .exinfo summary::after{content:"›";font-size:17px;color:var(--dim);transition:transform .2s}
+  .exinfo[open] summary::after{transform:rotate(90deg)}
+  .exinfo[open] summary{margin-bottom:10px}
   .forrow{background:var(--card2);border-radius:9px;padding:9px 11px;font-size:12.5px;color:#cdd6df;margin-bottom:10px}
   .forrow b{color:var(--accent2)}
   .steps{counter-reset:s;margin-bottom:10px}
@@ -1547,13 +1553,21 @@ function photoDemo(name){
 function pdFail(img){const d=img.closest(".pdemo");if(!d)return;const h=d.nextElementSibling;
   d.outerHTML=`<div class="viderr">Demo photos need an internet connection.</div>`;if(h&&h.classList.contains("pdhint"))h.remove();}
 // Library: animated demo with a toggle to the muscle map
-function libVisual(e){
-  const map=EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n]):"";
-  const slot=`<div class="mediaslot" id="media-${cssId(e.n)}"></div>`;
+function libVisual(e,map,slot){
+  if(map===undefined) map=EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n]):"";
+  if(slot===undefined) slot=`<div class="mediaslot"></div>`;
   if(!(mwKey||hasPhotoDemo(e.n))) return map;   // no demo available: just the muscles
   if(!map) return slot;
   return `<div class="vtog"><button class="on" onclick="libPane(this,0)">▶ How to</button><button onclick="libPane(this,1)">Muscles worked</button></div>
     <div class="vpane">${slot}</div><div class="vpane" hidden>${map}</div>`;
+}
+// Written info (what it's for, steps, tip) folded away until tapped
+function exInfo(e){
+  return `<details class="exinfo"><summary>What it's for &amp; how to do it</summary><div class="exinfo-in">
+    <div class="forrow"><b>What it's for:</b> ${e.for}</div>
+    <ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+    <div class="tip"><b>Tip:</b> ${e.tip}</div>
+  </div></details>`;
 }
 function libPane(btn,i){
   const bs=btn.parentElement.querySelectorAll("button");
@@ -1569,7 +1583,7 @@ function togPhotoDemo(btn,name){
 
 // Called when an exercise card opens: MuscleWiki video if a key is set, otherwise in-app photo demo.
 async function loadExerciseMedia(name,slotId){
-  const slot=document.getElementById(slotId||("media-"+cssId(name)));
+  const slot=(slotId&&slotId.nodeType)?slotId:document.getElementById(slotId||("media-"+cssId(name)));
   if(!slot) return;
   if(!mwKey){if(slot.dataset.loaded!=="p"){slot.innerHTML=photoDemo(name);slot.dataset.loaded="p";}return;}
   if(slot.dataset.loaded==="1") return;
@@ -1725,9 +1739,7 @@ function libCardHTML(e){
       </div>
       <div class="ex-body"><div class="ex-pad">
         ${libVisual(e)}
-        <div class="forrow"><b>What it's for:</b> ${e.for}</div>
-        <ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
-        <div class="tip"><b>Tip:</b> ${e.tip}</div>
+    ${exInfo(e)}
         <span class="equiptag">🏋 ${e.eq}</span>
         ${demoLinks(e,true)}
         ${logBlock(e)}
@@ -1764,15 +1776,11 @@ function ytLinks(e){
 }
 // Shared expandable detail body used by Library, Build and Planner cards.
 function exDetailBody(e,withMedia){
-  const media = withMedia ? `<div class="mediaslot" id="media-${cssId(e.n)}"></div>` : "";
   return `<div class="ex-body"><div class="ex-pad">
-    ${media}
-    ${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n]):""}
-    <div class="forrow"><b>What it's for:</b> ${e.for}</div>
-    <ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
-    <div class="tip"><b>Tip:</b> ${e.tip}</div>
+    ${libVisual(e)}
+    ${exInfo(e)}
     <span class="equiptag">🏋 ${e.eq}</span>
-    ${demoLinks(e)}
+    ${demoLinks(e,true)}
     ${logBlock(e)}
   </div></div>`;
 }
@@ -1964,15 +1972,23 @@ function logHistory(name,t){
     recent.map(en=>`<div class="lhrow"><span>${new Date(en.date).toLocaleDateString()}</span><span>${logSummary(t,en)}</span></div>`).join("")+
     `</details>`;
 }
-function togCard(el){el.closest(".exp").classList.toggle("open");}
-function tog(el){
-  const card=el.closest(".ex");
-  card.classList.toggle("open");
-  if(card.classList.contains("open")){
-    const name=card.getAttribute("data-n").replace(/\\'/g,"'");
-    loadExerciseMedia(name);
+// Open one exercise card at a time within the current tab
+function openOnly(card){
+  const opening=!card.classList.contains("open");
+  const scope=card.closest(".view")||document;
+  scope.querySelectorAll(".ex.open,.exp.open").forEach(c=>{if(c!==card)c.classList.remove("open");});
+  card.classList.toggle("open",opening);
+  if(opening){
+    const slot=card.querySelector(".mediaslot");
+    const n=card.getAttribute("data-n")||(card.querySelector("[data-n]")||{}).dataset?.n;
+    const e=n?exByName(n.replace(/\\'/g,"'")):null;
+    if(slot&&e) loadExerciseMedia(e.n,slot);
+    // keep the opened card's header in view once others collapse
+    setTimeout(()=>{const r=card.getBoundingClientRect();if(r.top<0||r.top>window.innerHeight*.6)card.scrollIntoView({behavior:"smooth",block:"start"});},320);
   }
 }
+function togCard(el){openOnly(el.closest(".exp"));}
+function tog(el){openOnly(el.closest(".ex"));}
 
 /* quick add: adds to currently selected planner day */
 function quickAdd(name,btn){
@@ -2064,7 +2080,7 @@ function renderPlan(){
 }
 function planItemHTML(x,i){
   const e=exByName(x.n);if(!e)return"";
-  return `<div class="plan-item exp">
+  return `<div class="plan-item exp" data-n="${enc(e.n)}">
       <div class="pi-main">
         <div class="ic" style="width:40px;height:40px;flex:0 0 40px" onclick="togCard(this)">${I[e.ic]||I.fullbody}</div>
         <div class="ph" onclick="togCard(this)">
@@ -2530,7 +2546,7 @@ function gitemHTML(i){
   const pickUI = ssMode
     ? `<div class="sspick ${picked?'on':''}" onclick="toggleSSPick(${i})">${picked?'✓':''}</div>`
     : "";
-  return `<div class="gitem exp ${ssMode?'ssmode':''}" data-i="${i}">
+  return `<div class="gitem exp ${ssMode?'ssmode':''}" data-i="${i}" data-n="${enc(e.n)}">
       <div class="gitem-top">
         ${pickUI}
         <div class="ic" onclick="${ssMode?`toggleSSPick(${i})`:'togCard(this)'}">${I[e.ic]||I.fullbody}</div>
@@ -2883,15 +2899,12 @@ function renderTrain(){
     ${dateBar()}
     <div class="trtop">${train.title} · exercise ${done+1} of ${total}${ssLabel?` · <span class="trss">${ssLabel}</span>`:""}</div>
     <div class="trcard">
-      <div class="mapwrap">
-        ${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n],{h:120}):""}
-        ${lastWeightBadge(e)}
-      </div>
+      ${libVisual(e,`<div class="mapwrap">${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n],{h:120}):""}${lastWeightBadge(e)}</div>`,`<div class="mediaslot" id="media-tr"></div>`)}
       <h2 class="trname">${e.n} <span class="lvl ${e.lvl}" style="font-size:9px">${e.lvl}</span></h2>
       <button class="trshuffle" onclick="shuffleCurrent()">⇄ Swap this exercise</button>
       <div class="trsug">${suggestFor(e)}</div>
       <div class="trmus">${e.m}</div>
-      <div class="mediaslot" id="media-tr"></div>
+      ${exInfo(e)}
       ${logBlock(e,"-tr")}
       ${demoLinks(e,true)}
     </div>
