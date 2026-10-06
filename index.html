@@ -370,6 +370,32 @@
   .calqbtn{flex:1;padding:10px 4px;border-radius:10px;background:var(--card2);border:1.5px solid var(--line);color:var(--accent2);font-size:13px;font-weight:700;cursor:pointer}
   .calqbtn:active{background:rgba(232,80,46,.14)}
   .caltrain{margin-top:18px;padding-top:4px}
+  /* FOOD CALCULATOR (Calories tab) */
+  .fcalc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+  .fcalc .fdhead{margin-top:0}
+  .fcrow{display:flex;gap:8px;margin-bottom:8px}
+  .fcrow .fcg{flex:0 0 92px;text-align:center}
+  .fcsug{margin:-2px 0 8px}
+  .fcsug:empty{display:none}
+  .fcs{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:5px;color:var(--txt);font-size:14px;cursor:pointer}
+  .fcs small{color:var(--dim);font-size:11.5px;white-space:nowrap}
+  .fcs:active{border-color:var(--accent)}
+  .fcunits{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .fcunits:empty{display:none}
+  .fcunits .chip.on{background:var(--accent);color:#fff}
+  .fcprev{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:10px;font-size:13px;color:var(--dim);line-height:1.5}
+  .fcprev b{color:var(--txt)}
+  .fcprev .fck{font-size:26px;font-weight:800;color:var(--accent2);line-height:1.1}
+  .fcprev .fck small{font-size:12px;color:var(--dim);font-weight:600}
+  .fcrecent{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px}
+  .fcrecent:empty{display:none}
+  .fcmine{margin-top:12px;font-size:13px;color:var(--dim)}
+  .fcmine summary{cursor:pointer;color:var(--accent2);font-weight:600}
+  .fcmine .fcrow{margin-top:8px}
+  .fcmine .calinput{font-size:14px;padding:10px}
+  .fi-m2{font-size:11px;color:var(--dim);margin-top:2px}
+  .calmac{font-size:12px;color:var(--dim);margin-top:6px}
+  .calmac b{color:var(--txt)}
   .calwtip{background:rgba(77,159,255,.08);border:1px solid rgba(77,159,255,.25);border-radius:9px;padding:9px 11px;font-size:11.5px;color:#cfe0f2;margin-bottom:10px;line-height:1.5}
   .calchk{display:flex;align-items:center;gap:8px;font-size:13px;color:#cdd6df;margin:10px 0}
   .calchk input{width:18px;height:18px}
@@ -486,6 +512,23 @@
   .mmv span{font-size:9px;color:#8a98a8;text-transform:uppercase;letter-spacing:1px}
   .daymaplab{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin:10px 0 6px;font-weight:600}
   .mwvid{width:100%;border-radius:11px;background:#000;display:block}
+  /* in-app photo demo: start/finish photos cross-fading in a loop */
+  .pdemo{position:relative;width:100%;aspect-ratio:4/3;border-radius:11px;overflow:hidden;background:#000}
+  .pdemo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+  .pdemo img.pd1{animation:pdfade 2.4s ease-in-out infinite}
+  @keyframes pdfade{0%,30%{opacity:0}45%,80%{opacity:1}95%,100%{opacity:0}}
+  .pdemo.paused img.pd1{animation-play-state:paused}
+  .vtog{display:flex;background:var(--card2);border-radius:10px;padding:3px;margin-bottom:10px}
+  .vtog button{flex:1;border:none;background:none;color:var(--dim);font-size:12.5px;font-weight:700;padding:8px;border-radius:8px}
+  .vtog button.on{background:var(--accent);color:#fff}
+  .vpane[hidden]{display:none}
+  .vpane .mmap{margin-bottom:12px}
+  .pdhint{font-size:10.5px;color:var(--dim);text-align:center;margin-top:5px}
+  .pdtoggle{width:100%;margin-top:8px;background:var(--card2);border:none;border-radius:9px;padding:10px;font-size:12.5px;font-weight:700;color:var(--accent2)}
+  .pdinline:empty{display:none}
+  .pdinline{margin-top:8px}
+  .demohd{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:10px}
+  .trcard .mediaslot{margin:10px 0 4px}
   .vidload,.viderr{background:var(--card2);border-radius:11px;padding:22px;text-align:center;font-size:12.5px;color:var(--dim)}
   .viderr{color:var(--amber)}
   /* settings */
@@ -649,6 +692,32 @@
     <div id="calRing"></div>
     <div id="calWarn"></div>
 
+    <div class="fcalc">
+      <div class="fdhead">What did you eat?</div>
+      <div class="fcrow">
+        <input type="text" id="fcFood" class="calinput" placeholder="e.g. ribeye 250g, 3 eggs" autocomplete="off" oninput="fcInput()" onfocus="fcInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcEnter();}">
+        <input type="number" inputmode="decimal" id="fcGrams" class="calinput fcg" placeholder="grams" oninput="fcGramsTyped()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcAdd();}">
+      </div>
+      <div id="fcSuggest" class="fcsug"></div>
+      <div id="fcUnits" class="fcunits"></div>
+      <div id="fcPreview" class="fcprev"></div>
+      <button class="btn primary" id="fcAddBtn" style="width:100%" onclick="fcAdd()">Add</button>
+      <div id="fcRecent" class="fcrecent"></div>
+      <details class="fcmine" id="fcMine">
+        <summary>Food not in the list? Add your own</summary>
+        <div style="margin-top:8px">Copy the "per 100 g" numbers from the packet. If you only know protein and fat, leave calories empty and it will be worked out.</div>
+        <div class="fcrow"><input type="text" id="mfName" class="calinput" placeholder="Name, e.g. Woolies boerewors"></div>
+        <div class="fcrow">
+          <input type="number" inputmode="decimal" id="mfK" class="calinput" placeholder="kcal">
+          <input type="number" inputmode="decimal" id="mfP" class="calinput" placeholder="protein g">
+          <input type="number" inputmode="decimal" id="mfF" class="calinput" placeholder="fat g">
+        </div>
+        <button class="btn ghost" style="width:100%" onclick="saveMyFood()">Save food</button>
+        <div id="mfList" style="margin-top:10px"></div>
+      </details>
+    </div>
+
+    <div class="fdhead">Or type calories directly</div>
     <div class="caladd">
       <input type="number" inputmode="numeric" id="calInput" class="calinput" placeholder="Calories eaten">
       <input type="text" id="calLabel" class="calinput callbl" placeholder="What (optional)">
@@ -761,7 +830,7 @@
         <button class="btn ghost" onclick="clearMwKey()">Remove</button>
       </div>
       <div id="mwStatus" class="mwstatus"></div>
-      <div class="setnote">Get a key at <b>api.musclewiki.com/register</b>. Direct video access needs the <b>TESTING tier ($10/mo)</b> — the free BASIC tier is playground-only and won't stream video. Without a key, the app still works using the written form cues and the demo link. Your key is stored only on this device.</div>
+      <div class="setnote">Get a key at <b>api.musclewiki.com/register</b>. Direct video access needs the <b>TESTING tier ($10/mo)</b> — the free BASIC tier is playground-only and won't stream video. Without a key, the app shows real start/finish demo photos inside each exercise instead. Your key is stored only on this device.</div>
     </div>
 
     <div class="summary"><b>Back up your data.</b> Your weekly plans, training logs, workout history, food log and weight history are stored <b>only on this phone</b> — not in the cloud. If you clear Safari's data or change phones, they're gone. Export below and keep the text somewhere safe (a note, or email it to yourself).</div>
@@ -1460,11 +1529,49 @@ async function mwGetVideo(name){
   }
 }
 
-// Called when an exercise card opens: injects the video if a key is set.
-async function loadExerciseMedia(name){
-  const slot=document.getElementById("media-"+cssId(name));
+/* ---------------- IN-APP PHOTO DEMOS ----------------
+ Real start/finish photos from free-exercise-db (public domain, github.com/yuhonas/free-exercise-db),
+ cross-faded in a loop so you see the movement without leaving the app. No key needed.
+------------------------------------------------------ */
+const DEMO_BASE="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
+const DEMO_IMG={"Bodyweight Squat":"Bodyweight_Squat","Goblet Squat":"Goblet_Squat","Reverse Lunge":"Dumbbell_Rear_Lunge","Bulgarian Split Squat":"Split_Squat_with_Dumbbells","Step-Up":"Dumbbell_Step_Ups","Calf Raise":"Standing_Calf_Raises","Glute Bridge":"Butt_Lift_Bridge","Single-Leg Glute Bridge":"Single_Leg_Glute_Bridge","Romanian Deadlift":"Romanian_Deadlift","Kettlebell Swing":"One-Arm_Kettlebell_Swings","Push-Up":"Pushups","Dumbbell Chest Press":"Dumbbell_Bench_Press","Bench Press":"Barbell_Bench_Press_-_Medium_Grip","Incline Press":"Incline_Dumbbell_Press","Chest Fly":"Dumbbell_Flyes","Dip":"Dips_-_Chest_Version","Lat Pulldown":"Wide-Grip_Lat_Pulldown","Seated Cable Row":"Seated_Cable_Rows","One-Arm Dumbbell Row":"One-Arm_Dumbbell_Row","Assisted Pull-Up":"Band_Assisted_Pull-Up","Pull-Up":"Pullups","Dumbbell Shoulder Press":"Dumbbell_Shoulder_Press","Lateral Raise":"Side_Lateral_Raise","Band Pull-Apart":"Band_Pull_Apart","Face Pull":"Face_Pull","Pike Push-Up":"Handstand_Push-Ups","Bicep Curl":"Dumbbell_Bicep_Curl","Hammer Curl":"Hammer_Curls","Overhead Tricep Extension":"Standing_Dumbbell_Triceps_Extension","Tricep Dip (Bench)":"Bench_Dips","Band Tricep Pushdown":"Triceps_Pushdown","Plank":"Plank","Side Plank":"Side_Bridge","Dead Bug":"Dead_Bug","Hanging Knee Raise":"Hanging_Leg_Raise","Hanging Leg Raise":"Hanging_Leg_Raise","Russian Twist":"Russian_Twist","Bike Intervals":"Bicycling_Stationary","Treadmill Incline Walk":"Walking_Treadmill","Jump Rope":"Rope_Jumping","Barbell Back Squat":"Barbell_Squat","Barbell Front Squat":"Front_Squat_Clean_Grip","Barbell Deadlift":"Barbell_Deadlift","Overhead Press":"Standing_Military_Press","Bent-Over Row":"Bent_Over_Barbell_Row","Barbell Hip Thrust":"Barbell_Hip_Thrust","Close-Grip Bench Press":"Close-Grip_Barbell_Bench_Press","Ab Wheel Rollout":"Ab_Roller","Leg Extension":"Leg_Extensions","Leg Curl":"Lying_Leg_Curls","Barbell Lunge":"Barbell_Lunge","Walking Lunge":"Bodyweight_Walking_Lunge","Split Squat":"Split_Squats","Cable Kickback":"One-Legged_Cable_Kickback","Good Morning":"Good_Morning","Decline Push-Up":"Decline_Push-Up","Barbell Floor Press":"Floor_Press","Chin-Up":"Chin-Up","Straight-Arm Pulldown":"Straight-Arm_Pulldown","Barbell Shrug":"Barbell_Shrug","Inverted Row":"Inverted_Row","Arnold Press":"Arnold_Dumbbell_Press","Front Raise":"Front_Dumbbell_Raise","Rear Delt Fly":"Seated_Bent-Over_Rear_Delt_Raise","Upright Row":"Upright_Barbell_Row","Barbell Curl":"Barbell_Curl","Incline Dumbbell Curl":"Incline_Dumbbell_Curl","Concentration Curl":"Concentration_Curls","Skull Crusher":"EZ-Bar_Skullcrusher","Tricep Kickback":"Tricep_Dumbbell_Kickback","Wrist Curl":"Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench","Sit-Up":"Sit-Up","Crunch":"Crunches","Bicycle Crunch":"Air_Bike","Cable Woodchop":"Standing_Cable_Wood_Chop","Mountain Climbers":"Mountain_Climbers","Farmer's Carry":"Farmers_Walk","Suitcase Carry":"Farmers_Walk","Smith Machine Squat":"Smith_Machine_Squat","Cable Pull-Through":"Pull_Through","Nordic Curl":"Natural_Glute_Ham_Raise","Cable Crossover":"Cable_Crossover","Low Cable Fly":"Low_Cable_Crossover","Single-Arm Cable Row":"Seated_One-arm_Cable_Pulley_Rows","Wide-Grip Lat Pulldown":"Wide-Grip_Lat_Pulldown","Close-Grip Pulldown":"Close-Grip_Front_Lat_Pulldown","Cable Rope Pushdown":"Triceps_Pushdown_-_Rope_Attachment","Cable Pallof Press":"Pallof_Press","Resistance Band Row":"Seated_Cable_Rows"};
+function hasPhotoDemo(name){return !!DEMO_IMG[name];}
+function photoDemo(name){
+  const id=DEMO_IMG[name]; if(!id) return "";
+  const u=DEMO_BASE+encodeURIComponent(id)+"/";
+  return `<div class="pdemo" onclick="this.classList.toggle('paused')">
+      <img class="pd0" src="${u}0.jpg" alt="${name}: start position" loading="lazy" onerror="pdFail(this)">
+      <img class="pd1" src="${u}1.jpg" alt="${name}: finish position" loading="lazy" onerror="pdFail(this)">
+    </div><div class="pdhint">Tap to pause · needs internet the first time</div>`;
+}
+function pdFail(img){const d=img.closest(".pdemo");if(!d)return;const h=d.nextElementSibling;
+  d.outerHTML=`<div class="viderr">Demo photos need an internet connection.</div>`;if(h&&h.classList.contains("pdhint"))h.remove();}
+// Library: animated demo with a toggle to the muscle map
+function libVisual(e){
+  const map=EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n]):"";
+  const slot=`<div class="mediaslot" id="media-${cssId(e.n)}"></div>`;
+  if(!(mwKey||hasPhotoDemo(e.n))) return map;   // no demo available: just the muscles
+  if(!map) return slot;
+  return `<div class="vtog"><button class="on" onclick="libPane(this,0)">▶ How to</button><button onclick="libPane(this,1)">Muscles worked</button></div>
+    <div class="vpane">${slot}</div><div class="vpane" hidden>${map}</div>`;
+}
+function libPane(btn,i){
+  const bs=btn.parentElement.querySelectorAll("button");
+  bs.forEach((b,j)=>b.classList.toggle("on",j===i));
+  let pane=btn.parentElement.nextElementSibling;
+  for(let j=0;j<2;j++){pane.hidden=(j!==i);pane=pane.nextElementSibling;}
+}
+function togPhotoDemo(btn,name){
+  const box=btn.nextElementSibling;
+  if(box.innerHTML){box.innerHTML="";btn.textContent="▶ Show me how";return;}
+  box.innerHTML=photoDemo(name);btn.textContent="✕ Hide demo";
+}
+
+// Called when an exercise card opens: MuscleWiki video if a key is set, otherwise in-app photo demo.
+async function loadExerciseMedia(name,slotId){
+  const slot=document.getElementById(slotId||("media-"+cssId(name)));
   if(!slot) return;
-  if(!mwKey){slot.innerHTML="";return;}
+  if(!mwKey){if(slot.dataset.loaded!=="p"){slot.innerHTML=photoDemo(name);slot.dataset.loaded="p";}return;}
   if(slot.dataset.loaded==="1") return;
   slot.dataset.loaded="1";
   slot.innerHTML=`<div class="vidload">Loading demo…</div>`;
@@ -1474,7 +1581,7 @@ async function loadExerciseMedia(name){
   }else if(r.err==="no-key"){
     slot.innerHTML="";
   }else{
-    slot.innerHTML=`<div class="viderr">Demo unavailable: ${r.err}</div>`;
+    slot.innerHTML=photoDemo(name)||`<div class="viderr">Demo unavailable: ${r.err}</div>`;
     slot.dataset.loaded="0"; // allow retry
   }
 }
@@ -1617,13 +1724,12 @@ function libCardHTML(e){
         <div class="chev" onclick="tog(this)">›</div>
       </div>
       <div class="ex-body"><div class="ex-pad">
-        <div class="mediaslot" id="media-${cssId(e.n)}"></div>
-        ${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n]):""}
+        ${libVisual(e)}
         <div class="forrow"><b>What it's for:</b> ${e.for}</div>
         <ol class="steps">${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
         <div class="tip"><b>Tip:</b> ${e.tip}</div>
         <span class="equiptag">🏋 ${e.eq}</span>
-        ${demoLinks(e)}
+        ${demoLinks(e,true)}
         ${logBlock(e)}
       </div></div>
     </div>`;
@@ -1637,7 +1743,12 @@ const EQ_SHORT={floor:"Bodyweight",dumbbells:"Dumbbell",barbell:"Barbell",squatr
  benchpress:"Barbell",bench:"Bench",kettlebell:"Kettlebell",bands:"Band",
  stack:"Cable",tower:"Bar",abwheel:"Ab wheel",bag:"Bag",rope:"Rope",bike:"Bike",treadmill:"Treadmill"};
 function ytLink(term){return `https://www.youtube.com/results?search_query=${encodeURIComponent(term)}`;}
-function demoLinks(e){
+function demoLinks(e,shown){
+  const inline = (!shown && hasPhotoDemo(e.n))
+    ? `<button class="pdtoggle" onclick="togPhotoDemo(this,'${enc(e.n)}')">▶ Show me how</button><div class="pdinline"></div>` : "";
+  return inline + `<div class="demohd">Full videos (opens YouTube)</div>` + ytLinks(e);
+}
+function ytLinks(e){
   const tags=(EX_EQ[e.n]||[]);
   // unique equipment "flavours" for video search
   const seen=new Set(); const links=[];
@@ -2000,7 +2111,7 @@ function clearDay(){if(!plans[curDay]||!plans[curDay].length)return;if(confirm(`
 
 /* ---------------- DATA (export/import) ---------------- */
 function exportPlans(){
-  const data=JSON.stringify({goal,plans,logs,foodLog,weightLog,profile,program,calLog,calCfg});
+  const data=JSON.stringify({goal,plans,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods});
   const ta=document.createElement("textarea");
   ta.value=data;document.body.appendChild(ta);ta.select();
   try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
@@ -2030,6 +2141,7 @@ function doImport(){
     if(d.program){program=d.program;saveProgram();}
     if(d.calLog){calLog=d.calLog;}
     if(d.calCfg){calCfg=Object.assign(calCfg,d.calCfg);}
+    if(Array.isArray(d.myFoods)){myFoods=d.myFoods;saveMyFoods();}
     saveCal();
     save();saveFood();
     renderGoals();renderLib();renderPlan();renderDaySelect();
@@ -2779,8 +2891,9 @@ function renderTrain(){
       <button class="trshuffle" onclick="shuffleCurrent()">⇄ Swap this exercise</button>
       <div class="trsug">${suggestFor(e)}</div>
       <div class="trmus">${e.m}</div>
+      <div class="mediaslot" id="media-tr"></div>
       ${logBlock(e,"-tr")}
-      ${demoLinks(e)}
+      ${demoLinks(e,true)}
     </div>
     <div class="trnav">
       <button class="btn ghost" onclick="trainPrev()" ${train.idx===0?'disabled':''}>‹ Prev</button>
@@ -2807,6 +2920,7 @@ function renderTrain(){
 
   act.innerHTML = bigCard + `<div class="trlist">${listHtml}</div>
     <button class="btn ghost" style="width:100%;margin-top:12px" onclick="endTraining()">End workout</button>`;
+  loadExerciseMedia(e.n,"media-tr");
 }
 function trRow(i){
   const it=train.list[i];
@@ -2958,7 +3072,83 @@ const FOODS=[
  {n:"Heart (beef)",c:"Organ",p:17,f:4,k:112},
  {n:"Tripe",c:"Organ",p:12,f:4,k:85},
  {n:"Bone Broth",c:"Organ",p:6,f:1,k:35},
+ // MORE (added with the food calculator)
+ {n:"Fillet Steak",c:"Beef",p:28,f:9,k:200},
+ {n:"T-Bone Steak",c:"Beef",p:24,f:18,k:260},
+ {n:"Boerewors",c:"Beef",p:15,f:25,k:290},
+ {n:"Roast Beef (sliced)",c:"Beef",p:26,f:6,k:160},
+ {n:"Corned Beef (tinned)",c:"Beef",p:27,f:15,k:250},
+ {n:"Beef Tongue",c:"Organ",p:19,f:22,k:280},
+ {n:"Lamb Liver",c:"Organ",p:20,f:5,k:137},
+ {n:"Lamb Ribs",c:"Lamb",p:18,f:30,k:340},
+ {n:"Lamb Shoulder",c:"Lamb",p:24,f:20,k:275},
+ {n:"Pork Ribs",c:"Pork",p:22,f:25,k:320},
+ {n:"Pork Loin",c:"Pork",p:27,f:8,k:185},
+ {n:"Gammon / Ham",c:"Pork",p:21,f:6,k:145},
+ {n:"Salami",c:"Pork",p:22,f:34,k:405},
+ {n:"Chorizo",c:"Pork",p:24,f:38,k:455},
+ {n:"Chicken Drumstick (skin on)",c:"Poultry",p:24,f:11,k:200},
+ {n:"Roast Chicken (meat + skin)",c:"Poultry",p:27,f:14,k:239},
+ {n:"Turkey Breast",c:"Poultry",p:29,f:2,k:140},
+ {n:"Trout",c:"Fish",p:21,f:6,k:145},
+ {n:"Cod",c:"Fish",p:23,f:1,k:105},
+ {n:"Tuna Steak",c:"Fish",p:29,f:1,k:130},
+ {n:"Tinned Tuna (in water)",c:"Fish",p:26,f:1,k:115},
+ {n:"Oysters",c:"Fish",p:9,f:2,k:70},
+ {n:"Mussels",c:"Fish",p:24,f:4,k:170},
+ {n:"Calamari",c:"Fish",p:16,f:1,k:90},
+ {n:"Crab",c:"Fish",p:19,f:1,k:85},
+ {n:"Egg White",c:"Eggs",p:11,f:0,k:52},
+ {n:"Duck Egg",c:"Eggs",p:13,f:14,k:185},
+ {n:"Cheddar",c:"Dairy",p:25,f:33,k:403},
+ {n:"Parmesan",c:"Dairy",p:38,f:29,k:431},
+ {n:"Mozzarella",c:"Dairy",p:22,f:17,k:280},
+ {n:"Cream Cheese",c:"Dairy",p:6,f:34,k:342},
+ {n:"Cream (heavy, 36%)",c:"Dairy",p:2,f:36,k:340},
+ {n:"Sour Cream",c:"Dairy",p:2,f:19,k:193},
+ {n:"Greek Yogurt (full fat)",c:"Dairy",p:9,f:5,k:97},
+ {n:"Full-cream Milk",c:"Dairy",p:3.3,f:3.3,k:64},
 ];
+// Extra words people type for a food, so "steak" or "mince" finds it
+const FOOD_ALIASES={
+ "Ribeye Steak":"steak scotch fillet entrecote",
+ "Sirloin Steak":"steak striploin",
+ "Rump Steak":"steak",
+ "Fillet Steak":"steak tenderloin filet",
+ "T-Bone Steak":"steak",
+ "Beef Mince (20% fat)":"mince ground beef burger patty",
+ "Beef Mince (10% fat)":"mince ground beef lean burger patty",
+ "Lamb Mince":"mince ground",
+ "Biltong (dry)":"jerky dried meat",
+ "Boerewors":"wors sausage braai",
+ "Bacon (streaky)":"rashers",
+ "Pork Sausage (100% meat)":"bangers",
+ "Chicken Breast (skinless)":"chicken fillet",
+ "Whole Egg (1 large ~50g)":"eggs",
+ "Egg Yolk":"eggs yolks",
+ "Egg White":"eggs whites",
+ "Hake / White Fish":"fish",
+ "Tinned Tuna (in oil)":"tuna can",
+ "Tinned Tuna (in water)":"tuna can brine",
+ "Prawns":"shrimp",
+ "Calamari":"squid",
+ "Cream (heavy, 36%)":"double whipping",
+ "Cheddar":"cheese",
+ "Parmesan":"cheese",
+ "Mozzarella":"cheese",
+ "Cream Cheese":"cheese",
+ "Full-cream Milk":"whole milk",
+ "Heart (beef)":"organ",
+};
+// Everyday picks float to the top when a search matches several foods
+const FOOD_BOOST={"Whole Egg (1 large ~50g)":3,"Ribeye Steak":2,"Beef Mince (20% fat)":2,"Chicken Breast (skinless)":1,"Chicken Thigh (skin on)":1,"Butter":1,"Bacon (streaky)":1,"Cheddar":1};
+// Foods you usually count rather than weigh: [grams each, word]
+const FOOD_UNITS={
+ "Whole Egg (1 large ~50g)":[50,"egg"],
+ "Egg Yolk":[17,"yolk"],
+ "Egg White":[33,"white"],
+ "Duck Egg":[70,"egg"],
+};
 let foodCat="All", foodSub="today";
 
 function todayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
@@ -3031,6 +3221,7 @@ function calTargetFor(key){ return calCfg.target + (calCfg.addBurn?calBurned(key
 function renderCal(){
   const db=document.getElementById("calDateBar"); if(db)db.innerHTML=dateBar();
   const key=selKey;
+  renderFoodCalc();
   calCfg.maint=calMaintenance();
   const m=document.getElementById("calMaint"); if(m)m.textContent=calCfg.maint;
   const ti=document.getElementById("calTargetInput"); if(ti&&document.activeElement!==ti)ti.value=calCfg.target;
@@ -3049,6 +3240,9 @@ function renderCal(){
       <div class="calsub">${eaten} eaten · ${target} target${calCfg.addBurn&&burned?` (incl. ${burned} burn)`:''}</div>
       <div class="calbar"><div class="calbarfill ${over?'over':''}" style="width:${pct}%"></div></div>
       <div class="caldef">${deficit>=0?`▼ ${deficit} under maintenance`:`▲ ${Math.abs(deficit)} over maintenance`}</div>
+      ${(()=>{const e=(calLog[key]?.eat||[]).filter(x=>x.p!=null);if(!e.length)return "";
+        const p=e.reduce((t,x)=>t+(+x.p||0),0), f=e.reduce((t,x)=>t+(+x.f||0),0);
+        return `<div class="calmac">From foods you picked: <b>${Math.round(p)} g</b> protein · <b>${Math.round(f)} g</b> fat</div>`;})()}
     </div>`;
 
   // warning
@@ -3067,7 +3261,7 @@ function renderCal(){
   // eaten list
   const eat=calLog[key]?.eat||[];
   document.getElementById("calList").innerHTML = eat.length
-    ? eat.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.label||"Food"}</div></div><div style="font-weight:800;color:var(--accent2)">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`).join("")
+    ? eat.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.food?escH(x.food):(x.label||"Food")}</div>${x.g?`<div class="fi-m2">${x.g} g · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`:""}</div><div style="font-weight:800;color:var(--accent2)">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`).join("")
     : `<div class="addhint">Nothing logged yet. Add what you eat above.</div>`;
 
   // burn list
@@ -3185,6 +3379,170 @@ function saveCalTarget(){
   calCfg.target=v; saveCal(); renderCal(); toast(`Target set: ${v} kcal`);
 }
 function toggleAddBurn(){ calCfg.addBurn=document.getElementById("calAddBurnChk").checked; saveCal(); renderCal(); }
+
+/* ---- Food calculator: pick a food, enter grams, it works out kcal + macros ---- */
+const MYFOOD_KEY="hgt_myfoods_v1";
+let myFoods=[];   // [{n,c:"My foods",p,f,k}] per 100 g
+function loadMyFoods(){try{const m=localStorage.getItem(MYFOOD_KEY);if(m)myFoods=JSON.parse(m)||[];}catch(e){}}
+function saveMyFoods(){try{localStorage.setItem(MYFOOD_KEY,JSON.stringify(myFoods));}catch(e){}}
+function escH(t){return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function allFoods(){return myFoods.concat(FOODS);}
+function findFood(name){return allFoods().find(f=>f.n===name);}
+
+let fcSel=null;      // the chosen food
+let fcNum=null;      // a number typed in the food box: {n, g:true if followed by "g"}
+let fcGramsManual=false;
+
+// Pull "250g" / "3" out of what was typed, leaving the food words
+function fcParse(raw){
+  let num=null;
+  const q=raw.replace(/(\d+(?:[.,]\d+)?)\s*(kg|g|gr|gram|grams)?\b/i,(m,n,u)=>{
+    let v=parseFloat(n.replace(",","."));
+    if(u&&u.toLowerCase()==="kg")v*=1000;
+    num={n:v,g:!!u};return " ";
+  }).replace(/\s+/g," ").trim().toLowerCase();
+  return {q,num};
+}
+function fcScore(f,words){
+  const name=f.n.toLowerCase(), hay=name+" "+(FOOD_ALIASES[f.n]||"").toLowerCase()+" "+f.c.toLowerCase();
+  let score=0;
+  for(const w of words){
+    const stem=w.length>3&&w.endsWith("s")?w.slice(0,-1):w;
+    if(!hay.includes(stem))return -1;
+    if(name.startsWith(stem))score+=6;
+    else if(new RegExp("(^|[^a-z])"+stem.replace(/[^a-z0-9]/g,"")).test(name))score+=4;
+    else if(name.includes(stem))score+=2;
+    else score+=1;
+  }
+  if(f.c==="My foods")score+=1;
+  score+=FOOD_BOOST[f.n]||0;
+  return score;
+}
+function fcMatches(q){
+  const words=q.split(" ").filter(Boolean);
+  if(!words.length)return [];
+  return allFoods().map(f=>({f,s:fcScore(f,words)})).filter(x=>x.s>=0)
+    .sort((a,b)=>b.s-a.s||a.f.n.length-b.f.n.length).slice(0,6).map(x=>x.f);
+}
+function fcInput(){
+  const el=document.getElementById("fcFood");
+  const {q,num}=fcParse(el.value);
+  fcNum=num;
+  if(fcSel&&el.value===fcSel.n){document.getElementById("fcSuggest").innerHTML="";return;}
+  fcSel=null;
+  const list=fcMatches(q);
+  document.getElementById("fcSuggest").innerHTML = q
+    ? (list.map(f=>`<button class="fcs" onclick="fcPick('${escH(f.n).replace(/\\/g,"\\\\").replace(/&#39;/g,"\\'")}')"><span>${escH(f.n)}</span><small>${f.k} kcal / 100 g</small></button>`).join("")
+       || `<div class="addhint" style="padding:6px 2px">No match. Add it under "Food not in the list?" below.</div>`)
+    : "";
+  fcRender();
+}
+function fcEnter(){
+  if(fcSel){fcAdd();return;}
+  const first=fcMatches(fcParse(document.getElementById("fcFood").value).q)[0];
+  if(first)fcPick(first.n);
+}
+function fcPick(name){
+  const f=findFood(name); if(!f)return;
+  fcSel=f;
+  const el=document.getElementById("fcFood"); el.value=f.n;
+  document.getElementById("fcSuggest").innerHTML="";
+  const g=document.getElementById("fcGrams");
+  if(fcNum){
+    const u=FOOD_UNITS[f.n];
+    g.value = (!fcNum.g && u && fcNum.n<=24) ? fcNum.n*u[0] : Math.round(fcNum.n);
+    fcGramsManual=true;
+  }else if(!fcGramsManual||!g.value){
+    const u=FOOD_UNITS[f.n];
+    g.value = u ? u[0]*2 : "";
+    fcGramsManual=false;
+  }
+  fcNum=null;
+  fcRender();
+  if(!g.value)g.focus();
+}
+function fcGramsTyped(){fcGramsManual=true;fcRender();}
+function fcSetGrams(v){document.getElementById("fcGrams").value=v;fcGramsManual=true;fcRender();}
+function fcCalc(f,g){return {k:Math.round(f.k*g/100),p:f.p*g/100,f:f.f*g/100};}
+function fcRender(){
+  const gEl=document.getElementById("fcGrams");
+  const g=parseFloat(gEl?.value);
+  const prev=document.getElementById("fcPreview"), units=document.getElementById("fcUnits");
+  const btn=document.getElementById("fcAddBtn");
+  if(btn)btn.textContent=`Add to ${dayLabel(selKey).toLowerCase()==="today"?"today":dayLabel(selKey)}`;
+  if(!fcSel){
+    units.innerHTML="";
+    prev.innerHTML=`Type what you ate, pick it from the list, then enter the grams. Calories and protein/fat are worked out for you.`;
+    return;
+  }
+  const u=FOOD_UNITS[fcSel.n];
+  const opts = u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} g`]);
+  units.innerHTML=opts.map(([v,l])=>`<button class="chip ${g===v?"on":""}" onclick="fcSetGrams(${v})">${l}</button>`).join("");
+  if(!g||g<=0){
+    prev.innerHTML=`<b>${escH(fcSel.n)}</b>: ${fcSel.k} kcal per 100 g. How many grams?`;
+    return;
+  }
+  const r=fcCalc(fcSel,g);
+  prev.innerHTML=`<div class="fck">${r.k}<small> kcal</small></div>
+    <b>${Math.round(g)} g ${escH(fcSel.n)}</b> · ${Math.round(r.p)} g protein · ${Math.round(r.f)} g fat`;
+}
+function fcAdd(){
+  if(!fcSel){
+    const first=fcMatches(fcParse(document.getElementById("fcFood").value).q)[0];
+    if(first){fcPick(first.n);} else {toast("Pick a food first");return;}
+  }
+  const g=parseFloat(document.getElementById("fcGrams").value);
+  if(!g||g<=0){toast("Enter grams");document.getElementById("fcGrams").focus();return;}
+  const r=fcCalc(fcSel,g);
+  calDay(selKey).eat.push({kcal:r.k,label:fcSel.n,food:fcSel.n,g:Math.round(g),p:Math.round(r.p*10)/10,f:Math.round(r.f*10)/10});
+  saveCal();
+  toast(`+${r.k} kcal · ${fcSel.n}`);
+  fcSel=null;fcNum=null;fcGramsManual=false;
+  document.getElementById("fcFood").value="";
+  document.getElementById("fcGrams").value="";
+  document.getElementById("fcSuggest").innerHTML="";
+  renderCal();
+}
+// One-tap refill of foods you've logged before (most recent first)
+function fcRecents(){
+  const seen={}, out=[];
+  Object.keys(calLog).sort().reverse().forEach(k=>{
+    (calLog[k].eat||[]).slice().reverse().forEach(x=>{
+      if(x.food&&x.g&&!seen[x.food]&&findFood(x.food)){seen[x.food]=1;out.push(x);}
+    });
+  });
+  return out.slice(0,8);
+}
+function fcRefill(name,g){fcSel=null;fcNum={n:g,g:true};fcPick(name);document.getElementById("fcGrams").focus();}
+function renderFoodCalc(){
+  const r=document.getElementById("fcRecent");
+  if(r){
+    const rec=fcRecents();
+    r.innerHTML=rec.length?rec.map(x=>`<button class="chip" onclick="fcRefill('${escH(x.food).replace(/&#39;/g,"\\'")}',${x.g})">${escH(x.food)} · ${x.g} g</button>`).join(""):"";
+  }
+  const ml=document.getElementById("mfList");
+  if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${escH(f.n)}</div><div class="fi-m2">per 100 g · ${f.k} kcal · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
+  fcRender();
+}
+function saveMyFood(){
+  const name=(document.getElementById("mfName").value||"").trim();
+  const num=id=>{const v=parseFloat(document.getElementById(id).value);return isNaN(v)||v<0?null:v;};
+  let k=num("mfK");const p=num("mfP")||0, f=num("mfF")||0;
+  if(!name){toast("Give it a name");return;}
+  if(k===null){ if(!p&&!f){toast("Enter kcal, or protein and fat");return;} k=Math.round(p*4+f*9); }
+  const food={n:name,c:"My foods",p,f,k:Math.round(k)};
+  const i=myFoods.findIndex(x=>x.n.toLowerCase()===name.toLowerCase());
+  if(i>=0)myFoods[i]=food; else myFoods.unshift(food);
+  saveMyFoods();
+  ["mfName","mfK","mfP","mfF"].forEach(id=>document.getElementById(id).value="");
+  toast(`Saved ${name}`);
+  fcSel=null;fcNum=null;fcPick(food.n);
+  renderFoodCalc();
+}
+function rmMyFood(i){
+  if(!confirm(`Remove ${myFoods[i].n} from your foods?`))return;
+  myFoods.splice(i,1);saveMyFoods();renderFoodCalc();
+}
 
 // --- targets ---
 function targets(){
@@ -3696,6 +4054,7 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 load();
 loadFood();
 loadCal();
+loadMyFoods();
 loadProgramState();
 renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();
 switchView("plan");   // ensures goal bar / nav state is initialised correctly
