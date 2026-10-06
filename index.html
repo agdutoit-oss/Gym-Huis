@@ -715,8 +715,8 @@
     <div class="fcalc">
       <div class="fdhead">What did you eat?</div>
       <div class="fcrow">
-        <input type="text" id="fcFood" class="calinput" placeholder="e.g. ribeye 250g, 3 eggs" autocomplete="off" oninput="fcInput()" onfocus="fcInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcEnter();}">
-        <input type="number" inputmode="decimal" id="fcGrams" class="calinput fcg" placeholder="grams" oninput="fcGramsTyped()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcAdd();}">
+        <input type="text" id="fcFood" class="calinput" placeholder="e.g. ribeye 250g, 2 castle lite" autocomplete="off" oninput="fcInput()" onfocus="fcInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcEnter();}">
+        <input type="number" inputmode="decimal" id="fcGrams" class="calinput fcg" placeholder="g / ml" oninput="fcGramsTyped()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcAdd();}">
       </div>
       <div id="fcSuggest" class="fcsug"></div>
       <div id="fcAi"></div>
@@ -3302,7 +3302,7 @@ function renderCal(){
   // eaten list
   const eat=calLog[key]?.eat||[];
   document.getElementById("calList").innerHTML = eat.length
-    ? eat.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.food?escH(x.food):(x.label||"Food")}</div>${x.g?`<div class="fi-m2">${x.g} g · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`:""}</div><div style="font-weight:800;color:var(--accent2)">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`).join("")
+    ? eat.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.food?escH(x.food):(x.label||"Food")}</div>${x.g?`<div class="fi-m2">${x.g} ${x.ml?"ml":"g"} · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`:""}</div><div style="font-weight:800;color:var(--accent2)">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`).join("")
     : `<div class="addhint">Nothing logged yet. Add what you eat above.</div>`;
 
   // burn list
@@ -3612,13 +3612,184 @@ function clearAiKey(){
   toast("Claude lookups off");
 }
 
+// Drinks, per 100 ml (ml:true). Typical South African values; kcal includes sugar and alcohol.
+// Sources: fatsecret.co.za SA product entries and BusinessTech's SA beer/cider/spirit kJ list (2015),
+// otherwise standard per-ABV/recipe estimates. Brand recipes change, so treat as close estimates.
+const DRINKS=[
+ // COFFEE & TEA (made with full cream milk unless noted)
+ {n:"Espresso",c:"Coffee & Tea",k:9,p:0.1,f:0.2,a:"short black ristretto",s:[[30,"single 30 ml"],[60,"double 60 ml"]],u:[30,"shot"]},
+ {n:"Americano / Black Coffee",c:"Coffee & Tea",k:2,p:0.1,f:0,a:"filter long black plain coffee"},
+ {n:"Cappuccino (full cream)",c:"Coffee & Tea",k:46,p:2.4,f:2.4,a:"cappucino capp"},
+ {n:"Cappuccino (low fat)",c:"Coffee & Tea",k:30,p:2.5,f:1,a:"cappucino capp skinny"},
+ {n:"Cappuccino (oat milk)",c:"Coffee & Tea",k:40,p:0.8,f:1.6,a:"cappucino capp"},
+ {n:"Latte (full cream)",c:"Coffee & Tea",k:54,p:2.9,f:2.9,a:"caffe latte cafe"},
+ {n:"Latte (low fat)",c:"Coffee & Tea",k:36,p:3,f:1.1,a:"caffe latte cafe skinny"},
+ {n:"Flat White (full cream)",c:"Coffee & Tea",k:50,p:2.7,f:2.7,a:"flatwhite"},
+ {n:"Cortado",c:"Coffee & Tea",k:40,p:2.1,f:2.1,a:"gibraltar",s:[[120,"cup 120 ml"],[240,"2 cups"]],u:[120,"cup"]},
+ {n:"Macchiato",c:"Coffee & Tea",k:20,p:1,f:1,s:[[60,"single 60 ml"],[120,"double 120 ml"]],u:[60,"cup"]},
+ {n:"Mocha (full cream)",c:"Coffee & Tea",k:80,p:3,f:3.4,a:"mochaccino chocolate coffee"},
+ {n:"Red Cappuccino (rooibos)",c:"Coffee & Tea",k:46,p:2.4,f:2.4,a:"red espresso rooibos latte"},
+ {n:"Coffee with cream",c:"Coffee & Tea",k:40,p:0.3,f:4.3,a:"carnivore heavy cream"},
+ {n:"Bulletproof Coffee (butter + MCT)",c:"Coffee & Tea",k:92,p:0.1,f:10,a:"butter coffee keto carnivore mct"},
+ {n:"Instant Coffee, milk, no sugar",c:"Coffee & Tea",k:9,p:0.4,f:0.4,a:"nescafe ricoffy frisco koffie mug"},
+ {n:"Instant Coffee, milk + 2 sugars",c:"Coffee & Tea",k:22,p:0.4,f:0.4,a:"nescafe ricoffy frisco koffie mug sugar"},
+ {n:"Iced Coffee (milk, sweetened)",c:"Coffee & Tea",k:60,p:2.5,f:1.5,a:"iced latte cold"},
+ {n:"Frappé / Blended Coffee",c:"Coffee & Tea",k:85,p:2,f:3,a:"frappe frappuccino freezo"},
+ {n:"Hot Chocolate (full cream)",c:"Coffee & Tea",k:85,p:3.4,f:3.6,a:"cocoa milo"},
+ {n:"Tea / Rooibos, black",c:"Coffee & Tea",k:1,p:0,f:0,a:"rooibos five roses joko ceylon green tea"},
+ {n:"Tea / Rooibos, milk, no sugar",c:"Coffee & Tea",k:8,p:0.4,f:0.4,a:"rooibos five roses joko ceylon"},
+ {n:"Tea / Rooibos, milk + 1 sugar",c:"Coffee & Tea",k:15,p:0.4,f:0.4,a:"rooibos five roses joko ceylon sugar"},
+ {n:"Sugar",c:"Coffee & Tea",k:400,p:0,f:0,a:"tsp teaspoon",ml:false,s:[[4,"1 tsp"],[8,"2 tsp"],[12,"3 tsp"]],u:[4,"tsp"]},
+ {n:"Milk, full cream",c:"Milk",k:64,p:3.3,f:3.3,a:"whole milk dash"},
+ {n:"Milk, low fat (2%)",c:"Milk",k:50,p:3.4,f:2,a:"lite milk dash"},
+ {n:"Milk, fat free",c:"Milk",k:35,p:3.5,f:0.1,a:"skim milk dash"},
+ {n:"Oat Milk",c:"Milk",k:45,p:1,f:1.5,a:"oatly"},
+ // SOFT DRINKS (Coca-Cola SA range and others)
+ {n:"Coca-Cola Original",c:"Soft drinks",k:42,p:0,f:0,a:"coke coca cola classic"},
+ {n:"Coca-Cola Less Sugar",c:"Soft drinks",k:30,p:0,f:0,a:"coke coca cola same taste"},
+ {n:"Coke No Sugar",c:"Soft drinks",k:0.3,p:0,f:0,a:"coca cola zero diet coke"},
+ {n:"Coke Light",c:"Soft drinks",k:0.4,p:0,f:0,a:"coca cola diet coke"},
+ {n:"Fanta Orange",c:"Soft drinks",k:18,p:0,f:0,a:"fanta"},
+ {n:"Fanta Grape",c:"Soft drinks",k:15,p:0,f:0,a:"fanta"},
+ {n:"Fanta Pineapple",c:"Soft drinks",k:20,p:0,f:0,a:"fanta"},
+ {n:"Fanta No Sugar",c:"Soft drinks",k:1,p:0,f:0,a:"fanta zero"},
+ {n:"Sprite",c:"Soft drinks",k:18,p:0,f:0,a:"lemonade 7up"},
+ {n:"Sprite No Sugar",c:"Soft drinks",k:1,p:0,f:0,a:"sprite zero"},
+ {n:"Stoney Ginger Beer",c:"Soft drinks",k:19,p:0,f:0,a:"stoney ginger"},
+ {n:"Stoney Zero",c:"Soft drinks",k:1,p:0,f:0,a:"stoney ginger beer no sugar"},
+ {n:"Sparletta Creme Soda",c:"Soft drinks",k:28,p:0,f:0,a:"cream soda green"},
+ {n:"Sparletta Iron Brew",c:"Soft drinks",k:28,p:0,f:0,a:"ironbrew irn bru"},
+ {n:"Sparletta Pine Nut",c:"Soft drinks",k:28,p:0,f:0,a:"pinenut"},
+ {n:"Pepsi",c:"Soft drinks",k:41,p:0,f:0,a:"cola"},
+ {n:"Pepsi Max",c:"Soft drinks",k:0.4,p:0,f:0,a:"cola zero diet"},
+ {n:"Appletiser",c:"Soft drinks",k:46,p:0,f:0,a:"apple sparkling juice"},
+ {n:"Grapetiser (red or white)",c:"Soft drinks",k:50,p:0,f:0,a:"grape sparkling juice"},
+ {n:"Lipton / Fuze Iced Tea",c:"Soft drinks",k:19,p:0,f:0,a:"ice tea peach lemon fuzetea"},
+ {n:"Powerade",c:"Soft drinks",k:24,p:0,f:0,a:"sports drink energade game"},
+ {n:"Bonaqua / Water",c:"Soft drinks",k:0,p:0,f:0,a:"water still sparkling valpre"},
+ {n:"Fruit Juice (100%)",c:"Soft drinks",k:46,p:0.5,f:0.1,a:"orange apple juice liqui fruit ceres"},
+ {n:"Coconut Water",c:"Soft drinks",k:19,p:0.7,f:0.2,a:"coconut"},
+ // ENERGY DRINKS
+ {n:"Red Bull",c:"Energy drinks",k:46,p:0,f:0,a:"redbull energy",s:[[250,"can 250 ml"],[355,"can 355 ml"],[473,"can 473 ml"]],u:[250,"can"]},
+ {n:"Red Bull Sugarfree",c:"Energy drinks",k:3,p:0,f:0,a:"redbull energy zero sugar free",s:[[250,"can 250 ml"],[355,"can 355 ml"]],u:[250,"can"]},
+ {n:"Monster Energy",c:"Energy drinks",k:47,p:0,f:0,a:"monster energy"},
+ {n:"Monster Ultra",c:"Energy drinks",k:1,p:0,f:0,a:"monster zero energy"},
+ {n:"Score / Dragon / Play Energy",c:"Energy drinks",k:48,p:0,f:0,a:"score dragon play reboost energy"},
+ // MIXERS & CORDIALS
+ {n:"Soda Water",c:"Mixers",k:0,p:0,f:0,a:"schweppes club soda sodawater"},
+ {n:"Schweppes Tonic Water",c:"Mixers",k:30,p:0,f:0,a:"tonic"},
+ {n:"Schweppes Tonic, Sugar Free",c:"Mixers",k:1,p:0,f:0,a:"tonic zero light"},
+ {n:"Schweppes Lemonade",c:"Mixers",k:30,p:0,f:0,a:"lemonade"},
+ {n:"Schweppes Dry Lemon",c:"Mixers",k:36,p:0,f:0,a:"dry lemon bitter"},
+ {n:"Schweppes Ginger Ale",c:"Mixers",k:34,p:0,f:0,a:"ginger ale"},
+ {n:"Rose's Kola Tonic (undiluted)",c:"Mixers",k:174,p:0,f:0,a:"roses kola tonic cordial",s:[[25,"25 ml"],[50,"50 ml"],[75,"75 ml"]],u:[25,"tot"]},
+ {n:"Rose's Lime Cordial (undiluted)",c:"Mixers",k:120,p:0,f:0,a:"roses lime cordial",s:[[25,"25 ml"],[50,"50 ml"]],u:[25,"tot"]},
+ {n:"Kola Tonic & Soda (50 ml + 200 ml soda)",c:"Mixers",k:35,p:0,f:0,a:"roses kola tonic soda water sodawater",s:[[250,"1 glass"],[500,"2 glasses"]],u:[250,"glass"]},
+ // BEER (SA)
+ {n:"Castle Lager",c:"Beer",k:38,p:0.3,f:0,a:"beer castle"},
+ {n:"Castle Lite",c:"Beer",k:29,p:0.2,f:0,a:"beer castle light"},
+ {n:"Castle Lite Lime",c:"Beer",k:31,p:0.2,f:0,a:"beer castle light"},
+ {n:"Castle Milk Stout",c:"Beer",k:50,p:0.4,f:0,a:"beer stout"},
+ {n:"Carling Black Label",c:"Beer",k:38,p:0.3,f:0,a:"beer black label zamalek"},
+ {n:"Hansa Pilsener",c:"Beer",k:31,p:0.3,f:0,a:"beer hansa pilsner"},
+ {n:"Lion Lager",c:"Beer",k:36,p:0.3,f:0,a:"beer lion"},
+ {n:"Windhoek Lager",c:"Beer",k:35,p:0.3,f:0,a:"beer windhoek"},
+ {n:"Windhoek Draught",c:"Beer",k:35,p:0.3,f:0,a:"beer windhoek draft"},
+ {n:"Windhoek Light",c:"Beer",k:21,p:0.2,f:0,a:"beer windhoek lite"},
+ {n:"Heineken",c:"Beer",k:38,p:0.3,f:0,a:"beer"},
+ {n:"Heineken 0.0 / Alcohol-free Beer",c:"Beer",k:21,p:0.2,f:0,a:"beer non alcoholic zero castle free"},
+ {n:"Amstel Lager",c:"Beer",k:40,p:0.3,f:0,a:"beer amstel"},
+ {n:"Amstel Lite",c:"Beer",k:28,p:0.2,f:0,a:"beer amstel light"},
+ {n:"Stella Artois",c:"Beer",k:42,p:0.3,f:0,a:"beer stella"},
+ {n:"Corona",c:"Beer",k:42,p:0.3,f:0,a:"beer corona extra"},
+ {n:"Peroni",c:"Beer",k:38,p:0.3,f:0,a:"beer peroni nastro azzurro"},
+ {n:"Miller Genuine Draft",c:"Beer",k:38,p:0.3,f:0,a:"beer mgd miller"},
+ {n:"Pilsner Urquell",c:"Beer",k:42,p:0.3,f:0,a:"beer pilsner"},
+ {n:"Jack Black Lager",c:"Beer",k:44,p:0.3,f:0,a:"beer craft jack black"},
+ {n:"Guinness",c:"Beer",k:36,p:0.3,f:0,a:"beer stout"},
+ {n:"Craft IPA (~6%)",c:"Beer",k:55,p:0.4,f:0,a:"beer craft ipa pale ale"},
+ {n:"Flying Fish",c:"Beer",k:50,p:0.2,f:0,a:"beer flavoured flying fish"},
+ // CIDERS & COOLERS (SA)
+ {n:"Savanna Dry",c:"Cider",k:50,p:0,f:0,a:"cider savanna"},
+ {n:"Savanna Light",c:"Cider",k:40,p:0,f:0,a:"cider savanna lite"},
+ {n:"Savanna Dark",c:"Cider",k:55,p:0,f:0,a:"cider savanna"},
+ {n:"Savanna Angry Lemon",c:"Cider",k:55,p:0,f:0,a:"cider savanna"},
+ {n:"Hunter's Dry",c:"Cider",k:57,p:0,f:0,a:"cider hunters hunter"},
+ {n:"Hunter's Gold",c:"Cider",k:55,p:0,f:0,a:"cider hunters hunter"},
+ {n:"Hunter's Extreme",c:"Cider",k:65,p:0,f:0,a:"cider hunters hunter"},
+ {n:"Strongbow",c:"Cider",k:45,p:0,f:0,a:"cider strongbow gold apple"},
+ {n:"Bernini",c:"Cider",k:52,p:0,f:0,a:"cider sparkling grape bernini"},
+ {n:"Redd's Original",c:"Cider",k:49,p:0,f:0,a:"cider redds cooler"},
+ {n:"Brutal Fruit",c:"Cider",k:59,p:0,f:0,a:"cider cooler brutal",s:[[275,"bottle 275 ml"],[500,"can 500 ml"]],u:[275,"bottle"]},
+ {n:"Smirnoff Spin",c:"Cider",k:65,p:0,f:0,a:"cooler smirnoff spin",s:[[275,"bottle 275 ml"],[440,"can 440 ml"]],u:[275,"bottle"]},
+ {n:"Smirnoff Storm",c:"Cider",k:70,p:0,f:0,a:"cooler smirnoff storm"},
+ {n:"Sarita",c:"Cider",k:53,p:0,f:0,a:"cider sarita"},
+ // SPIRITS (SA spirits are mostly 43%)
+ {n:"Brandy (43%)",c:"Spirits",k:231,p:0,f:0,a:"brandy klipdrift klippies richelieu oude meester viceroy commando wellington"},
+ {n:"Vodka (43%)",c:"Spirits",k:237,p:0,f:0,a:"vodka smirnoff skyy russian bear absolut"},
+ {n:"Vodka (40%)",c:"Spirits",k:222,p:0,f:0,a:"vodka absolut grey goose"},
+ {n:"Whisky (43%)",c:"Spirits",k:234,p:0,f:0,a:"whiskey bells j&b jb grants jameson johnnie walker three ships"},
+ {n:"Gin (43%)",c:"Spirits",k:237,p:0,f:0,a:"gin inverroche gordons bombay tanqueray"},
+ {n:"Rum (43%)",c:"Spirits",k:237,p:0,f:0,a:"rum captain morgan red heart bacardi"},
+ {n:"Cane Spirit (43%)",c:"Spirits",k:237,p:0,f:0,a:"cane mainstay spook"},
+ {n:"Tequila (38%)",c:"Spirits",k:215,p:0,f:0,a:"tequila jose cuervo"},
+ {n:"Jägermeister",c:"Spirits",k:245,p:0,f:0,a:"jager jagermeister jaegermeister"},
+ {n:"Amarula",c:"Spirits",k:340,p:0.5,f:16,a:"amarula cream liqueur"},
+ {n:"Baileys",c:"Spirits",k:327,p:3,f:13,a:"baileys irish cream liqueur"},
+ {n:"Sambuca",c:"Spirits",k:340,p:0,f:0,a:"sambuca shooter"},
+ {n:"Tequila Rose / Strawberry Cream",c:"Spirits",k:320,p:0.5,f:8,a:"tequila rose shooter"},
+ {n:"Old Brown Sherry",c:"Spirits",k:140,p:0,f:0,a:"sherry obs",s:[[50,"50 ml"],[100,"100 ml"],[150,"glass 150 ml"]],u:[50,"glass"]},
+ {n:"Port",c:"Spirits",k:160,p:0,f:0,a:"port",s:[[50,"50 ml"],[100,"100 ml"]],u:[50,"glass"]},
+ // MIXED DRINKS (1 tot = 25 ml)
+ {n:"Brandy & Coke (1 tot + 200 ml Coke)",c:"Mixed drinks",k:64,p:0,f:0,a:"klippies coke brandy and coke"},
+ {n:"Brandy & Coke No Sugar (1 tot)",c:"Mixed drinks",k:26,p:0,f:0,a:"klippies coke zero brandy and coke"},
+ {n:"Brandy, Kola Tonic & Soda (1 tot)",c:"Mixed drinks",k:43,p:0,f:0,a:"klippies brandy roses kola tonic soda water sodawater"},
+ {n:"Brandy & Soda / Water (1 tot)",c:"Mixed drinks",k:26,p:0,f:0,a:"klippies brandy soda water"},
+ {n:"Rum & Coke (1 tot + 200 ml Coke)",c:"Mixed drinks",k:64,p:0,f:0,a:"captain morgan red heart rum and coke"},
+ {n:"Whisky & Coke (1 tot + 200 ml Coke)",c:"Mixed drinks",k:64,p:0,f:0,a:"whiskey and coke bells jb"},
+ {n:"Whisky & Soda / Water (1 tot)",c:"Mixed drinks",k:26,p:0,f:0,a:"whiskey soda water"},
+ {n:"Gin & Tonic (1 tot + 200 ml tonic)",c:"Mixed drinks",k:53,p:0,f:0,a:"gin tonic g&t gnt"},
+ {n:"Gin & Sugar-free Tonic (1 tot)",c:"Mixed drinks",k:27,p:0,f:0,a:"gin tonic g&t gnt light zero"},
+ {n:"Vodka & Lemonade (1 tot + 200 ml)",c:"Mixed drinks",k:53,p:0,f:0,a:"vodka lemonade sprite"},
+ {n:"Vodka & Soda (1 tot)",c:"Mixed drinks",k:26,p:0,f:0,a:"vodka soda water"},
+ {n:"Vodka & Red Bull (1 tot + 250 ml)",c:"Mixed drinks",k:63,p:0,f:0,a:"vodka redbull energy",s:[[275,"1 drink"],[550,"2 drinks"]],u:[275,"drink"]},
+ {n:"Jägerbomb",c:"Mixed drinks",k:80,p:0,f:0,a:"jager bomb jagerbomb jagermeister red bull",s:[[150,"1 bomb"],[300,"2 bombs"],[450,"3 bombs"]],u:[150,"bomb"]},
+ // WINE
+ {n:"Red Wine (dry)",c:"Wine",k:85,p:0.1,f:0,a:"wine red merlot cabernet pinotage shiraz"},
+ {n:"White Wine (dry)",c:"Wine",k:82,p:0.1,f:0,a:"wine white sauvignon chenin chardonnay"},
+ {n:"Rosé Wine",c:"Wine",k:75,p:0.1,f:0,a:"wine rose blush"},
+ {n:"Sweet / Semi-sweet Wine",c:"Wine",k:100,p:0.1,f:0,a:"wine late harvest natural sweet semi"},
+ {n:"Sparkling Wine (brut)",c:"Wine",k:76,p:0.1,f:0,a:"wine champagne bubbly cap classique mcc prosecco"},
+ {n:"Sparkling Wine (sweet)",c:"Wine",k:95,p:0.1,f:0,a:"wine bubbly sweet jc le roux la fleurette"},
+ {n:"Boxed / Papsak Wine",c:"Wine",k:80,p:0.1,f:0,a:"wine box cask"},
+].map(d=>Object.assign({ml:true},d));
+// Serving sizes per drink type: chips shown when a drink is picked, and what "2 beers" means
+const DRINK_SIZES={
+ "Coffee & Tea":{u:[250,"cup"],s:[[250,"small 250 ml"],[350,"regular 350 ml"],[450,"large 450 ml"]]},
+ "Milk":{u:[30,"dash"],s:[[30,"dash 30 ml"],[60,"60 ml"],[125,"half glass"],[250,"glass 250 ml"]]},
+ "Soft drinks":{u:[300,"can"],s:[[300,"can 300 ml"],[440,"can 440 ml"],[500,"bottle 500 ml"],[250,"glass 250 ml"],[1000,"1 litre"]]},
+ "Energy drinks":{u:[500,"can"],s:[[250,"can 250 ml"],[500,"can 500 ml"]]},
+ "Mixers":{u:[200,"glass"],s:[[200,"200 ml"],[250,"glass 250 ml"],[300,"can 300 ml"]]},
+ "Beer":{u:[340,"beer"],s:[[340,"dumpie 340 ml"],[440,"can 440 ml"],[500,"can 500 ml"],[660,"quart 660 ml"],[750,"quart 750 ml"]]},
+ "Cider":{u:[330,"bottle"],s:[[330,"bottle 330 ml"],[440,"can 440 ml"],[500,"can 500 ml"]]},
+ "Spirits":{u:[25,"tot"],s:[[25,"1 tot 25 ml"],[50,"double 50 ml"],[75,"3 tots"],[100,"4 tots"]]},
+ "Mixed drinks":{u:[225,"drink"],s:[[225,"1 drink"],[450,"2 drinks"],[675,"3 drinks"]]},
+ "Wine":{u:[150,"glass"],s:[[150,"glass 150 ml"],[250,"large glass 250 ml"],[750,"bottle 750 ml"]]},
+};
+function fcUnitOf(f){return f.u||DRINK_SIZES[f.c]?.u||FOOD_UNITS[f.n]||null;}
+function fcSizesOf(f){return f.s||(f.ml!==false?DRINK_SIZES[f.c]?.s:null)||null;}
+function uoM(f){return f&&f.ml?"ml":"g";}
+// Words that describe the serving, not the food ("2 tots brandy", "large latte")
+const FC_STOP=new Set(["x","of","a","an","and","&","with","tot","tots","shot","shots","can","cans","bottle","bottles","glass","glasses","cup","cups","mug","mugs","dumpie","dumpies","quart","quarts","pint","pints","small","large","regular","ml","l","litre","liter","drink","drinks","some"]);
+Object.assign(FOOD_BOOST,{"Coca-Cola Original":6,"Castle Lager":5,"Castle Lite":5,"Americano / Black Coffee":3,"Brandy & Coke (1 tot + 200 ml Coke)":1,"Jägermeister":1,"Carling Black Label":1,"Savanna Dry":1,"Cappuccino (full cream)":1,"Latte (full cream)":1,"Brandy (43%)":1,"Red Wine (dry)":1,"White Wine (dry)":1});
+
 /* ---- Food calculator: pick a food, enter grams, it works out kcal + macros ---- */
 const MYFOOD_KEY="hgt_myfoods_v1";
 let myFoods=[];   // [{n,c:"My foods",p,f,k}] per 100 g
 function loadMyFoods(){try{const m=localStorage.getItem(MYFOOD_KEY);if(m)myFoods=JSON.parse(m)||[];}catch(e){}}
 function saveMyFoods(){try{localStorage.setItem(MYFOOD_KEY,JSON.stringify(myFoods));}catch(e){}}
 function escH(t){return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function allFoods(){return myFoods.concat(FOODS);}
+function allFoods(){return myFoods.concat(FOODS,DRINKS);}
 function findFood(name){return allFoods().find(f=>f.n===name);}
 
 let fcSel=null;      // the chosen food
@@ -3628,15 +3799,20 @@ let fcGramsManual=false;
 // Pull "250g" / "3" out of what was typed, leaving the food words
 function fcParse(raw){
   let num=null;
-  const q=raw.replace(/(\d+(?:[.,]\d+)?)\s*(kg|g|gr|gram|grams)?\b/i,(m,n,u)=>{
+  const q=raw.replace(/(\d+(?:[.,]\d+)?)\s*(kg|g|gr|gram|grams|ml|l|litres?|liters?)?\b/i,(m,n,u)=>{
     let v=parseFloat(n.replace(",","."));
-    if(u&&u.toLowerCase()==="kg")v*=1000;
+    const lu=(u||"").toLowerCase();
+    if(lu==="kg"||lu==="l"||lu.startsWith("lit"))v*=1000;
     num={n:v,g:!!u};return " ";
   }).replace(/\s+/g," ").trim().toLowerCase();
-  return {q,num};
+  const sm=raw.match(FC_SIZE_RE);
+  return {q:fcFold(q),num,sw:sm?sm[1].toLowerCase():null};
 }
+function fcFold(t){return String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
+let fcSize=null;   // a serving word typed, e.g. "large", "quart", "can"
+const FC_SIZE_RE=/\b(small|regular|large|double|single|quart|dumpie|can|bottle|glass|mug|cup|bomb|tot|shot)s?\b/i;
 function fcScore(f,words){
-  const name=f.n.toLowerCase(), hay=name+" "+(FOOD_ALIASES[f.n]||"").toLowerCase()+" "+f.c.toLowerCase();
+  const name=fcFold(f.n), hay=name+" "+fcFold(FOOD_ALIASES[f.n]||f.a||"")+" "+fcFold(f.c);
   let score=0;
   for(const w of words){
     const stem=w.length>3&&w.endsWith("s")?w.slice(0,-1):w;
@@ -3651,20 +3827,20 @@ function fcScore(f,words){
   return score;
 }
 function fcMatches(q){
-  const words=q.split(" ").filter(Boolean);
+  const words=q.split(" ").filter(w=>w&&!FC_STOP.has(w));
   if(!words.length)return [];
   return allFoods().map(f=>({f,s:fcScore(f,words)})).filter(x=>x.s>=0)
     .sort((a,b)=>b.s-a.s||a.f.n.length-b.f.n.length).slice(0,6).map(x=>x.f);
 }
 function fcInput(){
   const el=document.getElementById("fcFood");
-  const {q,num}=fcParse(el.value);
-  fcNum=num;
+  const {q,num,sw}=fcParse(el.value);
+  fcNum=num; fcSize=sw;
   if(fcSel&&el.value===fcSel.n){document.getElementById("fcSuggest").innerHTML="";return;}
   fcSel=null;
   const list=fcMatches(q);
   document.getElementById("fcSuggest").innerHTML = q
-    ? (list.map(f=>`<button class="fcs" onclick="fcPick('${escH(f.n).replace(/\\/g,"\\\\").replace(/&#39;/g,"\\'")}')"><span>${escH(f.n)}</span><small>${f.k} kcal / 100 g</small></button>`).join("")
+    ? (list.map(f=>`<button class="fcs" onclick="fcPick('${escH(f.n).replace(/\\/g,"\\\\").replace(/&#39;/g,"\\'")}')"><span>${escH(f.n)}</span><small>${f.k} kcal / 100 ${uoM(f)}</small></button>`).join("")
        + `<button class="fcs aiask" onclick="aiAsk()"><span>✨</span><span>Ask Claude: “${escH(el.value.trim())}”</span></button>`)
     : "";
   fcRender();
@@ -3681,15 +3857,21 @@ function fcPick(name){
   document.getElementById("fcSuggest").innerHTML="";
   const g=document.getElementById("fcGrams");
   if(fcNum){
-    const u=FOOD_UNITS[f.n];
+    const u=fcUnitOf(f);
     g.value = (!fcNum.g && u && fcNum.n<=24) ? fcNum.n*u[0] : Math.round(fcNum.n);
     fcGramsManual=true;
   }else if(!fcGramsManual||!g.value){
-    const u=FOOD_UNITS[f.n];
-    g.value = u ? u[0]*2 : "";
+    const u=fcUnitOf(f);
+    g.value = u ? (FOOD_UNITS[f.n]?u[0]*2:u[0]) : "";
     fcGramsManual=false;
   }
-  fcNum=null;
+  // "large latte", "2 cans coke", "black label quart": use that serving size
+  const szs=fcSizesOf(f);
+  if(szs&&fcSize&&!(fcNum&&fcNum.g)){
+    const hit=szs.find(([v,l])=>l.toLowerCase().includes(fcSize));
+    if(hit){ g.value=hit[0]*(fcNum&&fcNum.n<=24?fcNum.n:1); fcGramsManual=true; }
+  }
+  fcNum=null; fcSize=null;
   fcRender();
   if(!g.value)g.focus();
 }
@@ -3707,16 +3889,16 @@ function fcRender(){
     prev.innerHTML=`Type what you ate. Pick a food from the list and enter the grams, or tap ✨ Ask Claude for anything else, like a takeaway meal.`;
     return;
   }
-  const u=FOOD_UNITS[fcSel.n];
-  const opts = u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} g`]);
+  const u=fcUnitOf(fcSel), sz=fcSizesOf(fcSel), uo=uoM(fcSel);
+  const opts = sz ? sz : u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} g`]);
   units.innerHTML=opts.map(([v,l])=>`<button class="chip ${g===v?"on":""}" onclick="fcSetGrams(${v})">${l}</button>`).join("");
   if(!g||g<=0){
-    prev.innerHTML=`<b>${escH(fcSel.n)}</b>: ${fcSel.k} kcal per 100 g. How many grams?`;
+    prev.innerHTML=`<b>${escH(fcSel.n)}</b>: ${fcSel.k} kcal per 100 ${uo}. How much did you have?`;
     return;
   }
   const r=fcCalc(fcSel,g);
   prev.innerHTML=`<div class="fck">${r.k}<small> kcal</small></div>
-    <b>${Math.round(g)} g ${escH(fcSel.n)}</b> · ${Math.round(r.p)} g protein · ${Math.round(r.f)} g fat`;
+    <b>${Math.round(g)} ${uo} ${escH(fcSel.n)}</b> · ${Math.round(r.p)} g protein · ${Math.round(r.f)} g fat`;
 }
 function fcAdd(){
   if(!fcSel){
@@ -3724,9 +3906,9 @@ function fcAdd(){
     if(first){fcPick(first.n);} else {toast("Pick a food first");return;}
   }
   const g=parseFloat(document.getElementById("fcGrams").value);
-  if(!g||g<=0){toast("Enter grams");document.getElementById("fcGrams").focus();return;}
+  if(!g||g<=0){toast("Enter an amount");document.getElementById("fcGrams").focus();return;}
   const r=fcCalc(fcSel,g);
-  calDay(selKey).eat.push({kcal:r.k,label:fcSel.n,food:fcSel.n,g:Math.round(g),p:Math.round(r.p*10)/10,f:Math.round(r.f*10)/10});
+  calDay(selKey).eat.push({kcal:r.k,label:fcSel.n,food:fcSel.n,g:Math.round(g),p:Math.round(r.p*10)/10,f:Math.round(r.f*10)/10,...(fcSel.ml?{ml:true}:{})});
   saveCal();
   toast(`+${r.k} kcal · ${fcSel.n}`);
   fcSel=null;fcNum=null;fcGramsManual=false;
@@ -3750,7 +3932,7 @@ function renderFoodCalc(){
   const r=document.getElementById("fcRecent");
   if(r){
     const rec=fcRecents();
-    r.innerHTML=rec.length?rec.map(x=>`<button class="chip" onclick="fcRefill('${escH(x.food).replace(/&#39;/g,"\\'")}',${x.g})">${escH(x.food)} · ${x.g} g</button>`).join(""):"";
+    r.innerHTML=rec.length?rec.map(x=>`<button class="chip" onclick="fcRefill('${escH(x.food).replace(/&#39;/g,"\\'")}',${x.g})">${escH(x.food)} · ${x.g} ${x.ml?"ml":"g"}</button>`).join(""):"";
   }
   const ml=document.getElementById("mfList");
   if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${escH(f.n)}</div><div class="fi-m2">per 100 g · ${f.k} kcal · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
@@ -4022,7 +4204,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v35"]};
+ data:["Save & Settings","Backup your data · v36"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
