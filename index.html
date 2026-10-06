@@ -379,6 +379,20 @@
   /* FOOD CALCULATOR (Calories tab) */
   .fcalc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
   .fcalc .fdhead{margin-top:0}
+  .fcs.aiask{border-color:rgba(169,123,255,.55);background:rgba(169,123,255,.1);justify-content:flex-start;gap:8px;font-weight:600}
+  .fcs.aiask small{color:#cbb6ff}
+  .aibox{background:var(--bg);border:1px solid rgba(169,123,255,.5);border-radius:12px;padding:12px;margin-bottom:10px}
+  .aihead{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#cbb6ff;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .aihead b{font-size:22px;color:var(--accent2);text-transform:none;letter-spacing:0}
+  .aiitem{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+  .aik{font-weight:800;color:var(--accent2);white-space:nowrap}
+  .aisrc{font-size:11.5px;color:var(--dim);margin:6px 0 2px;line-height:1.45}
+  .aibtns{display:flex;gap:8px;margin-top:8px}
+  .aibtns .btn{flex:1}
+  .aierr{font-size:13px;color:#f0d6cf;line-height:1.5}
+  .aiwait{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dim)}
+  .aispin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(169,123,255,.3);border-top-color:#a97bff;animation:aispin .8s linear infinite;flex:0 0 auto}
+  @keyframes aispin{to{transform:rotate(360deg)}}
   .fcrow{display:flex;gap:8px;margin-bottom:8px}
   .fcrow .fcg{flex:0 0 92px;text-align:center}
   .fcsug{margin:-2px 0 8px}
@@ -705,6 +719,7 @@
         <input type="number" inputmode="decimal" id="fcGrams" class="calinput fcg" placeholder="grams" oninput="fcGramsTyped()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcAdd();}">
       </div>
       <div id="fcSuggest" class="fcsug"></div>
+      <div id="fcAi"></div>
       <div id="fcUnits" class="fcunits"></div>
       <div id="fcPreview" class="fcprev"></div>
       <button class="btn primary" id="fcAddBtn" style="width:100%" onclick="fcAdd()">Add</button>
@@ -837,6 +852,19 @@
       </div>
       <div id="mwStatus" class="mwstatus"></div>
       <div class="setnote">Get a key at <b>api.musclewiki.com/register</b>. Direct video access needs the <b>TESTING tier ($10/mo)</b> — the free BASIC tier is playground-only and won't stream video. Without a key, the app shows real start/finish demo photos inside each exercise instead. Your key is stored only on this device.</div>
+    </div>
+
+    <div class="setcard">
+      <h3>Calorie lookups with Claude</h3>
+      <p>Add a <b>Claude API key</b> and you can type any meal in the Calories tab, like "2 x KFC Original Twister without garnish or cheese" or "100g droëwors", and Claude works out the calories, protein and fat for you.</p>
+      <input type="text" id="aiKeyInput" class="keyinput" placeholder="Paste key (sk-ant-...)" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input type="text" id="aiCountryInput" class="keyinput" style="margin-top:8px" placeholder="Country, for local brands and portions">
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn primary" onclick="saveAiKey()">Save &amp; test key</button>
+        <button class="btn ghost" onclick="clearAiKey()">Remove</button>
+      </div>
+      <div id="aiStatus" class="mwstatus"></div>
+      <div class="setnote">Get a key at <b>console.anthropic.com</b> (Settings › API keys) and add some credit; it's pay as you go. Each lookup costs a few US cents, a bit more when it has to search for a brand's nutrition info. Your key is stored only on this phone and isn't included in exports.</div>
     </div>
 
     <div class="summary"><b>Back up your data.</b> Your weekly plans, training logs, workout history, food log and weight history are stored <b>only on this phone</b> — not in the cloud. If you clear Safari's data or change phones, they're gone. Export below and keep the text somewhere safe (a note, or email it to yourself).</div>
@@ -3393,6 +3421,197 @@ function saveCalTarget(){
 }
 function toggleAddBurn(){ calCfg.addBurn=document.getElementById("calAddBurnChk").checked; saveCal(); renderCal(); }
 
+/* ---- Ask Claude: describe a meal in plain words, Claude works out the calories ---- */
+const AI_KEY="hgt_claude_key_v1", AI_COUNTRY_KEY="hgt_claude_country_v1";
+const AI_MODEL="claude-opus-5-5";
+let aiKey="", aiCountry="South Africa";
+let aiNoFallback=false;
+let aiBusy=false, aiResult=null;   // aiResult: {query, items:[{name,grams,kcal,protein_g,fat_g,carbs_g}], source}
+function loadAi(){try{aiKey=localStorage.getItem(AI_KEY)||"";aiCountry=localStorage.getItem(AI_COUNTRY_KEY)||aiCountry;}catch(e){}}
+function saveAi(){try{localStorage.setItem(AI_KEY,aiKey);localStorage.setItem(AI_COUNTRY_KEY,aiCountry);}catch(e){}}
+
+const AI_TOOL={
+  name:"log_meal",
+  description:"Record the nutrition of what the user ate. Call this once with every food in the description as its own item.",
+  strict:true,
+  input_schema:{
+    type:"object",
+    properties:{
+      items:{type:"array",items:{
+        type:"object",
+        properties:{
+          name:{type:"string",description:"Short name including brand and changes, e.g. 'KFC Original Twister (no garnish, no cheese)'"},
+          grams:{type:"number",description:"Total grams eaten for this item (all portions together)"},
+          kcal:{type:"number",description:"Total kcal for all portions together"},
+          protein_g:{type:"number"},
+          fat_g:{type:"number"},
+          carbs_g:{type:"number"}
+        },
+        required:["name","grams","kcal","protein_g","fat_g","carbs_g"],
+        additionalProperties:false
+      }},
+      source:{type:"string",description:"One short line: where the numbers come from and any assumption made, e.g. 'KFC SA nutrition info, minus garnish and cheese'"}
+    },
+    required:["items","source"],
+    additionalProperties:false
+  }
+};
+function aiSystem(){
+  return `You are the calorie lookup inside a personal food diary app. The user lives in ${aiCountry}, so use the brands, recipes and portion sizes sold there. They type what they ate in plain words, often with a quantity ("2 x", "100g", "3 eggs").
+Work out calories, protein, fat and carbs. For branded or restaurant food, search the web for the brand's official nutrition information for ${aiCountry} first, and adjust for anything they left out or added (for example "no cheese"). For plain foods, typical values are fine without searching. Multiply by the quantity, so each item's totals cover everything they ate of it.
+When you have the numbers, call log_meal once. Do not ask follow-up questions; make the most reasonable assumption and name it in "source".`;
+}
+async function aiCall(body){
+  const r=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{
+      "content-type":"application/json",
+      "x-api-key":aiKey,
+      "anthropic-version":"2023-06-01",
+      ...(body.fallbacks?{"anthropic-beta":"server-side-fallback-2026-07-01"}:{}),
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
+    body:JSON.stringify(body)
+  });
+  let data=null; try{data=await r.json();}catch(e){}
+  if(!r.ok){
+    const msg=data?.error?.message||"";
+    if(r.status===401)throw new Error("Your Claude key was not accepted. Check it in Settings.");
+    if(r.status===403)throw new Error("Your Claude key isn't allowed to do this. "+msg);
+    if(r.status===429)throw new Error("Too many lookups right now, or your API credit has run out. Try again in a minute.");
+    if(r.status===529||r.status>=500)throw new Error("Claude is busy right now. Try again in a moment.");
+    if(r.status===400&&/credit/i.test(msg))throw new Error("Your Anthropic account is out of credit. Top it up at console.anthropic.com.");
+    const err=new Error(`Lookup failed (${r.status}). ${msg}`); err.status=r.status; err.raw=msg; throw err;
+  }
+  return data;
+}
+async function aiLookup(query){
+  const messages=[{role:"user",content:query}];
+  const body={
+    model:AI_MODEL, max_tokens:16000,
+    output_config:{effort:"low"},
+    ...(aiNoFallback?{}:{fallbacks:"default"}),
+    system:aiSystem(),
+    tools:[{type:"web_search_20260209",name:"web_search",max_uses:3}, AI_TOOL],
+    tool_choice:{type:"auto"},
+    messages
+  };
+  for(let turn=0;turn<4;turn++){
+    let res;
+    try{ res=await aiCall(body); }
+    catch(e){
+      // If the account can't use an optional extra, drop it and ask again
+      if(e.status===400&&/fallback/i.test(e.raw)&&body.fallbacks){delete body.fallbacks;aiNoFallback=true;turn--;continue;}
+      if(e.status===400&&/web_search|web search/i.test(e.raw)&&body.tools.length>1){body.tools=[AI_TOOL];turn--;continue;}
+      throw e;
+    }
+    if(res.stop_reason==="refusal")throw new Error("Claude couldn't help with that one. Try describing it differently.");
+    const call=(res.content||[]).find(b=>b.type==="tool_use"&&b.name==="log_meal");
+    if(call){
+      const inp=typeof call.input==="string"?JSON.parse(call.input):call.input;
+      const items=(inp.items||[]).filter(i=>i&&i.name&&+i.kcal>=0).map(i=>({
+        name:String(i.name).slice(0,80), grams:Math.max(0,Math.round(+i.grams||0)), kcal:Math.round(+i.kcal||0),
+        protein_g:+i.protein_g||0, fat_g:+i.fat_g||0, carbs_g:+i.carbs_g||0}));
+      if(!items.length)throw new Error("Claude didn't find any food in that. Try again with more detail.");
+      return {query,items,source:String(inp.source||"")};
+    }
+    if(res.stop_reason==="pause_turn"){ messages.push({role:"assistant",content:res.content}); continue; }
+    const txt=(res.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ").trim();
+    throw new Error(txt?("Claude says: "+txt.slice(0,300)):"Claude didn't return any numbers. Try again.");
+  }
+  throw new Error("That took too long. Try again.");
+}
+async function aiAsk(){
+  if(aiBusy)return;
+  const q=(document.getElementById("fcFood").value||"").trim();
+  if(!q){toast("Type what you ate first");return;}
+  aiResult=null;
+  if(!aiKey){aiRenderNeedKey();return;}
+  aiBusy=true;
+  document.getElementById("fcSuggest").innerHTML="";
+  const box=document.getElementById("fcAi");
+  box.innerHTML=`<div class="aibox"><div class="aiwait"><span class="aispin"></span>Working out “${escH(q)}”…</div></div>`;
+  try{
+    aiResult=await aiLookup(q);
+    aiRender();
+  }catch(e){
+    box.innerHTML=`<div class="aibox"><div class="aierr">${escH(e.message||"Something went wrong.")}</div>
+      <div class="aibtns"><button class="btn ghost" onclick="aiAsk()">Try again</button><button class="btn ghost" onclick="aiClose()">Close</button></div></div>`;
+  }finally{aiBusy=false;}
+}
+function aiRenderNeedKey(){
+  document.getElementById("fcAi").innerHTML=`<div class="aibox"><div class="aierr" style="color:var(--txt)">To look up any meal, add your Claude API key once in Settings. It's stored only on this phone.</div>
+    <div class="aibtns"><button class="btn primary" onclick="aiClose();toggleSettings()">Open Settings</button><button class="btn ghost" onclick="aiClose()">Not now</button></div></div>`;
+}
+function aiRender(){
+  const box=document.getElementById("fcAi"); if(!box)return;
+  if(!aiResult){box.innerHTML="";return;}
+  const its=aiResult.items, tot=its.reduce((t,i)=>t+i.kcal,0);
+  box.innerHTML=`<div class="aibox">
+    <div class="aihead"><span>✨ Claude's estimate</span><b>${tot} kcal</b></div>
+    ${its.map(i=>`<div class="aiitem"><div><div class="fi-n">${escH(i.name)}</div>
+      <div class="fi-m2">${i.grams?i.grams+" g · ":""}${Math.round(i.protein_g)} g protein · ${Math.round(i.fat_g)} g fat · ${Math.round(i.carbs_g)} g carbs</div></div>
+      <div class="aik">${i.kcal}</div></div>`).join("")}
+    ${aiResult.source?`<div class="aisrc">${escH(aiResult.source)}</div>`:""}
+    <label class="calchk"><input type="checkbox" id="aiRemember" checked> Remember ${its.length>1?"these foods":"this food"} so next time it's instant</label>
+    <div class="aibtns"><button class="btn primary" onclick="aiAddAll()">Add to ${dayLabel(selKey)==="Today"?"today":dayLabel(selKey)}</button><button class="btn ghost" onclick="aiClose()">Cancel</button></div>
+  </div>`;
+}
+function aiClose(){aiResult=null;const b=document.getElementById("fcAi");if(b)b.innerHTML="";}
+function aiAddAll(){
+  if(!aiResult)return;
+  const remember=document.getElementById("aiRemember")?.checked;
+  const day=calDay(selKey);
+  aiResult.items.forEach(i=>{
+    day.eat.push({kcal:i.kcal,label:i.name,food:i.name,g:i.grams||undefined,p:Math.round(i.protein_g*10)/10,f:Math.round(i.fat_g*10)/10,c:Math.round(i.carbs_g*10)/10,ai:true});
+    if(remember&&i.grams>0){
+      const per=v=>Math.round(v/i.grams*1000)/10;
+      const food={n:i.name,c:"My foods",k:Math.round(i.kcal/i.grams*100),p:per(i.protein_g),f:per(i.fat_g)};
+      const ix=myFoods.findIndex(x=>x.n.toLowerCase()===i.name.toLowerCase());
+      if(ix>=0)myFoods[ix]=food; else myFoods.unshift(food);
+    }
+  });
+  if(remember)saveMyFoods();
+  saveCal();
+  const tot=aiResult.items.reduce((t,i)=>t+i.kcal,0);
+  toast(`+${tot} kcal`);
+  aiResult=null; fcSel=null; fcNum=null; fcGramsManual=false;
+  document.getElementById("fcFood").value=""; document.getElementById("fcGrams").value="";
+  document.getElementById("fcSuggest").innerHTML="";
+  aiClose(); renderCal();
+}
+/* Settings card */
+function initAiUI(){
+  const k=document.getElementById("aiKeyInput"); if(k)k.value=aiKey||"";
+  const c=document.getElementById("aiCountryInput"); if(c)c.value=aiCountry||"";
+  const st=document.getElementById("aiStatus");
+  if(st)st.innerHTML=aiKey?`<span class="ok">✓ Key saved. Type any meal in the Calories tab and tap Ask Claude.</span>`:"";
+}
+async function saveAiKey(){
+  const st=document.getElementById("aiStatus");
+  const k=(document.getElementById("aiKeyInput").value||"").trim();
+  const c=(document.getElementById("aiCountryInput").value||"").trim();
+  if(c){aiCountry=c;}
+  if(!k){st.innerHTML=`<span class="bad">Paste a key first.</span>`;return;}
+  st.innerHTML=`<span>Testing key…</span>`;
+  const old=aiKey; aiKey=k;
+  try{
+    await aiCall({model:AI_MODEL,max_tokens:64,output_config:{effort:"low"},messages:[{role:"user",content:"Reply OK."}]});
+    saveAi();
+    st.innerHTML=`<span class="ok">✓ Key works. Type any meal in the Calories tab and tap Ask Claude.</span>`;
+    toast("Claude lookups on");
+  }catch(e){
+    aiKey=old;
+    st.innerHTML=`<span class="bad">${escH(e.message||"Couldn't check the key.")}</span>`;
+  }
+}
+function clearAiKey(){
+  aiKey="";saveAi();
+  const k=document.getElementById("aiKeyInput");if(k)k.value="";
+  const st=document.getElementById("aiStatus");if(st)st.innerHTML=`<span>Key removed.</span>`;
+  toast("Claude lookups off");
+}
+
 /* ---- Food calculator: pick a food, enter grams, it works out kcal + macros ---- */
 const MYFOOD_KEY="hgt_myfoods_v1";
 let myFoods=[];   // [{n,c:"My foods",p,f,k}] per 100 g
@@ -3446,14 +3665,14 @@ function fcInput(){
   const list=fcMatches(q);
   document.getElementById("fcSuggest").innerHTML = q
     ? (list.map(f=>`<button class="fcs" onclick="fcPick('${escH(f.n).replace(/\\/g,"\\\\").replace(/&#39;/g,"\\'")}')"><span>${escH(f.n)}</span><small>${f.k} kcal / 100 g</small></button>`).join("")
-       || `<div class="addhint" style="padding:6px 2px">No match. Add it under "Food not in the list?" below.</div>`)
+       + `<button class="fcs aiask" onclick="aiAsk()"><span>✨</span><span>Ask Claude: “${escH(el.value.trim())}”</span></button>`)
     : "";
   fcRender();
 }
 function fcEnter(){
   if(fcSel){fcAdd();return;}
   const first=fcMatches(fcParse(document.getElementById("fcFood").value).q)[0];
-  if(first)fcPick(first.n);
+  if(first)fcPick(first.n); else aiAsk();
 }
 function fcPick(name){
   const f=findFood(name); if(!f)return;
@@ -3485,7 +3704,7 @@ function fcRender(){
   if(btn)btn.textContent=`Add to ${dayLabel(selKey).toLowerCase()==="today"?"today":dayLabel(selKey)}`;
   if(!fcSel){
     units.innerHTML="";
-    prev.innerHTML=`Type what you ate, pick it from the list, then enter the grams. Calories and protein/fat are worked out for you.`;
+    prev.innerHTML=`Type what you ate. Pick a food from the list and enter the grams, or tap ✨ Ask Claude for anything else, like a takeaway meal.`;
     return;
   }
   const u=FOOD_UNITS[fcSel.n];
@@ -3803,7 +4022,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v34"]};
+ data:["Save & Settings","Backup your data · v35"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -3830,7 +4049,7 @@ function switchView(v){
   document.getElementById("hSub").textContent=TITLES[v][1];
   window.scrollTo({top:0,behavior:"smooth"});
   if(v==="train"){renderTrain();}
-  if(v==="data"){initMwUI();}
+  if(v==="data"){initMwUI();initAiUI();}
   if(v==="history"){setHistSub(histSub);renderHistory();}
   if(v==="timer"){renderCal();setCalSub(calSub);}
 }
@@ -4068,6 +4287,7 @@ load();
 loadFood();
 loadCal();
 loadMyFoods();
+loadAi();
 loadProgramState();
 renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();
 switchView("plan");   // ensures goal bar / nav state is initialised correctly
