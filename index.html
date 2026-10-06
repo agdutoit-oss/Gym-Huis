@@ -123,6 +123,12 @@
   .plan-item h4{font-size:14px;font-weight:700}
   .plan-item .pm{font-size:11px;color:var(--dim)}
   .plan-item .ps{font-size:12.5px;color:var(--accent2);font-weight:600;margin-top:2px}
+  .ceditor{border-color:var(--accent)}
+  .cerow{display:flex;gap:8px;margin-top:8px}
+  .cerow label{flex:1;min-width:0;font-size:11px;color:var(--dim);display:flex;flex-direction:column;gap:4px}
+  .cerow .calinput{padding:9px 10px;font-size:15px}
+  .cehint{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.45}
+  .cehint:empty{display:none}
   .qty{display:flex;align-items:center;gap:4px;flex:0 0 auto}
   .qty button{width:30px;height:30px;border-radius:9px;background:var(--card2);border:1.5px solid var(--line);color:var(--txt);font-size:17px;font-weight:700;cursor:pointer;line-height:1}
   .qty button:active{border-color:var(--accent)}
@@ -752,7 +758,7 @@
     </div>
     <div id="calQuick" class="calquick"></div>
 
-    <div class="fdhead">Logged today</div>
+    <div class="fdhead">Logged today <span style="text-transform:none;letter-spacing:0;font-weight:500">· tap one to fix it</span></div>
     <div id="calList"></div>
 
     <div class="caltrain">
@@ -3308,7 +3314,7 @@ function renderCal(){
   // eaten list
   const eat=calLog[key]?.eat||[];
   document.getElementById("calList").innerHTML = eat.length
-    ? eat.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.food?escH(x.food):(x.label||"Food")}</div>${x.g?`<div class="fi-m2">${(x.q||1)>1?`${x.q} × ${x.unit.g} ${x.ml?"ml":"g"} = `:""}${x.g} ${x.ml?"ml":"g"} · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`:((x.q||1)>1?`<div class="fi-m2">${x.q} × ${x.unit.kcal} kcal</div>`:"")}</div><div class="qty"><button onclick="calStep(${i},-1)" ${(x.q||1)<=1?"disabled":""} aria-label="One less">−</button><span>${x.q||1}</span><button onclick="calStep(${i},1)" aria-label="One more">+</button></div><div class="qtyk">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`).join("")
+    ? eat.map((x,i)=>i===calEditIdx?calEditHtml(x,i):calItemHtml(x,i)).join("")
     : `<div class="addhint">Nothing logged yet. Add what you eat above.</div>`;
 
   // burn list
@@ -3406,7 +3412,11 @@ function addCal(){
   const vEl=document.getElementById("calInput"), lEl=document.getElementById("calLabel");
   const v=parseInt(vEl.value,10);
   if(!v||v<=0){toast("Enter calories");return;}
-  calDay(selKey).eat.push({kcal:v,label:(lEl.value||"").trim()});
+  const lbl=(lEl.value||"").trim();
+  if(lbl&&!isBuiltinFood(lbl)){
+    if(!myFoods.some(x=>x.n.toLowerCase()===lbl.toLowerCase()))rememberFood(lbl,{k:v,g:0,p:0,f:0},1,null);
+    calDay(selKey).eat.push({kcal:v,label:lbl,food:findFood(lbl)?.n||lbl,q:1,unit:{kcal:v}});
+  }else calDay(selKey).eat.push({kcal:v,label:lbl});
   saveCal(); vEl.value=""; lEl.value=""; renderCal();
   toast(`+${v} kcal`);
 }
@@ -3432,7 +3442,74 @@ function calStep(i,d){
   if(u.c!=null)x.c=r1(u.c*q);
   saveCal(); renderCal();
 }
-function rmCal(kind,i){ calDay(selKey)[kind].splice(i,1); saveCal(); renderCal(); }
+/* ---- Edit a logged item, and remember foods for next time ---- */
+let calEditIdx=-1;
+function r1(v){return Math.round(v*10)/10;}
+function isBuiltinFood(n){return !!n&&!myFoods.some(x=>x.n===n)&&(FOODS.some(x=>x.n===n)||DRINKS.some(x=>x.n===n));}
+// Save (or correct) a "My foods" entry from the totals of what was eaten.
+// With grams: stored per 100 g, plus the weight of one when there was more than one.
+// Without grams: stored as kcal/protein/fat for one serving.
+function rememberFood(name,tot,q,oldName){
+  q=Math.max(1,q||1);
+  const prev=myFoods.find(x=>x.n.toLowerCase()===(oldName||name).toLowerCase());
+  let food;
+  if(tot.g>0){
+    food={n:name,c:"My foods",k:Math.round(tot.k/tot.g*100),p:r1((tot.p||0)/tot.g*100),f:r1((tot.f||0)/tot.g*100)};
+    if(q>1||prev?.u)food.u=[Math.round(tot.g/q),"each"];
+    if(tot.ml)food.ml=true;
+  }else{
+    food={n:name,c:"My foods",k:Math.round(tot.k/q),p:r1((tot.p||0)/q),f:r1((tot.f||0)/q),each:true};
+  }
+  myFoods=myFoods.filter(x=>{const n=x.n.toLowerCase();return n!==name.toLowerCase()&&(!oldName||n!==oldName.toLowerCase());});
+  myFoods.unshift(food); saveMyFoods();
+}
+function calItemHtml(x,i){
+  const q=x.q||1, uo=x.ml?"ml":"g";
+  const sub = x.g
+    ? `<div class="fi-m2">${q>1&&x.unit?.g?`${q} × ${Math.round(x.unit.g)} ${uo} = `:""}${x.g} ${uo} · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`
+    : (q>1&&x.unit?`<div class="fi-m2">${q} × ${Math.round(x.unit.kcal)} kcal</div>`:"");
+  return `<div class="fitem"><div class="fi-info" onclick="calEdit(${i})" style="cursor:pointer"><div class="fi-n">${escH(x.food||x.label||"Food")}</div>${sub}</div><div class="qty"><button onclick="calStep(${i},-1)" ${q<=1?"disabled":""} aria-label="One less">−</button><span>${q}</span><button onclick="calStep(${i},1)" aria-label="One more">+</button></div><div class="qtyk">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`;
+}
+function calEditHtml(x,i){
+  const q=x.q||1, builtin=isBuiltinFood(x.food), name=x.food||x.label||"";
+  const num=(id,lab,val,ph)=>`<label>${lab}<input id="${id}" class="calinput" type="number" inputmode="decimal" value="${val}" placeholder="${ph||""}" oninput="calEditHint()"></label>`;
+  return `<div class="fitem ceditor"><div style="flex:1;min-width:0">
+    <div class="fdhead" style="margin-top:0">Fix what you logged</div>
+    <input id="ceName" class="calinput" style="width:100%" value="${escH(name)}" placeholder="What was it?" ${builtin?"disabled":""}>
+    <div class="cerow">${num("ceQ","How many",q)}${num("ceK","Total kcal",x.kcal)}</div>
+    <div class="cerow">${num("ceG",`Total ${x.ml?"ml":"grams"}`,x.g||"","optional")}${num("ceP","Protein g",x.p!=null?r1(x.p):"","optional")}${num("ceF","Fat g",x.f!=null?r1(x.f):"","optional")}</div>
+    <div class="cehint" id="ceEach"></div>
+    ${builtin?`<div class="cehint">This food is from the built-in list, so only this entry changes.</div>`:`<label class="calchk"><input type="checkbox" id="ceRem" checked onchange="calEditHint()"> Use these numbers next time too</label>`}
+    <div class="aibtns"><button class="btn primary" onclick="calEditSave(${i})">Save</button><button class="btn ghost" onclick="calEdit(-1)">Cancel</button></div>
+  </div></div>`;
+}
+function calEdit(i){calEditIdx=i;renderCal();if(i>=0){calEditHint();document.getElementById("ceQ")?.focus();}}
+function calEditHint(){
+  const el=document.getElementById("ceEach"); if(!el)return;
+  const v=id=>parseFloat(document.getElementById(id)?.value);
+  const q=Math.max(1,Math.round(v("ceQ")||1)), k=v("ceK"), g=v("ceG");
+  const x=calDay(selKey).eat[calEditIdx]||{}, uo=x.ml?"ml":"g";
+  const next=!isBuiltinFood(x.food)&&document.getElementById("ceRem")?.checked;
+  el.textContent = isNaN(k)?"" : q>1 ? `That's ${Math.round(k/q)} kcal each${g>0?` (${Math.round(g/q)} ${uo} each)`:""}.${next?` Next time, 1 counts as ${Math.round(k/q)} kcal.`:""}` : "";
+}
+function calEditSave(i){
+  const x=calDay(selKey).eat[i]; if(!x)return;
+  const v=id=>{const n=parseFloat(document.getElementById(id)?.value);return isNaN(n)?null:n;};
+  const q=Math.max(1,Math.round(v("ceQ")||1)), k=v("ceK");
+  if(k==null||k<0){toast("Enter the total calories");return;}
+  const g=v("ceG")||0, p=v("ceP")||0, f=v("ceF")||0;
+  const builtin=isBuiltinFood(x.food), oldName=x.food||x.label||"";
+  const name=builtin?x.food:((document.getElementById("ceName")?.value||"").trim()||oldName||"Food");
+  x.q=q; x.kcal=Math.round(k); x.p=r1(p); x.f=r1(f); x.label=name;
+  if(g>0)x.g=Math.round(g); else delete x.g;
+  x.unit={kcal:k/q,g:g>0?g/q:undefined,p:p/q,f:f/q,c:x.c!=null?x.c/q:undefined};
+  if(!builtin){
+    if(document.getElementById("ceRem")?.checked){ rememberFood(name,{k,g,p,f,ml:x.ml},q,oldName); x.food=name; }
+    else if(findFood(name)) x.food=name; else delete x.food;
+  }
+  calEditIdx=-1; saveCal(); renderCal(); toast("Saved");
+}
+function rmCal(kind,i){ calEditIdx=-1; calDay(selKey)[kind].splice(i,1); saveCal(); renderCal(); }
 function saveCalTarget(){
   const v=parseInt(document.getElementById("calTargetInput").value,10);
   if(!v||v<800){toast("Enter a realistic target (800+)");return;}
@@ -3462,11 +3539,12 @@ const AI_TOOL={
           name:{type:"string",description:"Short name including brand and changes, e.g. 'KFC Original Twister (no garnish, no cheese)'"},
           grams:{type:"number",description:"Total grams eaten for this item (all portions together)"},
           kcal:{type:"number",description:"Total kcal for all portions together"},
+          count:{type:"integer",description:"How many portions or pieces this is, e.g. 2 for '2 x twister', 3 for '3 packs'. Use 1 when it was measured by weight or volume."},
           protein_g:{type:"number"},
           fat_g:{type:"number"},
           carbs_g:{type:"number"}
         },
-        required:["name","grams","kcal","protein_g","fat_g","carbs_g"],
+        required:["name","grams","kcal","count","protein_g","fat_g","carbs_g"],
         additionalProperties:false
       }},
       source:{type:"string",description:"One short line: where the numbers come from and any assumption made, e.g. 'KFC SA nutrition info, minus garnish and cheese'"}
@@ -3530,7 +3608,7 @@ async function aiLookup(query){
       const inp=typeof call.input==="string"?JSON.parse(call.input):call.input;
       const items=(inp.items||[]).filter(i=>i&&i.name&&+i.kcal>=0).map(i=>({
         name:String(i.name).slice(0,80), grams:Math.max(0,Math.round(+i.grams||0)), kcal:Math.round(+i.kcal||0),
-        protein_g:+i.protein_g||0, fat_g:+i.fat_g||0, carbs_g:+i.carbs_g||0}));
+        protein_g:+i.protein_g||0, fat_g:+i.fat_g||0, carbs_g:+i.carbs_g||0, count:Math.max(1,Math.min(50,Math.round(+i.count||1)))}));
       if(!items.length)throw new Error("Claude didn't find any food in that. Try again with more detail.");
       return {query,items,source:String(inp.source||"")};
     }
@@ -3569,7 +3647,7 @@ function aiRender(){
   box.innerHTML=`<div class="aibox">
     <div class="aihead"><span>✨ Claude's estimate</span><b>${tot} kcal</b></div>
     ${its.map(i=>`<div class="aiitem"><div><div class="fi-n">${escH(i.name)}</div>
-      <div class="fi-m2">${i.grams?i.grams+" g · ":""}${Math.round(i.protein_g)} g protein · ${Math.round(i.fat_g)} g fat · ${Math.round(i.carbs_g)} g carbs</div></div>
+      <div class="fi-m2">${i.count>1?i.count+" × · ":""}${i.grams?i.grams+" g · ":""}${Math.round(i.protein_g)} g protein · ${Math.round(i.fat_g)} g fat · ${Math.round(i.carbs_g)} g carbs</div></div>
       <div class="aik">${i.kcal}</div></div>`).join("")}
     ${aiResult.source?`<div class="aisrc">${escH(aiResult.source)}</div>`:""}
     <label class="calchk"><input type="checkbox" id="aiRemember" checked> Remember ${its.length>1?"these foods":"this food"} so next time it's instant</label>
@@ -3582,15 +3660,14 @@ function aiAddAll(){
   const remember=document.getElementById("aiRemember")?.checked;
   const day=calDay(selKey);
   aiResult.items.forEach(i=>{
-    day.eat.push({kcal:i.kcal,label:i.name,food:i.name,g:i.grams||undefined,p:Math.round(i.protein_g*10)/10,f:Math.round(i.fat_g*10)/10,c:Math.round(i.carbs_g*10)/10,ai:true});
-    if(remember&&i.grams>0){
-      const per=v=>Math.round(v/i.grams*1000)/10;
-      const food={n:i.name,c:"My foods",k:Math.round(i.kcal/i.grams*100),p:per(i.protein_g),f:per(i.fat_g)};
-      const ix=myFoods.findIndex(x=>x.n.toLowerCase()===i.name.toLowerCase());
-      if(ix>=0)myFoods[ix]=food; else myFoods.unshift(food);
-    }
+    const q=i.count||1;
+    const ent={kcal:i.kcal,label:i.name,food:i.name,p:r1(i.protein_g),f:r1(i.fat_g),c:r1(i.carbs_g),ai:true,q,
+      unit:{kcal:i.kcal/q,p:i.protein_g/q,f:i.fat_g/q,c:i.carbs_g/q}};
+    if(i.grams>0){ent.g=i.grams;ent.unit.g=i.grams/q;}
+    if(remember)rememberFood(i.name,{k:i.kcal,g:i.grams,p:i.protein_g,f:i.fat_g},q,null);
+    else if(!findFood(i.name))delete ent.food;
+    day.eat.push(ent);
   });
-  if(remember)saveMyFoods();
   saveCal();
   const tot=aiResult.items.reduce((t,i)=>t+i.kcal,0);
   toast(`+${tot} kcal`);
@@ -3795,9 +3872,9 @@ const DRINK_SIZES={
  "Mixed drinks":{u:[225,"drink"],s:[[225,"1 drink"],[450,"2 drinks"],[675,"3 drinks"]]},
  "Wine":{u:[150,"glass"],s:[[150,"glass 150 ml"],[250,"large glass 250 ml"],[750,"bottle 750 ml"]]},
 };
-function fcUnitOf(f){return f.u||DRINK_SIZES[f.c]?.u||FOOD_UNITS[f.n]||null;}
+function fcUnitOf(f){if(f.each)return [1,"serving"];return f.u||DRINK_SIZES[f.c]?.u||FOOD_UNITS[f.n]||null;}
 function fcSizesOf(f){return f.s||(f.ml!==false?DRINK_SIZES[f.c]?.s:null)||null;}
-function uoM(f){return f&&f.ml?"ml":"g";}
+function uoM(f){return f&&f.each?"×":f&&f.ml?"ml":"g";}
 // Words that describe the serving, not the food ("2 tots brandy", "large latte")
 const FC_STOP=new Set(["x","of","a","an","and","&","with","tot","tots","shot","shots","can","cans","bottle","bottles","glass","glasses","cup","cups","mug","mugs","dumpie","dumpies","quart","quarts","pint","pints","small","large","regular","ml","l","litre","liter","drink","drinks","some"]);
 Object.assign(FOOD_BOOST,{"Coca-Cola Original":6,"Castle Lager":5,"Castle Lite":5,"Americano / Black Coffee":3,"Brandy & Coke (1 tot + 200 ml Coke)":1,"Jägermeister":1,"Carling Black Label":1,"Savanna Dry":1,"Cappuccino (full cream)":1,"Latte (full cream)":1,"Brandy (43%)":1,"Red Wine (dry)":1,"White Wine (dry)":1});
@@ -3859,7 +3936,7 @@ function fcInput(){
   fcSel=null;
   const list=fcMatches(q);
   document.getElementById("fcSuggest").innerHTML = q
-    ? (list.map(f=>`<button class="fcs" onclick="fcPick('${escH(f.n).replace(/\\/g,"\\\\").replace(/&#39;/g,"\\'")}')"><span>${escH(f.n)}</span><small>${f.k} kcal / 100 ${uoM(f)}</small></button>`).join("")
+    ? (list.map(f=>`<button class="fcs" onclick="fcPick('${escH(f.n).replace(/\\/g,"\\\\").replace(/&#39;/g,"\\'")}')"><span>${escH(f.n)}</span><small>${f.each?`${f.k} kcal each`:`${f.k} kcal / 100 ${uoM(f)}`}</small></button>`).join("")
        + `<button class="fcs aiask" onclick="aiAsk()"><span>✨</span><span>Ask Claude: “${escH(el.value.trim())}”</span></button>`)
     : "";
   fcRender();
@@ -3896,7 +3973,7 @@ function fcPick(name){
 }
 function fcGramsTyped(){fcGramsManual=true;fcRender();}
 function fcSetGrams(v){document.getElementById("fcGrams").value=v;fcGramsManual=true;fcRender();}
-function fcCalc(f,g){return {k:Math.round(f.k*g/100),p:f.p*g/100,f:f.f*g/100};}
+function fcCalc(f,g){if(f.each)return {k:Math.round(f.k*g),p:f.p*g,f:f.f*g};return {k:Math.round(f.k*g/100),p:f.p*g/100,f:f.f*g/100};}
 function fcRender(){
   const gEl=document.getElementById("fcGrams");
   const g=parseFloat(gEl?.value);
@@ -3912,7 +3989,7 @@ function fcRender(){
   const opts = sz ? sz : u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} g`]);
   units.innerHTML=opts.map(([v,l])=>`<button class="chip ${g===v?"on":""}" onclick="fcSetGrams(${v})">${l}</button>`).join("");
   if(!g||g<=0){
-    prev.innerHTML=`<b>${escH(fcSel.n)}</b>: ${fcSel.k} kcal per 100 ${uo}. How much did you have?`;
+    prev.innerHTML=fcSel.each?`<b>${escH(fcSel.n)}</b>: ${fcSel.k} kcal each. How many?`:`<b>${escH(fcSel.n)}</b>: ${fcSel.k} kcal per 100 ${uo}. How much did you have?`;
     return;
   }
   const r=fcCalc(fcSel,g);
@@ -3927,7 +4004,12 @@ function fcAdd(){
   const g=parseFloat(document.getElementById("fcGrams").value);
   if(!g||g<=0){toast("Enter an amount");document.getElementById("fcGrams").focus();return;}
   const r=fcCalc(fcSel,g);
-  calDay(selKey).eat.push({kcal:r.k,label:fcSel.n,food:fcSel.n,g:Math.round(g),p:Math.round(r.p*10)/10,f:Math.round(r.f*10)/10,...(fcSel.ml?{ml:true}:{})});
+  const u=fcUnitOf(fcSel), cnt=u&&g%u[0]===0?g/u[0]:1, q=cnt>=1&&cnt<=24?cnt:1;
+  const one=fcCalc(fcSel,g/q);
+  const ent={kcal:r.k,label:fcSel.n,food:fcSel.n,p:r1(r.p),f:r1(r.f),q,unit:{kcal:one.k,p:one.p,f:one.f}};
+  if(!fcSel.each){ent.g=Math.round(g);ent.unit.g=g/q;ent.unit.kcal=fcSel.k*g/q/100;}
+  if(fcSel.ml)ent.ml=true;
+  calDay(selKey).eat.push(ent);
   saveCal();
   toast(`+${r.k} kcal · ${fcSel.n}`);
   fcSel=null;fcNum=null;fcGramsManual=false;
@@ -3941,20 +4023,25 @@ function fcRecents(){
   const seen={}, out=[];
   Object.keys(calLog).sort().reverse().forEach(k=>{
     (calLog[k].eat||[]).slice().reverse().forEach(x=>{
-      if(x.food&&x.g&&!seen[x.food]&&findFood(x.food)){seen[x.food]=1;out.push(x);}
+      const fd=x.food&&findFood(x.food);
+      if(fd&&(x.g||fd.each)&&!seen[x.food]){seen[x.food]=1;out.push(x);}
     });
   });
   return out.slice(0,8);
 }
+let fcRecentList=[];
+function fcRefillIdx(n){const x=fcRecentList[n];if(!x)return;const fd=findFood(x.food);fcRefill(x.food,fd?.each?1:Math.round(x.unit?.g||x.g));}
 function fcRefill(name,g){fcSel=null;fcNum={n:g,g:true};fcPick(name);document.getElementById("fcGrams").focus();}
 function renderFoodCalc(){
   const r=document.getElementById("fcRecent");
   if(r){
     const rec=fcRecents();
-    r.innerHTML=rec.length?rec.map(x=>`<button class="chip" onclick="fcRefill('${escH(x.food).replace(/&#39;/g,"\\'")}',${x.unit?.g||x.g})">${escH(x.food)} · ${x.unit?.g||x.g} ${x.ml?"ml":"g"}</button>`).join(""):"";
+    fcRecentList=rec;
+    r.innerHTML=rec.map((x,n)=>{const fd=findFood(x.food), one=fd.each?1:Math.round(x.unit?.g||x.g);
+      return `<button class="chip" onclick="fcRefillIdx(${n})">${escH(x.food)} · ${fd.each?`${fd.k} kcal`:`${one} ${x.ml?"ml":"g"}`}</button>`;}).join("");
   }
   const ml=document.getElementById("mfList");
-  if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${escH(f.n)}</div><div class="fi-m2">per 100 g · ${f.k} kcal · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
+  if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${escH(f.n)}</div><div class="fi-m2">${f.each?`each · ${f.k} kcal`:`per 100 ${f.ml?"ml":"g"} · ${f.k} kcal${f.u?` · 1 = ${f.u[0]} ${f.ml?"ml":"g"}`:""}`} · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
   fcRender();
 }
 function saveMyFood(){
@@ -4223,7 +4310,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v37"]};
+ data:["Save & Settings","Backup your data · v38"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
