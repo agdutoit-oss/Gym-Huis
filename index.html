@@ -123,6 +123,12 @@
   .plan-item h4{font-size:14px;font-weight:700}
   .plan-item .pm{font-size:11px;color:var(--dim)}
   .plan-item .ps{font-size:12.5px;color:var(--accent2);font-weight:600;margin-top:2px}
+  .qty{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+  .qty button{width:30px;height:30px;border-radius:9px;background:var(--card2);border:1.5px solid var(--line);color:var(--txt);font-size:17px;font-weight:700;cursor:pointer;line-height:1}
+  .qty button:active{border-color:var(--accent)}
+  .qty button:disabled{opacity:.35}
+  .qty span{min-width:22px;text-align:center;font-weight:800;font-size:14px}
+  .qtyk{font-weight:800;color:var(--accent2);min-width:38px;text-align:right}
   .rm{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--card2);border:none;color:var(--dim);font-size:17px;cursor:pointer}
   .rm.swap{color:var(--blue);font-size:15px;font-weight:800}
   .rm.swap:active{background:rgba(77,159,255,.18)}
@@ -3302,7 +3308,7 @@ function renderCal(){
   // eaten list
   const eat=calLog[key]?.eat||[];
   document.getElementById("calList").innerHTML = eat.length
-    ? eat.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.food?escH(x.food):(x.label||"Food")}</div>${x.g?`<div class="fi-m2">${x.g} ${x.ml?"ml":"g"} · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`:""}</div><div style="font-weight:800;color:var(--accent2)">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`).join("")
+    ? eat.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.food?escH(x.food):(x.label||"Food")}</div>${x.g?`<div class="fi-m2">${(x.q||1)>1?`${x.q} × ${x.unit.g} ${x.ml?"ml":"g"} = `:""}${x.g} ${x.ml?"ml":"g"} · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`:((x.q||1)>1?`<div class="fi-m2">${x.q} × ${x.unit.kcal} kcal</div>`:"")}</div><div class="qty"><button onclick="calStep(${i},-1)" ${(x.q||1)<=1?"disabled":""} aria-label="One less">−</button><span>${x.q||1}</span><button onclick="calStep(${i},1)" aria-label="One more">+</button></div><div class="qtyk">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`).join("")
     : `<div class="addhint">Nothing logged yet. Add what you eat above.</div>`;
 
   // burn list
@@ -3412,6 +3418,19 @@ function addBurn(){
   calDay(selKey).burn.push({kcal:v,label:(lEl.value||"").trim()});
   saveCal(); vEl.value=""; lEl.value=""; renderCal();
   toast(`+${v} kcal burn`);
+}
+// + / − on a logged item: one more or one less of the portion first logged
+function calStep(i,d){
+  const x=calDay(selKey).eat[i]; if(!x)return;
+  if(!x.unit)x.unit={kcal:+x.kcal||0,g:x.g,p:x.p,f:x.f,c:x.c};
+  const q=(x.q||1)+d; if(q<1)return;
+  const u=x.unit, r1=v=>Math.round(v*10)/10;
+  x.q=q; x.kcal=Math.round(u.kcal*q);
+  if(u.g!=null)x.g=Math.round(u.g*q);
+  if(u.p!=null)x.p=r1(u.p*q);
+  if(u.f!=null)x.f=r1(u.f*q);
+  if(u.c!=null)x.c=r1(u.c*q);
+  saveCal(); renderCal();
 }
 function rmCal(kind,i){ calDay(selKey)[kind].splice(i,1); saveCal(); renderCal(); }
 function saveCalTarget(){
@@ -3932,7 +3951,7 @@ function renderFoodCalc(){
   const r=document.getElementById("fcRecent");
   if(r){
     const rec=fcRecents();
-    r.innerHTML=rec.length?rec.map(x=>`<button class="chip" onclick="fcRefill('${escH(x.food).replace(/&#39;/g,"\\'")}',${x.g})">${escH(x.food)} · ${x.g} ${x.ml?"ml":"g"}</button>`).join(""):"";
+    r.innerHTML=rec.length?rec.map(x=>`<button class="chip" onclick="fcRefill('${escH(x.food).replace(/&#39;/g,"\\'")}',${x.unit?.g||x.g})">${escH(x.food)} · ${x.unit?.g||x.g} ${x.ml?"ml":"g"}</button>`).join(""):"";
   }
   const ml=document.getElementById("mfList");
   if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${escH(f.n)}</div><div class="fi-m2">per 100 g · ${f.k} kcal · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
@@ -4204,7 +4223,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v36"]};
+ data:["Save & Settings","Backup your data · v37"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
