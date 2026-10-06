@@ -352,6 +352,28 @@
   .fwarn.plan b{color:var(--blue)}
   .fhrow{cursor:pointer}
 
+  /* CALORIE COUNTER */
+  .calcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 18px;text-align:center;margin-bottom:14px}
+  .calbig{font-size:46px;font-weight:800;line-height:1;color:var(--good)}
+  .calbig.over{color:var(--accent2)}
+  .calbig small{display:block;font-size:13px;font-weight:600;color:var(--dim);margin-top:4px}
+  .calsub{font-size:12.5px;color:var(--dim);margin:10px 0}
+  .calbar{height:8px;background:var(--card2);border-radius:4px;overflow:hidden;margin:8px 0}
+  .calbarfill{height:100%;background:var(--good);border-radius:4px;transition:width .3s}
+  .calbarfill.over{background:var(--accent)}
+  .caldef{font-size:12px;font-weight:700;color:var(--accent2);margin-top:6px}
+  .caladd{display:flex;gap:8px;margin-bottom:10px}
+  .calinput{flex:1;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--txt);font-size:15px;min-width:0}
+  .calinput:focus{outline:none;border-color:var(--accent)}
+  .callbl{flex:1.3}
+  .calquick{display:flex;gap:7px;margin-bottom:16px}
+  .calqbtn{flex:1;padding:10px 4px;border-radius:10px;background:var(--card2);border:1.5px solid var(--line);color:var(--accent2);font-size:13px;font-weight:700;cursor:pointer}
+  .calqbtn:active{background:rgba(232,80,46,.14)}
+  .caltrain{margin-top:18px;padding-top:4px}
+  .calwtip{background:rgba(77,159,255,.08);border:1px solid rgba(77,159,255,.25);border-radius:9px;padding:9px 11px;font-size:11.5px;color:#cfe0f2;margin-bottom:10px;line-height:1.5}
+  .calchk{display:flex;align-items:center;gap:8px;font-size:13px;color:#cdd6df;margin:10px 0}
+  .calchk input{width:18px;height:18px}
+
   .macros{display:flex;gap:8px;margin-bottom:14px}
   .macro{flex:1;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 8px;text-align:center}
   .mval{font-size:19px;font-weight:800}
@@ -611,51 +633,44 @@
 
   <!-- TIMER -->
   <div class="view" id="v-timer">
-    <div class="tmode">
-      <button class="tmbtn on" id="tmode-simple" onclick="setTimerMode('simple')">Work / Rest</button>
-      <button class="tmbtn" id="tmode-custom" onclick="setTimerMode('custom')">Custom intervals</button>
+    <div id="calDateBar"></div>
+    <div id="calRing"></div>
+    <div id="calWarn"></div>
+
+    <div class="caladd">
+      <input type="number" inputmode="numeric" id="calInput" class="calinput" placeholder="Calories eaten">
+      <input type="text" id="calLabel" class="calinput callbl" placeholder="What (optional)">
+      <button class="btn primary" style="flex:0 0 70px" onclick="addCal()">Add</button>
+    </div>
+    <div id="calQuick" class="calquick"></div>
+
+    <div class="fdhead">Logged today</div>
+    <div id="calList"></div>
+
+    <div class="caltrain">
+      <div class="fdhead">Optional: add a workout's burn</div>
+      <div class="calwtip">Your Apple Watch tends to overestimate — if you add training calories, shave ~20% off what it says. Easiest is to ignore this and just hit your intake target.</div>
+      <div class="caladd">
+        <input type="number" inputmode="numeric" id="calBurnInput" class="calinput" placeholder="Burn (kcal)">
+        <input type="text" id="calBurnLabel" class="calinput callbl" placeholder="e.g. padel, treadmill">
+        <button class="btn ghost" style="flex:0 0 70px" onclick="addBurn()">Add</button>
+      </div>
+      <div id="calBurnList"></div>
     </div>
 
-    <!-- simple mode config -->
-    <div id="timerSimpleCfg" class="tcfg">
-      <div class="trow">
-        <label>Work</label>
-        <div class="tstep"><button onclick="adjT('work',-5)">−</button><span id="tWork">45</span>s<button onclick="adjT('work',5)">+</button></div>
-      </div>
-      <div class="trow">
-        <label>Rest</label>
-        <div class="tstep"><button onclick="adjT('rest',-5)">−</button><span id="tRest">90</span>s<button onclick="adjT('rest',5)">+</button></div>
-      </div>
-      <div class="trow">
-        <label>Rounds</label>
-        <div class="tstep"><button onclick="adjT('rounds',-1)">−</button><span id="tRounds">5</span><button onclick="adjT('rounds',1)">+</button></div>
-      </div>
-    </div>
+    <details class="fhist"><summary>Previous days</summary><div id="calHistory"></div></details>
 
-    <!-- custom mode config -->
-    <div id="timerCustomCfg" class="tcfg" style="display:none">
-      <div class="chint">Build your own sequence of intervals. They'll run in order, once through.</div>
-      <div id="customList"></div>
-      <div class="caddrow">
-        <button class="cadd work" onclick="addInterval('work')">+ Work</button>
-        <button class="cadd rest" onclick="addInterval('rest')">+ Rest</button>
+    <div class="setcard" style="margin-top:16px">
+      <h3>Your daily target</h3>
+      <p>Your desk-job maintenance (no training) is about <b id="calMaint">2460</b> kcal. Set the daily intake target you want to eat to — lower than maintenance to lose fat.</p>
+      <div class="caladd">
+        <input type="number" inputmode="numeric" id="calTargetInput" class="calinput" placeholder="Target kcal">
+        <button class="btn primary" style="flex:0 0 70px" onclick="saveCalTarget()">Save</button>
       </div>
+      <label class="calchk"><input type="checkbox" id="calAddBurnChk" onchange="toggleAddBurn()"> Add workout burn to my target for the day</label>
+      <div class="setnote">A deficit of ~500/day ≈ 0.5 kg/week. On a strict carnivore diet, keep protein high to protect muscle while you lose fat. Not medical advice.</div>
     </div>
-
-    <!-- the clock -->
-    <div class="clock" id="clockFace">
-      <div class="clabel" id="clockLabel">Ready</div>
-      <div class="ctime" id="clockTime">00:45</div>
-      <div class="cround" id="clockRound"></div>
-      <div class="cprog"><div class="cprogbar" id="clockBar"></div></div>
-    </div>
-
-    <div class="tctrl">
-      <button class="btn ghost" onclick="testSound()">🔊 Test</button>
-      <button class="btn ghost" onclick="resetTimer()">Reset</button>
-      <button class="btn primary" id="startBtn" onclick="toggleTimer()">Start</button>
-    </div>
-    <div class="disc">Keep the app open and your screen awake while the timer runs. It beeps and flashes when switching between work and rest.</div>
+    <div class="disc">Intake is what you control; burn is an estimate. Aim to hit your target most days and let the weekly trend tell the story.</div>
   </div>
 
   <!-- FOOD / NUTRITION -->
@@ -747,7 +762,7 @@
   <button id="nav-lib" onclick="switchView('lib')">
     <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg>Library</button>
   <button id="nav-timer" onclick="switchView('timer')">
-    <svg viewBox="0 0 24 24"><path d="M12 6a9 9 0 109 9 9 9 0 00-9-9zm1 10h-2V9h2zM9 1h6v2H9z"/></svg>Timer</button>
+    <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 109 9 9 9 0 00-9-9zm0 16a7 7 0 110-14 7 7 0 010 14zm-1-11h2v4h3v2h-5z"/></svg>Calories</button>
   <button id="nav-history" onclick="switchView('history')">
     <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 00-9 9H1l3.9 3.9.1.1L9 12H6a7 7 0 117 7 6.9 6.9 0 01-5-2l-1.4 1.4A9 9 0 1013 3zm-1 5v5l4.3 2.5.7-1.2-3.5-2.1V8z"/></svg>History</button>
 </div>
@@ -1964,7 +1979,7 @@ function clearDay(){if(!plans[curDay]||!plans[curDay].length)return;if(confirm(`
 
 /* ---------------- DATA (export/import) ---------------- */
 function exportPlans(){
-  const data=JSON.stringify({goal,plans,logs,foodLog,weightLog,profile,program});
+  const data=JSON.stringify({goal,plans,logs,foodLog,weightLog,profile,program,calLog,calCfg});
   const ta=document.createElement("textarea");
   ta.value=data;document.body.appendChild(ta);ta.select();
   try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
@@ -1992,6 +2007,9 @@ function doImport(){
     if(d.weightLog)weightLog=d.weightLog;
     if(d.profile)profile=Object.assign(profile,d.profile);
     if(d.program){program=d.program;saveProgram();}
+    if(d.calLog){calLog=d.calLog;}
+    if(d.calCfg){calCfg=Object.assign(calCfg,d.calCfg);}
+    saveCal();
     save();saveFood();
     renderGoals();renderLib();renderPlan();renderDaySelect();
     document.getElementById("dataArea").innerHTML="";
@@ -2745,7 +2763,6 @@ function renderTrain(){
     </div>
     <div class="trnav">
       <button class="btn ghost" onclick="trainPrev()" ${train.idx===0?'disabled':''}>‹ Prev</button>
-      <button class="btn ghost" onclick="switchView('timer')">⏱ Rest timer</button>
       <button class="btn primary" onclick="trainNext()">${train.idx>=total-1?'Finish':'Next ›'}</button>
     </div>`;
 
@@ -2787,7 +2804,36 @@ function toggleDone(i){
   else train.done[i]=true;
   renderTrain();
 }
+// Pressing Next counts the current exercise as done. If nothing was logged
+// this session, record it at the last weight used (carry-forward).
+function autoLogCurrent(){
+  const i=train.idx;
+  const cur=train.list[i];
+  if(!cur||train.done[i])return;          // already logged/done — leave it
+  const e=exByName(cur.n); if(!e)return;
+  const t=logType(e);
+  const last=lastLog(cur.n);
+  // build a set carrying the last value forward (weight for weight exercises)
+  let set;
+  if(last){
+    const ls=entrySets(last); const l=ls[ls.length-1];
+    set = t==="weight" ? {w:l.w||null,r:null} : {w:null,r:l.r||null};
+  } else {
+    set = {w:null,r:null};                  // never done before — log it as done, no value
+  }
+  if(!logs[cur.n])logs[cur.n]=[];
+  const ld=dateOf(selKey); const now=new Date();
+  if(selKey===todayKey())ld.setHours(now.getHours(),now.getMinutes(),now.getSeconds());
+  else ld.setHours(12,0,0);
+  const entry={date:ld.toISOString(),sets:[set],carried:!!last};
+  if(cur.ss)entry.ss=cur.ss;
+  entry.ord=i;
+  logs[cur.n].push(entry);
+  train.done[i]=true;
+  save();renderDaySelect();
+}
 function trainNext(){
+  autoLogCurrent();
   if(train.idx>=train.list.length-1){endTraining(true);return;}
   train.idx++;renderTrain();window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -2834,7 +2880,7 @@ function endTraining(finished){
 const FOOD_KEY="hgt_food_v1", WEIGHT_KEY="hgt_weight_v1", PROFILE_KEY="hgt_profile_v1";
 let foodLog={};   // "YYYY-MM-DD" -> [{name,g,p,f,kcal}]
 let weightLog=[]; // [{date, kg}]
-let profile={kg:124, cm:181, born:1988};
+let profile={kg:110, cm:182, born:1988};
 function currentAge(){return new Date().getFullYear() - (profile.born||1988);}
 
 // Carnivore food database: per 100g -> protein, fat, kcal
@@ -2909,10 +2955,7 @@ function goToday(){selKey=todayKey();refreshForDate();}
 function pickDate(v){ if(v){selKey=v;refreshForDate();} }
 function refreshForDate(){
   // re-render whatever view is showing
-  if(document.getElementById("v-food").classList.contains("on")){
-    if(foodSub==="today")renderToday();
-    if(foodSub==="weight")renderWeight();
-  }
+  if(document.getElementById("v-timer").classList.contains("on"))renderCal();
   if(document.getElementById("v-train").classList.contains("on"))renderTrain();
 }
 // Friendly label: Today / Yesterday / Tomorrow / Wed 16 Jul
@@ -2941,6 +2984,107 @@ function dateBar(){
     ${isToday?"":`<button class="dtoday" onclick="goToday()">Today</button>`}
   </div>`;
 }
+
+/* ---------------- CALORIE COUNTER ---------------- */
+const CAL_KEY="hgt_cal_v1";
+// calLog: { "YYYY-MM-DD": {eat:[{kcal,label}], burn:[{kcal,label}]} }
+let calLog={};
+let calCfg={target:2000, maint:2460, addBurn:false};
+function loadCal(){try{
+  const c=localStorage.getItem(CAL_KEY);
+  if(c){const d=JSON.parse(c); calLog=d.log||{}; calCfg=Object.assign(calCfg,d.cfg||{});}
+}catch(e){}}
+function saveCal(){try{localStorage.setItem(CAL_KEY,JSON.stringify({log:calLog,cfg:calCfg}));}catch(e){}}
+function calMaintenance(){
+  // Mifflin-St Jeor × 1.2 (desk job), recomputed from current profile
+  const w=profile.kg, h=profile.cm, a=currentAge();
+  const bmr=10*w + 6.25*h - 5*a + 5;
+  return Math.round(bmr*1.2);
+}
+function calDay(key){ if(!calLog[key])calLog[key]={eat:[],burn:[]}; return calLog[key]; }
+function calEaten(key){return (calLog[key]?.eat||[]).reduce((t,x)=>t+(+x.kcal||0),0);}
+function calBurned(key){return (calLog[key]?.burn||[]).reduce((t,x)=>t+(+x.kcal||0),0);}
+function calTargetFor(key){ return calCfg.target + (calCfg.addBurn?calBurned(key):0); }
+
+function renderCal(){
+  const db=document.getElementById("calDateBar"); if(db)db.innerHTML=dateBar();
+  const key=selKey;
+  calCfg.maint=calMaintenance();
+  const m=document.getElementById("calMaint"); if(m)m.textContent=calCfg.maint;
+  const ti=document.getElementById("calTargetInput"); if(ti&&document.activeElement!==ti)ti.value=calCfg.target;
+  const chk=document.getElementById("calAddBurnChk"); if(chk)chk.checked=calCfg.addBurn;
+
+  const eaten=calEaten(key), burned=calBurned(key);
+  const target=calTargetFor(key);
+  const remaining=target-eaten;
+  const pct=target>0?Math.min(100,(eaten/target)*100):0;
+  const over=eaten>target;
+  const deficit=calCfg.maint + (calCfg.addBurn?burned:0) - eaten; // vs maintenance(+burn)
+
+  document.getElementById("calRing").innerHTML=`
+    <div class="calcard">
+      <div class="calbig ${over?'over':''}">${Math.round(Math.abs(remaining))}<small>${remaining>=0?'kcal left':'kcal over'}</small></div>
+      <div class="calsub">${eaten} eaten · ${target} target${calCfg.addBurn&&burned?` (incl. ${burned} burn)`:''}</div>
+      <div class="calbar"><div class="calbarfill ${over?'over':''}" style="width:${pct}%"></div></div>
+      <div class="caldef">${deficit>=0?`▼ ${deficit} under maintenance`:`▲ ${Math.abs(deficit)} over maintenance`}</div>
+    </div>`;
+
+  // warning
+  let warn="";
+  const isFuture=dateOf(key)>dateOf(todayKey());
+  if(!isFuture){
+    if(over)warn=`<div class="fwarn warn"><b>Over target.</b> You're ${Math.round(-remaining)} kcal above today's goal. One day won't undo progress — just get back on target tomorrow.</div>`;
+    else if(eaten>0 && eaten<1200)warn=`<div class="fwarn warn"><b>Very low so far.</b> Eating too little backfires — it costs muscle and tanks energy. Make sure you hit enough protein.</div>`;
+  }
+  document.getElementById("calWarn").innerHTML=warn;
+
+  // quick-add buttons (common round numbers)
+  document.getElementById("calQuick").innerHTML=[100,200,300,500].map(n=>
+    `<button class="calqbtn" onclick="quickCal(${n})">+${n}</button>`).join("");
+
+  // eaten list
+  const eat=calLog[key]?.eat||[];
+  document.getElementById("calList").innerHTML = eat.length
+    ? eat.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.label||"Food"}</div></div><div style="font-weight:800;color:var(--accent2)">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`).join("")
+    : `<div class="addhint">Nothing logged yet. Add what you eat above.</div>`;
+
+  // burn list
+  const burn=calLog[key]?.burn||[];
+  document.getElementById("calBurnList").innerHTML = burn.length
+    ? burn.map((x,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${x.label||"Workout"}</div></div><div style="font-weight:800;color:var(--blue)">${x.kcal}</div><button class="rm" onclick="rmCal('burn',${i})">×</button></div>`).join("")
+    : "";
+
+  // history
+  const keys=Object.keys(calLog).filter(k=>k!==key && (calLog[k].eat?.length||calLog[k].burn?.length)).sort().reverse().slice(0,14);
+  document.getElementById("calHistory").innerHTML = keys.length
+    ? keys.map(k=>{const e=calEaten(k);const t=calTargetFor(k);const d=t-e;
+        return `<div class="fhrow" onclick="pickDate('${k}')"><span>${dayLabel(k)}</span><span>${e} kcal</span><span class="${d>=0?'good':'accent'}">${d>=0?d+' under':Math.abs(d)+' over'}</span></div>`;}).join("")
+    : `<div class="addhint">No other days logged yet.</div>`;
+}
+function addCal(){
+  const vEl=document.getElementById("calInput"), lEl=document.getElementById("calLabel");
+  const v=parseInt(vEl.value,10);
+  if(!v||v<=0){toast("Enter calories");return;}
+  calDay(selKey).eat.push({kcal:v,label:(lEl.value||"").trim()});
+  saveCal(); vEl.value=""; lEl.value=""; renderCal();
+  toast(`+${v} kcal`);
+}
+function quickCal(n){ calDay(selKey).eat.push({kcal:n,label:""}); saveCal(); renderCal(); toast(`+${n} kcal`); }
+function addBurn(){
+  const vEl=document.getElementById("calBurnInput"), lEl=document.getElementById("calBurnLabel");
+  const v=parseInt(vEl.value,10);
+  if(!v||v<=0){toast("Enter burn");return;}
+  calDay(selKey).burn.push({kcal:v,label:(lEl.value||"").trim()});
+  saveCal(); vEl.value=""; lEl.value=""; renderCal();
+  toast(`+${v} kcal burn`);
+}
+function rmCal(kind,i){ calDay(selKey)[kind].splice(i,1); saveCal(); renderCal(); }
+function saveCalTarget(){
+  const v=parseInt(document.getElementById("calTargetInput").value,10);
+  if(!v||v<800){toast("Enter a realistic target (800+)");return;}
+  calCfg.target=v; saveCal(); renderCal(); toast(`Target set: ${v} kcal`);
+}
+function toggleAddBurn(){ calCfg.addBurn=document.getElementById("calAddBurnChk").checked; saveCal(); renderCal(); }
 
 // --- targets ---
 function targets(){
@@ -3186,9 +3330,9 @@ function loadFood(){try{
 const TITLES={plan:["Plan","Build a session or pick a workout type"],
  train:["Train","Pick a day, then start your workout"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
- timer:["Gym Timer","Work / rest intervals · beeps hands-free"],
+ timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v31"]};
+ data:["Save & Settings","Backup your data · v32"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -3217,7 +3361,7 @@ function switchView(v){
   if(v==="train"){renderTrain();}
   if(v==="data"){initMwUI();}
   if(v==="history"){setHistSub(histSub);renderHistory();}
-  if(v==="timer" && !tState.seq.length){resetTimer();}
+  if(v==="timer"){renderCal();}
 }
 
 /* ---------------- WORKOUT HISTORY ---------------- */
@@ -3451,8 +3595,9 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 /* ---------------- INIT ---------------- */
 load();
 loadFood();
+loadCal();
 loadProgramState();
-renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();resetTimer();
+renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();
 switchView("plan");   // ensures goal bar / nav state is initialised correctly
 </script>
 </body>
