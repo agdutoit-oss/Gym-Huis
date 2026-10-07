@@ -426,6 +426,12 @@
   .fcmine .fcrow{margin-top:8px}
   .fcmine .calinput{font-size:14px;padding:10px}
   .fi-m2{font-size:11px;color:var(--dim);margin-top:2px}
+  .calmacs{display:flex;gap:10px;margin-top:12px;text-align:left}
+  .calmacs>div{flex:1;min-width:0}
+  .calmacs .ml{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);margin-bottom:4px}
+  .calmacs .ml b{color:var(--txt)}
+  .calmacs .calbar{margin:0;height:6px}
+  .calmacs .mfp{background:var(--good)} .calmacs .mff{background:var(--amber)}
   .calmac{font-size:12px;color:var(--dim);margin-top:6px}
   .calmac b{color:var(--txt)}
   .calwtip{background:rgba(77,159,255,.08);border:1px solid rgba(77,159,255,.25);border-radius:9px;padding:9px 11px;font-size:11.5px;color:#cfe0f2;margin-bottom:10px;line-height:1.5}
@@ -756,6 +762,11 @@
       <input type="text" id="calLabel" class="calinput callbl" placeholder="What (optional)">
       <button class="btn primary" style="flex:0 0 70px" onclick="addCal()">Add</button>
     </div>
+    <div class="caladd">
+      <input type="number" inputmode="decimal" id="calProt" class="calinput" placeholder="Protein g (optional)">
+      <input type="number" inputmode="decimal" id="calFat" class="calinput" placeholder="Fat g (optional)">
+      <div style="flex:0 0 70px"></div>
+    </div>
     <div id="calQuick" class="calquick"></div>
 
     <div class="fdhead">Logged today <span style="text-transform:none;letter-spacing:0;font-weight:500">· tap one to fix it</span></div>
@@ -780,6 +791,12 @@
         <input type="number" inputmode="numeric" id="calTargetInput" class="calinput" placeholder="Target kcal">
         <button class="btn primary" style="flex:0 0 70px" onclick="saveCalTarget()">Save</button>
       </div>
+      <div class="caladd">
+        <input type="number" inputmode="numeric" id="calProtTarget" class="calinput" placeholder="Protein g">
+        <input type="number" inputmode="numeric" id="calFatTarget" class="calinput" placeholder="Fat g">
+        <div style="flex:0 0 70px"></div>
+      </div>
+      <div class="setnote" id="calMacroNote"></div>
       <label class="calchk"><input type="checkbox" id="calAddBurnChk" onchange="toggleAddBurn()"> Add workout burn to my target for the day</label>
       <div class="setnote">A deficit of ~500/day ≈ 0.5 kg/week. On a strict carnivore diet, keep protein high to protect muscle while you lose fat. Not medical advice.</div>
     </div>
@@ -3278,6 +3295,12 @@ function renderCal(){
   calCfg.maint=calMaintenance();
   const m=document.getElementById("calMaint"); if(m)m.textContent=calCfg.maint;
   const ti=document.getElementById("calTargetInput"); if(ti&&document.activeElement!==ti)ti.value=calCfg.target;
+  const mtA=calMacroTargets(key);
+  const pti=document.getElementById("calProtTarget"); if(pti&&document.activeElement!==pti)pti.value=calCfg.protein||"";
+  const fti=document.getElementById("calFatTarget"); if(fti&&document.activeElement!==fti)fti.value=calCfg.fat||"";
+  if(pti)pti.placeholder=`Protein g (auto ${mtA.p})`; if(fti)fti.placeholder=`Fat g (auto ${mtA.f})`;
+  const mn=document.getElementById("calMacroNote");
+  if(mn)mn.textContent=`Leave protein and fat empty to use the automatic targets: protein for your weight (${targets().pLo}–${targets().pHi} g), and fat from the calories left after protein.`;
   const chk=document.getElementById("calAddBurnChk"); if(chk)chk.checked=calCfg.addBurn;
 
   const eaten=calEaten(key), burned=calBurned(key);
@@ -3293,9 +3316,10 @@ function renderCal(){
       <div class="calsub">${eaten} eaten · ${target} target${calCfg.addBurn&&burned?` (incl. ${burned} burn)`:''}</div>
       <div class="calbar"><div class="calbarfill ${over?'over':''}" style="width:${pct}%"></div></div>
       <div class="caldef">${deficit>=0?`▼ ${deficit} under maintenance`:`▲ ${Math.abs(deficit)} over maintenance`}</div>
-      ${(()=>{const e=(calLog[key]?.eat||[]).filter(x=>x.p!=null);if(!e.length)return "";
+      ${(()=>{const e=calLog[key]?.eat||[], mt=calMacroTargets(key);
         const p=e.reduce((t,x)=>t+(+x.p||0),0), f=e.reduce((t,x)=>t+(+x.f||0),0);
-        return `<div class="calmac">From foods you picked: <b>${Math.round(p)} g</b> protein · <b>${Math.round(f)} g</b> fat</div>`;})()}
+        const bar=(lab,v,t,cls)=>`<div><div class="ml"><span>${lab}</span><span><b>${Math.round(v)}</b> / ${t} g</span></div><div class="calbar"><div class="calbarfill ${cls}" style="width:${t>0?Math.min(100,v/t*100):0}%"></div></div></div>`;
+        return `<div class="calmacs">${bar("Protein",p,mt.p,"mfp")}${bar("Fat",f,mt.f,"mff")}</div>`;})()}
     </div>`;
 
   // warning
@@ -3413,11 +3437,15 @@ function addCal(){
   const v=parseInt(vEl.value,10);
   if(!v||v<=0){toast("Enter calories");return;}
   const lbl=(lEl.value||"").trim();
+  const pEl=document.getElementById("calProt"), fEl=document.getElementById("calFat");
+  const num=el=>{const n=parseFloat(el?.value);return isNaN(n)||n<0?0:n;};
+  const p=num(pEl), f=num(fEl), mac=(pEl?.value||fEl?.value)?{p:r1(p),f:r1(f)}:{};
   if(lbl&&!isBuiltinFood(lbl)){
-    if(!myFoods.some(x=>x.n.toLowerCase()===lbl.toLowerCase()))rememberFood(lbl,{k:v,g:0,p:0,f:0},1,null);
-    calDay(selKey).eat.push({kcal:v,label:lbl,food:findFood(lbl)?.n||lbl,q:1,unit:{kcal:v}});
-  }else calDay(selKey).eat.push({kcal:v,label:lbl});
-  saveCal(); vEl.value=""; lEl.value=""; renderCal();
+    const old=myFoods.find(x=>x.n.toLowerCase()===lbl.toLowerCase());
+    if(!old||old.each)rememberFood(lbl,{k:v,g:0,p,f},1,null);   // latest typed numbers win for a serving
+    calDay(selKey).eat.push({kcal:v,label:lbl,food:findFood(lbl)?.n||lbl,q:1,unit:{kcal:v,...mac},...mac});
+  }else calDay(selKey).eat.push({kcal:v,label:lbl,...mac,...(mac.p!=null?{q:1,unit:{kcal:v,...mac}}:{})});
+  saveCal(); vEl.value=""; lEl.value=""; if(pEl)pEl.value=""; if(fEl)fEl.value=""; renderCal();
   toast(`+${v} kcal`);
 }
 function quickCal(n){ calDay(selKey).eat.push({kcal:n,label:""}); saveCal(); renderCal(); toast(`+${n} kcal`); }
@@ -3467,7 +3495,7 @@ function calItemHtml(x,i){
   const q=x.q||1, uo=x.ml?"ml":"g";
   const sub = x.g
     ? `<div class="fi-m2">${q>1&&x.unit?.g?`${q} × ${Math.round(x.unit.g)} ${uo} = `:""}${x.g} ${uo} · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`
-    : (q>1&&x.unit?`<div class="fi-m2">${q} × ${Math.round(x.unit.kcal)} kcal</div>`:"");
+    : (q>1&&x.unit||x.p!=null)?`<div class="fi-m2">${q>1&&x.unit?`${q} × ${Math.round(x.unit.kcal)} kcal`:""}${q>1&&x.unit&&x.p!=null?" · ":""}${x.p!=null?`${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat`:""}</div>`:"";
   return `<div class="fitem"><div class="fi-info" onclick="calEdit(${i})" style="cursor:pointer"><div class="fi-n">${escH(x.food||x.label||"Food")}</div>${sub}</div><div class="qty"><button onclick="calStep(${i},-1)" ${q<=1?"disabled":""} aria-label="One less">−</button><span>${q}</span><button onclick="calStep(${i},1)" aria-label="One more">+</button></div><div class="qtyk">${x.kcal}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`;
 }
 function calEditHtml(x,i){
@@ -3531,10 +3559,19 @@ function calEditSave(i){
   calEditIdx=-1; saveCal(); renderCal(); toast("Saved");
 }
 function rmCal(kind,i){ calEditIdx=-1; calDay(selKey)[kind].splice(i,1); saveCal(); renderCal(); }
+// Protein: your own number, else the app's estimate for your weight (2.2 g per kg lean mass).
+// Fat: your own number, else whatever calories are left after protein (strict carnivore, ~0 carbs).
+function calMacroTargets(key){
+  const p=calCfg.protein||targets().pMid;
+  const f=calCfg.fat||Math.max(0,Math.round((calTargetFor(key)-p*4)/9));
+  return {p,f};
+}
 function saveCalTarget(){
   const v=parseInt(document.getElementById("calTargetInput").value,10);
   if(!v||v<800){toast("Enter a realistic target (800+)");return;}
-  calCfg.target=v; saveCal(); renderCal(); toast(`Target set: ${v} kcal`);
+  const opt=id=>{const n=parseInt(document.getElementById(id)?.value,10);return n>0?n:0;};
+  calCfg.target=v; calCfg.protein=opt("calProtTarget"); calCfg.fat=opt("calFatTarget");
+  saveCal(); renderCal(); toast(`Target set: ${v} kcal`);
 }
 function toggleAddBurn(){ calCfg.addBurn=document.getElementById("calAddBurnChk").checked; saveCal(); renderCal(); }
 
@@ -4331,7 +4368,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v40"]};
+ data:["Save & Settings","Backup your data · v41"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
