@@ -3472,18 +3472,39 @@ function calItemHtml(x,i){
 }
 function calEditHtml(x,i){
   const q=x.q||1, builtin=isBuiltinFood(x.food), name=x.food||x.label||"";
-  const num=(id,lab,val,ph)=>`<label>${lab}<input id="${id}" class="calinput" type="number" inputmode="decimal" value="${val}" placeholder="${ph||""}" oninput="calEditHint()"></label>`;
+  const num=(id,lab,val,ph)=>`<label>${lab}<input id="${id}" class="calinput" type="number" inputmode="decimal" value="${val}" placeholder="${ph||""}" oninput="calEditInput('${id}')"></label>`;
   return `<div class="fitem ceditor"><div style="flex:1;min-width:0">
     <div class="fdhead" style="margin-top:0">Fix what you logged</div>
     <input id="ceName" class="calinput" style="width:100%" value="${escH(name)}" placeholder="What was it?" ${builtin?"disabled":""}>
     <div class="cerow">${num("ceQ","How many",q)}${num("ceK","Total kcal",x.kcal)}</div>
     <div class="cerow">${num("ceG",`Total ${x.ml?"ml":"grams"}`,x.g||"","optional")}${num("ceP","Protein g",x.p!=null?r1(x.p):"","optional")}${num("ceF","Fat g",x.f!=null?r1(x.f):"","optional")}</div>
+    <div class="cehint">Change the grams and the calories, protein and fat follow.</div>
     <div class="cehint" id="ceEach"></div>
     ${builtin?`<div class="cehint">This food is from the built-in list, so only this entry changes.</div>`:`<label class="calchk"><input type="checkbox" id="ceRem" checked onchange="calEditHint()"> Use these numbers next time too</label>`}
     <div class="aibtns"><button class="btn primary" onclick="calEditSave(${i})">Save</button><button class="btn ghost" onclick="calEdit(-1)">Cancel</button></div>
   </div></div>`;
 }
-function calEdit(i){calEditIdx=i;renderCal();if(i>=0){calEditHint();document.getElementById("ceQ")?.focus();}}
+// While editing: changing the grams rescales kcal, protein and fat (unless you typed those yourself)
+let calEditOrig=null, calEditTyped={};
+function calEditInput(id){
+  if(id==="ceK"||id==="ceP"||id==="ceF")calEditTyped[id]=true;
+  if(id==="ceG")calEditScale();
+  calEditHint();
+}
+function calEditScale(){
+  const o=calEditOrig; if(!o)return;
+  const g=parseFloat(document.getElementById("ceG")?.value); if(!(g>0))return;
+  let per=null;   // kcal/protein/fat per gram
+  if(o.g>0)per={k:o.k/o.g,p:o.p/o.g,f:o.f/o.g};
+  else{const fd=findFood(o.food); if(fd&&!fd.each)per={k:fd.k/100,p:fd.p/100,f:fd.f/100};}
+  if(!per)return;
+  const set=(id,v)=>{if(!calEditTyped[id]){const el=document.getElementById(id);if(el)el.value=id==="ceK"?Math.round(v):r1(v);}};
+  set("ceK",per.k*g); set("ceP",per.p*g); set("ceF",per.f*g);
+}
+function calEdit(i){
+  const x=i>=0?calDay(selKey).eat[i]:null;
+  calEditOrig=x?{g:+x.g||0,k:+x.kcal||0,p:+x.p||0,f:+x.f||0,food:x.food}:null; calEditTyped={};
+  calEditIdx=i;renderCal();if(i>=0){calEditHint();document.getElementById("ceQ")?.focus();}}
 function calEditHint(){
   const el=document.getElementById("ceEach"); if(!el)return;
   const v=id=>parseFloat(document.getElementById(id)?.value);
@@ -4310,7 +4331,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v38"]};
+ data:["Save & Settings","Backup your data · v39"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
