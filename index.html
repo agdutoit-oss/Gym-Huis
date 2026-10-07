@@ -4599,7 +4599,17 @@ loadMyFoods();
 loadAi();
 loadProgramState();
 renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();
-switchView("plan");   // ensures goal bar / nav state is initialised correctly
+// Start on Train from 05:00 to 07:59 (phone's local time), otherwise on Calories
+function startTab(){const h=new Date().getHours();return h>=5&&h<8?"train":"timer";}
+switchView(startTab());   // also initialises goal bar / nav state
+// Coming back after the app sat in the background for 30+ min counts as a fresh open,
+// unless a timer is running
+let hiddenAt=0;
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){hiddenAt=Date.now();return;}
+  if(hiddenAt&&Date.now()-hiddenAt>=30*60*1000&&!tState.running)switchView(startTab());
+  hiddenAt=0;
+});
 </script>
 </body>
 </html>
