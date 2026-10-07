@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Home Gym Trainer</title>
@@ -20,7 +20,8 @@
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);padding-bottom:calc(96px + env(safe-area-inset-bottom));line-height:1.5;font-size:15px}
   .wrap{max-width:600px;margin:0 auto}
 
-  header{padding:20px 18px 14px;background:linear-gradient(135deg,#1a2129,#0f1419);position:relative;overflow:hidden}
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg);z-index:150}
+  header{padding:calc(20px + env(safe-area-inset-top)) 18px 14px;background:linear-gradient(135deg,#1a2129,#0f1419);position:relative;overflow:hidden}
   .gearbtn{position:absolute;top:18px;right:16px;z-index:3;width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
   .gearbtn svg{width:19px;height:19px;fill:currentColor}
   .gearbtn:active,.gearbtn.on{color:var(--txt);background:rgba(255,255,255,.12)}
@@ -507,6 +508,9 @@
   .trss{color:var(--accent2)}
   .trcard{background:var(--card);border:1.5px solid var(--accent);border-radius:18px;padding:16px;text-align:center}
   .trname{font-size:22px;font-weight:800;margin:6px 0 4px}
+  .trnamerow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 4px}
+  .trnamerow .trname{margin:0}
+  .trnamerow .trshuffle{margin:0;padding:5px 10px}
   .trsug{font-size:15px;color:var(--accent2);font-weight:700}
   .trmus{font-size:12px;color:var(--dim);margin-bottom:8px}
   .trcard .mmap{margin-bottom:6px}
@@ -1605,7 +1609,7 @@ function photoDemo(name){
   return `<div class="pdemo" onclick="this.classList.toggle('paused')">
       <img class="pd0" src="${u}0.jpg" alt="${name}: start position" loading="lazy" onerror="pdFail(this)">
       <img class="pd1" src="${u}1.jpg" alt="${name}: finish position" loading="lazy" onerror="pdFail(this)">
-    </div><div class="pdhint">Tap to pause · needs internet the first time</div>`;
+    </div>`;
 }
 function pdFail(img){const d=img.closest(".pdemo");if(!d)return;const h=d.nextElementSibling;
   d.outerHTML=`<div class="viderr">Demo photos need an internet connection.</div>`;if(h&&h.classList.contains("pdhint"))h.remove();}
@@ -1796,7 +1800,6 @@ function libCardHTML(e){
       </div>
       <div class="ex-body"><div class="ex-pad">
         ${libVisual(e)}
-    ${exInfo(e)}
         <span class="equiptag">🏋 ${e.eq}</span>
         ${demoLinks(e,true)}
         ${logBlock(e)}
@@ -1815,7 +1818,7 @@ function ytLink(term){return `https://www.youtube.com/results?search_query=${enc
 function demoLinks(e,shown){
   const inline = (!shown && hasPhotoDemo(e.n))
     ? `<button class="pdtoggle" onclick="togPhotoDemo(this,'${enc(e.n)}')">▶ Show me how</button><div class="pdinline"></div>` : "";
-  return inline + `<div class="demohd">Full videos (opens YouTube)</div>` + ytLinks(e);
+  return inline + ytLinks(e);
 }
 function ytLinks(e){
   const tags=(EX_EQ[e.n]||[]);
@@ -1835,7 +1838,6 @@ function ytLinks(e){
 function exDetailBody(e,withMedia){
   return `<div class="ex-body"><div class="ex-pad">
     ${libVisual(e)}
-    ${exInfo(e)}
     <span class="equiptag">🏋 ${e.eq}</span>
     ${demoLinks(e,true)}
     ${logBlock(e)}
@@ -2957,11 +2959,10 @@ function renderTrain(){
     <div class="trtop">${train.title} · exercise ${done+1} of ${total}${ssLabel?` · <span class="trss">${ssLabel}</span>`:""}</div>
     <div class="trcard">
       ${libVisual(e,`<div class="mapwrap">${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n],{h:120}):""}${lastWeightBadge(e)}</div>`,`<div class="mediaslot" id="media-tr"></div>`)}
-      <h2 class="trname">${e.n} <span class="lvl ${e.lvl}" style="font-size:9px">${e.lvl}</span></h2>
-      <button class="trshuffle" onclick="shuffleCurrent()">⇄ Swap this exercise</button>
+      <div class="trnamerow"><h2 class="trname">${e.n} <span class="lvl ${e.lvl}" style="font-size:9px">${e.lvl}</span></h2>
+        <button class="trshuffle" onclick="shuffleCurrent()" aria-label="Swap this exercise">⇄ Swap</button></div>
       <div class="trsug">${suggestFor(e)}</div>
       <div class="trmus">${e.m}</div>
-      ${exInfo(e)}
       ${logBlock(e,"-tr")}
       ${demoLinks(e,true)}
     </div>
@@ -4368,7 +4369,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v41"]};
+ data:["Save & Settings","Backup your data · v42"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
