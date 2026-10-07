@@ -4331,7 +4331,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Calories","Track your intake against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v39"]};
+ data:["Save & Settings","Backup your data · v40"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -4599,17 +4599,29 @@ loadMyFoods();
 loadAi();
 loadProgramState();
 renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();
-// Start on Train from 05:00 to 07:59 (phone's local time), otherwise on Calories
+</script>
+<script>
+// Start on Train from 05:00 to 07:59 (phone's local time), otherwise on Calories.
+// Kept in its own script so a hiccup while the app loads can't leave it stuck on Plan.
 function startTab(){const h=new Date().getHours();return h>=5&&h<8?"train":"timer";}
-switchView(startTab());   // also initialises goal bar / nav state
+function openStartTab(){
+  const v=startTab();
+  try{switchView(v);}catch(e){
+    document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.id==="nav-"+v));
+  }
+}
+openStartTab();
 // Coming back after the app sat in the background for 30+ min counts as a fresh open,
 // unless a timer is running
 let hiddenAt=0;
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden){hiddenAt=Date.now();return;}
-  if(hiddenAt&&Date.now()-hiddenAt>=30*60*1000&&!tState.running)switchView(startTab());
+  if(hiddenAt&&Date.now()-hiddenAt>=30*60*1000&&!(typeof tState!=="undefined"&&tState.running))openStartTab();
   hiddenAt=0;
 });
+// Also when the browser restores the page from its back/forward cache
+window.addEventListener("pageshow",e=>{if(e.persisted)openStartTab();});
 </script>
 </body>
 </html>
