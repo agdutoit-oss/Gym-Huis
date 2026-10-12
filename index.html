@@ -400,6 +400,11 @@
   .aik{font-weight:800;color:var(--accent2);white-space:nowrap}
   .aisrc{font-size:11.5px;color:var(--dim);margin:6px 0 2px;line-height:1.45}
   .aibtns{display:flex;gap:8px;margin-top:8px}
+  .aiwork{font-size:12.5px;line-height:1.5;color:var(--txt);background:var(--card2);border-radius:8px;padding:8px 10px;margin:8px 0 4px;font-variant-numeric:tabular-nums}
+  .aiconf{font-size:12px;font-weight:700;margin:6px 0 2px;color:var(--good)}
+  .aiconf.rough{color:#f0a030}
+  .aino{display:block;width:100%;margin-top:10px;padding:8px;background:none;border:none;color:#a97bff;font-size:13.5px;font-weight:600;cursor:pointer}
+  .aiwhy{width:100%;margin-top:10px;resize:vertical;font-family:inherit;min-height:70px}
   .aibtns .btn{flex:1}
   .aierr{font-size:13px;color:#f0d6cf;line-height:1.5}
   .aiwait{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dim)}
@@ -3614,15 +3619,25 @@ const AI_TOOL={
         required:["name","grams","kcal","count","protein_g","fat_g","carbs_g"],
         additionalProperties:false
       }},
-      source:{type:"string",description:"One short line: where the numbers come from and any assumption made, e.g. 'KFC SA nutrition info, minus garnish and cheese'"}
+      source:{type:"string",description:"One short line: where the numbers come from and any assumption made, e.g. 'KFC SA nutrition info, minus garnish and cheese'"},
+      working:{type:"array",items:{type:"string"},description:"The sum, one short step per line, in kJ, so the user can check it at a glance. E.g. ['King Steer Burger (beef), Steers SA: 2736 kJ','minus 2 beef patties (200 g): −1300 kJ','plus 2 grilled chicken fillets (220 g): +760 kJ','= 2196 kJ']. For a plain food, one line such as 'Ribeye, raw: 1218 kJ per 100 g × 250 g = 3045 kJ'."},
+      confidence:{type:"string",enum:["official","adjusted","rough"],description:"official: the brand's or a label's numbers for exactly this item. adjusted: official numbers for the standard item, changed for what was added or removed. rough: no reliable source found, typical values used."}
     },
-    required:["items","source"],
+    required:["items","source","working","confidence"],
     additionalProperties:false
   }
 };
 function aiSystem(){
-  return `You are the calorie lookup inside a personal food diary app. The user lives in ${aiCountry}, so use the brands, recipes and portion sizes sold there. They type what they ate in plain words, often with a quantity ("2 x", "100g", "3 eggs").
-Work out calories, protein, fat and carbs. For branded or restaurant food, search the web for the brand's official nutrition information for ${aiCountry} first, and adjust for anything they left out or added (for example "no cheese"). Nutrition labels in ${aiCountry} may list energy only in kJ; convert to kcal (divide by 4.184) for the kcal fields. For plain foods, typical values are fine without searching. Multiply by the quantity, so each item's totals cover everything they ate of it.
+  return `You are the food lookup inside a personal food diary app. The user lives in ${aiCountry}, so use the brands, recipes and portion sizes sold there. They type what they ate in plain words, often with a quantity ("2 x", "100g", "3 eggs"). They rely on your numbers to hit a daily energy target, so accuracy matters more than speed.
+
+Work it out like this:
+1. Find the exact item. For branded, restaurant or packaged food, search for the brand's own nutrition information for ${aiCountry} (their website, menu or nutrition PDF). If the brand doesn't publish it, use fatsecret.co.za or another listing for ${aiCountry}. Open the page and read the numbers; don't rely on a search snippet. For plain foods (meat, eggs, cheese), use standard values for that food, raw or cooked as the user describes.
+2. If they changed the item (swapped, removed or added something), start from the standard item exactly as sold, in the same size. Take off what was removed and add what replaced it, using realistic weights for those parts. Never start from a different version of the item (a veggie or combo version, another size) unless that is what they ate.
+3. Count only what they said. "A burger" means the burger alone, not a combo with chips and a drink.
+4. Multiply by the quantity, so each item's totals cover everything they ate of it.
+5. Check before answering. kcal should roughly equal 4 × protein + 4 × carbs + 9 × fat. If you changed an item, compare the total with the standard item and make sure the difference makes sense (for example, chicken breast is leaner than a beef patty, so the total should go down). Fix anything that doesn't add up.
+
+Labels in ${aiCountry} often list energy in kJ only; the kcal fields need kcal (kJ ÷ 4.184). Write "working" in kJ, because that's what the user reads.
 When you have the numbers, call log_meal once. Do not ask follow-up questions; make the most reasonable assumption and name it in "source".`;
 }
 async function aiCall(body){
@@ -3649,23 +3664,30 @@ async function aiCall(body){
   }
   return data;
 }
-async function aiLookup(query){
-  const messages=[{role:"user",content:query}];
+// prev + feedback: the user disagreed with an earlier estimate, so ask again with their reason
+async function aiLookup(query,prev,feedback){
+  let content=query;
+  if(prev&&feedback){
+    const was=prev.items.map(i=>`${i.count>1?i.count+" × ":""}${i.name}: ${kj(i.kcal)} kJ (${i.kcal} kcal)${i.grams?`, ${i.grams} g`:""}, ${Math.round(i.protein_g)} g protein, ${Math.round(i.fat_g)} g fat, ${Math.round(i.carbs_g)} g carbs`).join("; ");
+    content=`${query}\n\nYou estimated this before: ${was}.${prev.source?` Your reasoning: ${prev.source}.`:""}${prev.working?.length?` Your working: ${prev.working.join("; ")}.`:""}\nThe user doesn't agree: "${feedback}"\nCheck again with that in mind, searching if it helps. If they give a number from a label, menu or app, use it unless it's clearly wrong for what they ate. Then call log_meal with the corrected numbers, and say in "source" what changed.`;
+  }
+  const messages=[{role:"user",content}];
   const body={
     model:AI_MODEL, max_tokens:16000,
-    output_config:{effort:"low"},
+    output_config:{effort:"high"},
     ...(aiNoFallback?{}:{fallbacks:"default"}),
     system:aiSystem(),
-    tools:[{type:"web_search_20260209",name:"web_search",max_uses:3}, AI_TOOL],
+    tools:[{type:"web_search_20260209",name:"web_search",max_uses:5},{type:"web_fetch_20260209",name:"web_fetch",max_uses:3}, AI_TOOL],
     tool_choice:{type:"auto"},
     messages
   };
-  for(let turn=0;turn<4;turn++){
+  for(let turn=0;turn<6;turn++){
     let res;
     try{ res=await aiCall(body); }
     catch(e){
       // If the account can't use an optional extra, drop it and ask again
       if(e.status===400&&/fallback/i.test(e.raw)&&body.fallbacks){delete body.fallbacks;aiNoFallback=true;turn--;continue;}
+      if(e.status===400&&/web_fetch|web fetch/i.test(e.raw)&&body.tools.some(t=>t.name==="web_fetch")){body.tools=body.tools.filter(t=>t.name!=="web_fetch");turn--;continue;}
       if(e.status===400&&/web_search|web search/i.test(e.raw)&&body.tools.length>1){body.tools=[AI_TOOL];turn--;continue;}
       throw e;
     }
@@ -3677,7 +3699,9 @@ async function aiLookup(query){
         name:String(i.name).slice(0,80), grams:Math.max(0,Math.round(+i.grams||0)), kcal:Math.round(+i.kcal||0),
         protein_g:+i.protein_g||0, fat_g:+i.fat_g||0, carbs_g:+i.carbs_g||0, count:Math.max(1,Math.min(50,Math.round(+i.count||1)))}));
       if(!items.length)throw new Error("Claude didn't find any food in that. Try again with more detail.");
-      return {query,items,source:String(inp.source||"")};
+      const working=Array.isArray(inp.working)?inp.working.map(w=>String(w).slice(0,160)).slice(0,10):[];
+      const confidence=["official","adjusted","rough"].includes(inp.confidence)?inp.confidence:"rough";
+      return {query,items,source:String(inp.source||""),working,confidence};
     }
     if(res.stop_reason==="pause_turn"){ messages.push({role:"assistant",content:res.content}); continue; }
     const txt=(res.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ").trim();
@@ -3713,13 +3737,44 @@ function aiRender(){
   const its=aiResult.items, tot=its.reduce((t,i)=>t+i.kcal,0);
   box.innerHTML=`<div class="aibox">
     <div class="aihead"><span>✨ Claude's estimate</span><b>${kj(tot)} kJ</b></div>
+    ${aiResult.was!=null?`<div class="aisrc">Was ${kj(aiResult.was)} kJ before your note.</div>`:""}
     ${its.map(i=>`<div class="aiitem"><div><div class="fi-n">${escH(i.name)}</div>
       <div class="fi-m2">${i.count>1?i.count+" × · ":""}${i.grams?i.grams+" g · ":""}${Math.round(i.protein_g)} g protein · ${Math.round(i.fat_g)} g fat · ${Math.round(i.carbs_g)} g carbs</div></div>
       <div class="aik">${kj(i.kcal)}</div></div>`).join("")}
+    ${aiResult.working?.length?`<div class="aiwork">${aiResult.working.map(w=>`<div>${escH(w)}</div>`).join("")}</div>`:""}
     ${aiResult.source?`<div class="aisrc">${escH(aiResult.source)}</div>`:""}
+    ${(()=>{const c=AI_CONF[aiResult.confidence]; return c?`<div class="aiconf ${aiResult.confidence}">${c}</div>`:"";})()}
+    ${(()=>{const bad=its.filter(i=>{const m=4*i.protein_g+4*i.carbs_g+9*i.fat_g;return i.kcal>50&&Math.abs(m-i.kcal)>0.2*i.kcal;});
+      return bad.length?`<div class="aiconf rough">⚠ The protein, fat and carbs don't add up to this kJ${bad.length<its.length?` for ${escH(bad[0].name)}`:""}. Tap “Don't agree” below to have it checked.</div>`:"";})()}
     <label class="calchk"><input type="checkbox" id="aiRemember" checked> Remember ${its.length>1?"these foods":"this food"} so next time it's instant</label>
     <div class="aibtns"><button class="btn primary" onclick="aiAddAll()">Add to ${dayLabel(selKey)==="Today"?"today":dayLabel(selKey)}</button><button class="btn ghost" onclick="aiClose()">Cancel</button></div>
+    <div id="aiPush">${aiResult.rechecked?`<div class="aisrc">Checked again after your note. Still not right? Add it, then tap it in the list to type your own kJ.</div>`:""}<button class="aino" onclick="aiPushOpen()">${aiResult.rechecked?"Tell Claude again":"Don't agree? Tell Claude why"}</button></div>
   </div>`;
+}
+const AI_CONF={official:"✓ The brand's own numbers",adjusted:"✓ The brand's numbers, adjusted for your changes",rough:"⚠ No official numbers found, so this is a rough estimate"};
+function aiPushOpen(){
+  const el=document.getElementById("aiPush"); if(!el)return;
+  el.innerHTML=`<textarea id="aiWhy" class="calinput aiwhy" rows="3" placeholder="e.g. That's too high. Steers lists the beef King Steer at 2736 kJ, and chicken fillets are leaner than beef patties."></textarea>
+    <div class="aibtns"><button class="btn primary" onclick="aiRecheck()">Check again</button><button class="btn ghost" onclick="aiRender()">Never mind</button></div>
+    <div class="aisrc">Or add it as it is and tap it in the list to type your own kJ.</div>`;
+  document.getElementById("aiWhy").focus();
+}
+async function aiRecheck(){
+  if(aiBusy||!aiResult)return;
+  const why=(document.getElementById("aiWhy")?.value||"").trim();
+  if(!why){toast("Say what looks wrong");return;}
+  const prev=aiResult, box=document.getElementById("fcAi");
+  aiBusy=true;
+  box.innerHTML=`<div class="aibox"><div class="aiwait"><span class="aispin"></span>Checking again…</div></div>`;
+  try{
+    aiResult=await aiLookup(prev.query,prev,why);
+    aiResult.rechecked=true; aiResult.was=prev.items.reduce((t,i)=>t+i.kcal,0);
+    aiRender();
+  }catch(e){
+    aiResult=prev;
+    box.innerHTML=`<div class="aibox"><div class="aierr">${escH(e.message||"Something went wrong.")}</div>
+      <div class="aibtns"><button class="btn ghost" onclick="aiRender()">Back to the estimate</button></div></div>`;
+  }finally{aiBusy=false;}
 }
 function aiClose(){aiResult=null;const b=document.getElementById("fcAi");if(b)b.innerHTML="";}
 function aiAddAll(){
@@ -4378,7 +4433,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v44"]};
+ data:["Save & Settings","Backup your data · v46"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
