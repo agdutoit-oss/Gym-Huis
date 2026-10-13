@@ -247,6 +247,26 @@
   .hstat{flex:1;background:var(--card2);border-radius:12px;padding:12px 6px;text-align:center}
   .hstat b{display:block;font-size:22px;color:var(--accent2);font-weight:800}
   .hstat span{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+  .rpseg{display:flex;background:var(--card2);border-radius:11px;padding:3px;margin-bottom:10px}
+  .rpseg button{flex:1;padding:8px 4px;border:none;border-radius:9px;background:none;color:var(--dim);font-size:13px;font-weight:700;cursor:pointer}
+  .rpseg button.on{background:var(--card);color:var(--txt)}
+  .rpnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .rpnav b{font-size:15px}
+  .rpnav button{width:40px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:20px;cursor:pointer}
+  .rpnav button:disabled{opacity:.3}
+  .rpfood{margin:8px 0}
+  .rpfrow{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+  .rpfn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rpfn small{color:var(--dim)}
+  .rpfv{color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .rpbar{height:6px;background:var(--card2);border-radius:3px;margin-top:4px;overflow:hidden}
+  .rpbar i{display:block;height:100%;background:var(--accent2);border-radius:3px}
+  .rpsplit{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;margin:6px 0}
+  .rpsplit i{display:block;height:100%}
+  .rpkey{display:flex;gap:14px;font-size:12px;color:var(--dim);margin-bottom:6px}
+  .rpkey i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  .sp{background:var(--good)} .sf{background:var(--amber)} .sc{background:var(--purple)}
+  .rpb{cursor:pointer}
   .hday{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:12px}
   .hdhead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
   .hdname{font-size:16px;font-weight:800}
@@ -731,7 +751,7 @@
   <div class="view" id="v-timer">
     <div class="subtabs">
       <button class="subtab on" id="csub-today" onclick="setCalSub('today')">Today</button>
-      <button class="subtab" id="csub-history" onclick="setCalSub('history')">History</button>
+      <button class="subtab" id="csub-history" onclick="setCalSub('history')">Reports</button>
     </div>
     <div id="calToday">
     <div id="calDateBar"></div>
@@ -812,12 +832,8 @@
     </div><!-- /calToday -->
 
     <div id="calHistoryView" style="display:none">
-      <div id="calStats" class="histstats"></div>
-      <div id="calProjection"></div>
-      <div id="calChart"></div>
-      <div class="fdhead">Day by day</div>
-      <div id="calDayList"></div>
-      <div class="disc">Averages use the days you've actually logged. The weekly trend matters more than any single day.</div>
+      <div id="calReport"></div>
+      <div class="disc">Averages use only the days you logged. The weekly trend matters more than any single day.</div>
     </div>
   </div>
 
@@ -3366,60 +3382,134 @@ function setCalSub(s){
   document.getElementById("csub-history").classList.toggle("on",s==="history");
   document.getElementById("calToday").style.display=s==="today"?"block":"none";
   document.getElementById("calHistoryView").style.display=s==="history"?"block":"none";
-  if(s==="history")renderCalHistory();
+  if(s==="history"){repAnchor=selKey;renderCalHistory();}
+}
+/* ---- Reports: one day, a week (Mon–Sun) or a month ---- */
+let repMode="week", repAnchor=null;   // repAnchor: a date key inside the period shown
+function repSetMode(m){repMode=m;renderCalHistory();}
+function repStep(d){
+  const a=dateOf(repAnchor||todayKey());
+  if(repMode==="day")a.setDate(a.getDate()+d);
+  else if(repMode==="week")a.setDate(a.getDate()+7*d);
+  else{a.setDate(1);a.setMonth(a.getMonth()+d);}
+  repAnchor=keyOf(a); renderCalHistory();
+}
+function repPeriod(){
+  const a=dateOf(repAnchor||todayKey()), days=[];
+  let s,e;
+  if(repMode==="day"){s=new Date(a);e=new Date(a);}
+  else if(repMode==="week"){s=new Date(a);s.setDate(a.getDate()-((a.getDay()+6)%7));e=new Date(s);e.setDate(s.getDate()+6);}
+  else{s=new Date(a.getFullYear(),a.getMonth(),1);e=new Date(a.getFullYear(),a.getMonth()+1,0);}
+  for(const d=new Date(s);d<=e;d.setDate(d.getDate()+1))days.push(keyOf(d));
+  const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], W=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const label = repMode==="day" ? (["Today","Yesterday"].includes(dayLabel(days[0]))?dayLabel(days[0])+" · ":"")+`${W[s.getDay()]} ${s.getDate()} ${M[s.getMonth()]}`
+    : repMode==="week" ? `${s.getDate()} ${s.getMonth()!==e.getMonth()?M[s.getMonth()]+" ":""}– ${e.getDate()} ${M[e.getMonth()]}`
+    : ["January","February","March","April","May","June","July","August","September","October","November","December"][s.getMonth()]+" "+s.getFullYear();
+  return {days,label,start:s,end:e,isNow:days.includes(todayKey()),future:dateOf(days[0])>dateOf(todayKey())};
+}
+function repDay(k){
+  const e=calLog[k]?.eat||[];
+  const sum=f=>e.reduce((t,x)=>t+(+x[f]||0),0);
+  return {k,logged:e.length>0,kcal:sum("kcal"),p:sum("p"),f:sum("f"),c:sum("c"),burn:calBurned(k),target:calTargetFor(k),mt:calMacroTargets(k),eat:e};
+}
+function repFoods(ds){
+  const m={};
+  ds.forEach(d=>d.eat.forEach(x=>{const n=x.food||x.label||"Quick add";const o=m[n]||(m[n]={n,kcal:0,times:0});o.kcal+=+x.kcal||0;o.times+=x.q||1;}));
+  return Object.values(m).sort((a,b)=>b.kcal-a.kcal);
+}
+function repFoodBars(list,tot,max){
+  return list.slice(0,max).map(x=>`<div class="rpfood"><div class="rpfrow"><span class="rpfn">${escH(x.n)}${x.times>1?` <small>× ${x.times}</small>`:""}</span><span class="rpfv">${kj(x.kcal)} kJ · ${tot>0?Math.round(x.kcal/tot*100):0}%</span></div><div class="rpbar"><i style="width:${tot>0?Math.max(2,x.kcal/list[0].kcal*100):0}%"></i></div></div>`).join("");
+}
+function repSplit(p,f,c){
+  const e={p:p*4,f:f*9,c:c*4}, t=e.p+e.f+e.c; if(t<=0)return "";
+  const pc=v=>Math.round(v/t*100);
+  return `<div class="fdhead">Where your energy came from</div>
+    <div class="rpsplit"><i class="sp" style="width:${e.p/t*100}%"></i><i class="sf" style="width:${e.f/t*100}%"></i>${e.c>0?`<i class="sc" style="width:${e.c/t*100}%"></i>`:""}</div>
+    <div class="rpkey"><span><i class="sp"></i>Protein ${pc(e.p)}%</span><span><i class="sf"></i>Fat ${pc(e.f)}%</span>${e.c>0?`<span><i class="sc"></i>Carbs ${pc(e.c)}%</span>`:""}</div>`;
+}
+function repMacroRow(lab,v,t,cls){
+  return `<div><div class="ml"><span>${lab}</span><span><b>${Math.round(v)}</b> / ${Math.round(t)} g</span></div><div class="calbar"><div class="calbarfill ${cls}" style="width:${t>0?Math.min(100,v/t*100):0}%"></div></div></div>`;
+}
+// Daily bars against each day's target. Tap a bar to open that day.
+function repChart(ds){
+  const W=330,H=150,top=14,bot=22,left=6,right=6, n=ds.length;
+  const vals=ds.map(d=>d.logged?kj(d.kcal):0), tg=ds.map(d=>kj(d.target));
+  const hi=Math.max(...vals,...tg)*1.08||1;
+  const slot=(W-left-right)/n, bw=Math.max(3,Math.min(26,slot-(n>14?2:6)));
+  const y=v=>top+(1-v/hi)*(H-top-bot);
+  const bars=ds.map((d,i)=>{
+    const x=left+i*slot+(slot-bw)/2, lab=dayLabel(d.k);
+    const tip=d.logged?`${lab}: ${vals[i]} kJ of ${tg[i]} kJ`:`${lab}: nothing logged`;
+    const mark=d.logged?`<rect x="${x.toFixed(1)}" y="${y(vals[i]).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,(H-bot)-y(vals[i])).toFixed(1)}" rx="${Math.min(4,bw/2)}" fill="${vals[i]>tg[i]?"var(--accent2)":"var(--good)"}"/>`
+      :`<rect x="${x.toFixed(1)}" y="${(H-bot-3).toFixed(1)}" width="${bw.toFixed(1)}" height="3" rx="1.5" fill="var(--line)"/>`;
+    const dt=dateOf(d.k), showLab=n<=7||dt.getDate()===1||dt.getDate()%5===0;
+    const tl=n<=7?["S","M","T","W","T","F","S"][dt.getDay()]:dt.getDate();
+    return `<g class="rpb" onclick="pickDate('${d.k}');setCalSub('today')"><title>${tip}</title><rect x="${(left+i*slot).toFixed(1)}" y="0" width="${slot.toFixed(1)}" height="${H}" fill="transparent"/>${mark}${showLab?`<text x="${(x+bw/2).toFixed(1)}" y="${H-7}" text-anchor="middle" fill="var(--dim)" font-size="10">${tl}</text>`:""}</g>`;
+  }).join("");
+  const tgPath=ds.map((d,i)=>(i?"L":"M")+(left+i*slot).toFixed(1)+","+y(tg[i]).toFixed(1)+" L"+(left+(i+1)*slot).toFixed(1)+","+y(tg[i]).toFixed(1)).join(" ");
+  return `<div class="wchart"><svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Daily kJ against target">
+    <line x1="${left}" x2="${W-right}" y1="${H-bot}" y2="${H-bot}" stroke="var(--line)" stroke-width="1"/>
+    ${bars}
+    <path d="${tgPath}" fill="none" stroke="var(--dim)" stroke-width="1.5" stroke-dasharray="4 3" pointer-events="none"/>
+    <text x="${W-right}" y="${Math.max(10,y(tg[tg.length-1])-4).toFixed(1)}" text-anchor="end" fill="var(--dim)" font-size="10">target ${tg[tg.length-1]}</text>
+  </svg><div class="chartkey"><span class="k-ok">● under target</span> <span class="k-over">● over</span> <span class="k-tg">╌ target</span> · tap a day to open it</div></div>`;
 }
 function renderCalHistory(){
-  // all logged days (with food), oldest->newest
-  const keys=Object.keys(calLog).filter(k=>calLog[k].eat?.length).sort();
-  if(!keys.length){
-    document.getElementById("calStats").innerHTML="";
-    document.getElementById("calProjection").innerHTML="";
-    document.getElementById("calChart").innerHTML="";
-    document.getElementById("calDayList").innerHTML=`<div class="addhint">No days logged yet.<br>Log what you eat and your history builds here.</div>`;
-    return;
+  const P=repPeriod(), ds=P.days.map(repDay), logged=ds.filter(d=>d.logged);
+  const el=document.getElementById("calReport"); if(!el)return;
+  const seg=["day","week","month"].map(m=>`<button class="${repMode===m?"on":""}" onclick="repSetMode('${m}')">${m==="day"?"Day":m==="week"?"Week":"Month"}</button>`).join("");
+  let h=`<div class="rpseg">${seg}</div>
+    <div class="rpnav"><button onclick="repStep(-1)" aria-label="Earlier">‹</button><b>${P.label}</b><button onclick="repStep(1)" aria-label="Later" ${P.isNow||P.future?"disabled":""}>›</button></div>`;
+  if(!logged.length){
+    el.innerHTML=h+`<div class="addhint">Nothing logged ${repMode==="day"?"on this day":repMode==="week"?"this week":"this month"}.</div>`;return;
   }
   const maint=calMaintenance();
-  // per-day numbers
-  const rows=keys.map(k=>{
-    const eaten=calEaten(k), burned=calBurned(k);
-    const target=calTargetFor(k);
-    const deficit=maint+(calCfg.addBurn?burned:0)-eaten;
-    return {k,eaten,burned,target,deficit,under:eaten<=target};
-  });
-  // last-7-day window for averages
-  const last7=rows.slice(-7);
-  const avgEaten=Math.round(last7.reduce((t,r)=>t+r.eaten,0)/last7.length);
-  const avgDef=Math.round(last7.reduce((t,r)=>t+r.deficit,0)/last7.length);
-  const onTarget=rows.filter(r=>r.under).length;
-  // streak of consecutive on-target days from newest backwards
-  let streak=0; for(let i=rows.length-1;i>=0;i--){if(rows[i].under)streak++;else break;}
-
-  document.getElementById("calStats").innerHTML=`
-    <div class="hstat"><b>${kj(avgEaten)}</b><span>avg kJ (7d)</span></div>
-    <div class="hstat"><b>${onTarget}/${rows.length}</b><span>on target</span></div>
-    <div class="hstat"><b>${streak}</b><span>day streak</span></div>`;
-
-  // projection from 7-day avg deficit
-  const kgPerWeek=(avgDef*7)/7700;  // ~7700 kcal per kg fat
-  const projClass=avgDef>0?"good":"accent";
-  const projText = avgDef>0
-    ? `At your current 7-day average you're running a <b>${kj(avgDef)} kJ/day deficit</b> — about <b>${kgPerWeek.toFixed(2)} kg/week</b> of fat loss (~${(kgPerWeek*4.3).toFixed(1)} kg/month).`
-    : `Your 7-day average is <b>${kj(Math.abs(avgDef))} kJ/day over maintenance</b> — you'd gain about ${Math.abs(kgPerWeek).toFixed(2)} kg/week at this rate. Tighten the target to get back into a deficit.`;
-  document.getElementById("calProjection").innerHTML=`<div class="calproj ${projClass}">${projText}</div>`;
-
-  // chart: intake vs target line
-  document.getElementById("calChart").innerHTML=calChartSVG(rows);
-
-  // day-by-day, newest first
-  document.getElementById("calDayList").innerHTML=rows.slice().reverse().map(r=>{
-    const d=r.target-r.eaten;
-    return `<div class="fitem" onclick="pickDate('${r.k}');setCalSub('today')" style="cursor:pointer">
-      <div class="fi-info"><div class="fi-n">${dayLabel(r.k)}</div>
-        <div class="fi-m">${kj(r.eaten)} kJ eaten · target ${kj(r.target)}${r.burned?` · ${kj(r.burned)} burn`:''}</div></div>
-      <div style="font-weight:800;font-size:13px" class="${d>=0?'':''}">
-        <span style="color:${d>=0?'var(--good)':'var(--accent2)'}">${d>=0?kj(d)+' under':kj(Math.abs(d))+' over'}</span></div>
-    </div>`;
-  }).join("");
+  if(repMode==="day"){
+    const d=ds[0], left=d.target-d.kcal, def=maint+(calCfg.addBurn?d.burn:0)-d.kcal;
+    h+=`<div class="histstats">
+      <div class="hstat"><b>${kj(d.kcal)}</b><span>kJ of ${kj(d.target)}</span></div>
+      <div class="hstat"><b>${Math.round(d.p)}</b><span>g protein</span></div>
+      <div class="hstat"><b>${Math.round(d.f)}</b><span>g fat</span></div></div>
+      <div class="calproj ${left>=0?"good":"accent"}">${left>=0?`<b>${kj(left)} kJ under</b> your target`:`<b>${kj(-left)} kJ over</b> your target`}, and ${def>=0?`${kj(def)} kJ under`:`${kj(-def)} kJ over`} maintenance.</div>
+      <div class="calmacs" style="margin:12px 0">${repMacroRow("Protein",d.p,d.mt.p,"mfp")}${repMacroRow("Fat",d.f,d.mt.f,"mff")}</div>
+      ${repSplit(d.p,d.f,d.c)}
+      <div class="fdhead">What you ate, biggest first</div>${repFoodBars(repFoods([d]),d.kcal,30)}
+      <button class="btn ghost" style="width:100%;margin-top:12px" onclick="pickDate('${d.k}');setCalSub('today')">Open this day</button>`;
+    el.innerHTML=h; return;
+  }
+  const n=logged.length, sum=f=>logged.reduce((t,d)=>t+d[f],0);
+  const avg=sum("kcal")/n, avgP=sum("p")/n, avgF=sum("f")/n, avgC=sum("c")/n;
+  const onT=logged.filter(d=>d.kcal<=d.target).length;
+  const avgT=logged.reduce((t,d)=>t+d.target,0)/n, mtAvg={p:logged.reduce((t,d)=>t+d.mt.p,0)/n,f:logged.reduce((t,d)=>t+d.mt.f,0)/n};
+  const def=logged.reduce((t,d)=>t+maint+(calCfg.addBurn?d.burn:0)-d.kcal,0);
+  const fatKg=def/7700;
+  const inP=weightLog.filter(w=>{const k=keyOf(new Date(w.date));return k>=P.days[0]&&k<=P.days[P.days.length-1];}).sort((a,b)=>a.date<b.date?-1:1);
+  const wt=inP.length>=2?inP[inP.length-1].kg-inP[0].kg:null;
+  h+=`<div class="histstats">
+      <div class="hstat"><b>${kj(avg)}</b><span>avg kJ / day</span></div>
+      <div class="hstat"><b>${onT}/${n}</b><span>days on target</span></div>
+      <div class="hstat"><b>${Math.round(avgP)}</b><span>avg g protein</span></div></div>
+    ${repChart(ds)}
+    <div class="calproj ${def>0?"good":"accent"}">${def>0
+      ?`Over the ${n} logged day${n>1?"s":""} you ate <b>${kj(def)} kJ less</b> than maintenance. That's about <b>${fatKg.toFixed(2)} kg</b> of fat.`
+      :`Over the ${n} logged day${n>1?"s":""} you ate <b>${kj(-def)} kJ more</b> than maintenance, about ${(-fatKg).toFixed(2)} kg of gain.`}
+      ${wt!=null?` Your weigh-ins went ${wt<=0?"down":"up"} <b>${Math.abs(wt).toFixed(1)} kg</b>.`:""}
+      ${n<P.days.filter(k=>dateOf(k)<=dateOf(todayKey())).length?` Days you didn't log are left out.`:""}</div>
+    <div class="fdhead">Average per day</div>
+    <div class="calmacs" style="margin-bottom:6px">${repMacroRow("Protein",avgP,mtAvg.p,"mfp")}${repMacroRow("Fat",avgF,mtAvg.f,"mff")}</div>
+    <div class="cehint">Average target: ${kj(avgT)} kJ a day.</div>
+    ${repSplit(avgP,avgF,avgC)}`;
+  if(repMode==="month"){
+    const wk={};
+    logged.forEach(d=>{const a=dateOf(d.k);a.setDate(a.getDate()-((a.getDay()+6)%7));const k=keyOf(a);(wk[k]=wk[k]||[]).push(d);});
+    h+=`<div class="fdhead">Week by week</div>`+Object.keys(wk).sort().map(k=>{const L=wk[k],a=L.reduce((t,d)=>t+d.kcal,0)/L.length,o=L.filter(d=>d.kcal<=d.target).length;
+      const s=dateOf(k), M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      return `<div class="fitem" onclick="repMode='week';repAnchor='${k}';renderCalHistory()" style="cursor:pointer"><div class="fi-info"><div class="fi-n">Week of ${s.getDate()} ${M[s.getMonth()]}</div><div class="fi-m">${L.length} day${L.length>1?"s":""} logged · ${o} on target</div></div><div style="font-weight:800;font-size:13px">${kj(a)} kJ/day</div></div>`;}).join("");
+  }
+  h+=`<div class="fdhead">Top foods</div>${repFoodBars(repFoods(logged),sum("kcal"),8)}`;
+  h+=`<div class="fdhead">Day by day</div>`+logged.slice().reverse().map(d=>{const x=d.target-d.kcal;
+    return `<div class="fitem" onclick="pickDate('${d.k}');setCalSub('today')" style="cursor:pointer"><div class="fi-info"><div class="fi-n">${dayLabel(d.k)}</div><div class="fi-m">${kj(d.kcal)} kJ · ${Math.round(d.p)} g protein · ${Math.round(d.f)} g fat</div></div><div style="font-weight:800;font-size:13px;color:${x>=0?"var(--good)":"var(--accent2)"}">${x>=0?kj(x)+" under":kj(-x)+" over"}</div></div>`;}).join("");
+  el.innerHTML=h;
 }
 function calChartSVG(rows){
   if(rows.length<2)return `<div class="calwtip">Log at least 2 days to see the trend chart.</div>`;
@@ -4435,7 +4525,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v47"]};
+ data:["Save & Settings","Backup your data · v48"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
