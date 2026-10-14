@@ -2942,12 +2942,12 @@ function startTrainingFromDay(){
   const arr=plans[curDay]||[];
   if(!arr.length){toast("This day is empty");return;}
   train={active:true, list:buildTrainList(arr), idx:0, title:DAYNAMES[curDay], done:{}};
-  switchView('train');
+  switchView('train');focusTrainCard();
 }
 function startTrainingFromSession(){
   if(!session.length){toast("Build a session first");return;}
   train={active:true, list:buildTrainList(session), idx:0, title:"Session", done:{}};
-  switchView('train');
+  switchView('train');focusTrainCard();
 }
 
 function renderTrain(){
@@ -3058,13 +3058,19 @@ function autoLogCurrent(){
   train.done[i]=true;
   save();renderDaySelect();
 }
+// Line the workout card up at the top of the screen (past the header, goal and date bar)
+function focusTrainCard(smooth){
+  const el=document.querySelector("#trainActive .trtop");
+  if(!el) return;
+  window.scrollTo({top:Math.max(0,el.getBoundingClientRect().top+window.scrollY-6),behavior:smooth?"smooth":"auto"});
+}
 function trainNext(){
   autoLogCurrent();
   if(train.idx>=train.list.length-1){endTraining(true);return;}
-  train.idx++;renderTrain();window.scrollTo({top:0,behavior:"smooth"});
+  train.idx++;renderTrain();focusTrainCard(true);
 }
-function trainPrev(){if(train.idx>0){train.idx--;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}}
-function trainJump(i){train.idx=i;renderTrain();window.scrollTo({top:0,behavior:"smooth"});}
+function trainPrev(){if(train.idx>0){train.idx--;renderTrain();focusTrainCard(true);}}
+function trainJump(i){train.idx=i;renderTrain();focusTrainCard(true);}
 // Swap the current exercise for another that trains the same muscle
 function shuffleCurrent(){
   const i=train.idx;
@@ -4525,7 +4531,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v48"]};
+ data:["Save & Settings","Backup your data · v49"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -4760,7 +4766,7 @@ function repeatTrainNow(key){
   const list=workoutFromDay(key);
   if(!list.length){toast("Nothing to repeat");return;}
   train={active:true, list:buildTrainList(list), idx:0, title:prettyDate(key)+" (repeat)", done:{}};
-  switchView('train');
+  switchView('train');focusTrainCard();
 }
 function repeatToDay(key){
   const box=document.getElementById("hdp-"+key);
