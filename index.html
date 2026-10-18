@@ -267,6 +267,37 @@
   .rpkey i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
   .sp{background:var(--good)} .sf{background:var(--amber)} .sc{background:var(--purple)}
   .rpb{cursor:pointer}
+  .rpexp{width:100%;margin-top:12px}
+  #printReport{display:none}
+  @media print{
+    body.printing>*:not(#printReport){display:none!important}
+    body.printing{background:#fff!important;padding:0!important;margin:0!important}
+    body.printing #printReport{display:block;color:#111;font:11px/1.4 -apple-system,Helvetica,Arial,sans-serif;
+      --txt:#111;--dim:#666;--line:#ccc;--good:#2e9e62;--accent2:#e0602f;--card:#fff;--card2:#f2f2f2}
+    @page{margin:14mm 12mm}
+    #printReport h1{font-size:20px;margin:0}
+    #printReport h2{font-size:14px;margin:18px 0 6px;border-bottom:1.5px solid #111;padding-bottom:3px}
+    #printReport h3{font-size:12px;margin:0 0 4px;display:flex;justify-content:space-between;gap:10px}
+    #printReport h3 span{font-weight:400;color:#555}
+    .pr-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px}
+    .pr-sub{font-size:13px;color:#333}
+    .pr-meta{text-align:right;color:#555;font-size:10px}
+    .pr-kv{width:100%;border-collapse:collapse;margin:4px 0}
+    .pr-kv td{padding:3px 6px;border-bottom:1px solid #e3e3e3}
+    .pr-kv td:nth-child(odd){color:#555;width:22%}
+    .pr-kv td:nth-child(even){font-weight:600}
+    .pr-t{width:100%;border-collapse:collapse;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+    .pr-t th{text-align:right;font-weight:600;color:#555;border-bottom:1px solid #999;padding:3px 5px;font-size:10px}
+    .pr-t td{text-align:right;padding:3px 5px;border-bottom:1px solid #eee}
+    .pr-t th:first-child,.pr-t td:first-child{text-align:left}
+    .pr-tot td{font-weight:700;border-top:1px solid #999;border-bottom:none}
+    .pr-day{break-inside:avoid;margin:12px 0}
+    .pr-ai{font-size:9px;color:#7a4fd6;border:1px solid #c7b3f0;border-radius:3px;padding:0 3px}
+    .pr-note{color:#555;font-size:10px;margin-top:2px}
+    .pr-chart{max-width:420px;margin:8px 0;break-inside:avoid}
+    .pr-chart .wchart{background:none;border:1px solid #ddd;padding:6px}
+    .pr-foot{margin-top:16px;color:#777;font-size:9.5px;border-top:1px solid #ddd;padding-top:6px}
+  }
   .hday{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:12px}
   .hdhead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
   .hdname{font-size:16px;font-weight:800}
@@ -3480,7 +3511,8 @@ function renderCalHistory(){
       <div class="calmacs" style="margin:12px 0">${repMacroRow("Protein",d.p,d.mt.p,"mfp")}${repMacroRow("Fat",d.f,d.mt.f,"mff")}</div>
       ${repSplit(d.p,d.f,d.c)}
       <div class="fdhead">What you ate, biggest first</div>${repFoodBars(repFoods([d]),d.kcal,30)}
-      <button class="btn ghost" style="width:100%;margin-top:12px" onclick="pickDate('${d.k}');setCalSub('today')">Open this day</button>`;
+      <button class="btn ghost" style="width:100%;margin-top:12px" onclick="pickDate('${d.k}');setCalSub('today')">Open this day</button>
+      <button class="btn ghost rpexp" onclick="repExport()">⤓ Save as PDF for your dietician</button>`;
     el.innerHTML=h; return;
   }
   const n=logged.length, sum=f=>logged.reduce((t,d)=>t+d[f],0);
@@ -3513,9 +3545,59 @@ function renderCalHistory(){
       return `<div class="fitem" onclick="repMode='week';repAnchor='${k}';renderCalHistory()" style="cursor:pointer"><div class="fi-info"><div class="fi-n">Week of ${s.getDate()} ${M[s.getMonth()]}</div><div class="fi-m">${L.length} day${L.length>1?"s":""} logged · ${o} on target</div></div><div style="font-weight:800;font-size:13px">${kj(a)} kJ/day</div></div>`;}).join("");
   }
   h+=`<div class="fdhead">Top foods</div>${repFoodBars(repFoods(logged),sum("kcal"),8)}`;
+  h+=`<button class="btn ghost rpexp" onclick="repExport()">⤓ Save as PDF for your dietician</button>`;
   h+=`<div class="fdhead">Day by day</div>`+logged.slice().reverse().map(d=>{const x=d.target-d.kcal;
     return `<div class="fitem" onclick="pickDate('${d.k}');setCalSub('today')" style="cursor:pointer"><div class="fi-info"><div class="fi-n">${dayLabel(d.k)}</div><div class="fi-m">${kj(d.kcal)} kJ · ${Math.round(d.p)} g protein · ${Math.round(d.f)} g fat</div></div><div style="font-weight:800;font-size:13px;color:${x>=0?"var(--good)":"var(--accent2)"}">${x>=0?kj(x)+" under":kj(-x)+" over"}</div></div>`;}).join("");
   el.innerHTML=h;
+}
+/* ---- Export the report on screen as a PDF (via the phone's print / share sheet) ---- */
+function repExport(){
+  const P=repPeriod(), ds=P.days.map(repDay), logged=ds.filter(d=>d.logged);
+  if(!logged.length){toast("Nothing logged in this period");return;}
+  const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], WD=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const long=k=>{const d=dateOf(k);return `${WD[d.getDay()]} ${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;};
+  const g=v=>Math.round(+v||0), maint=calMaintenance(), n=logged.length, sum=f=>logged.reduce((t,d)=>t+d[f],0);
+  const avg=f=>sum(f)/n, onT=logged.filter(d=>d.kcal<=d.target).length;
+  const def=logged.reduce((t,d)=>t+maint+(calCfg.addBurn?d.burn:0)-d.kcal,0);
+  const inP=weightLog.filter(w=>{const k=keyOf(new Date(w.date));return k>=P.days[0]&&k<=P.days[P.days.length-1];}).sort((a,b)=>a.date<b.date?-1:1);
+  const now=new Date(), title=repMode==="day"?long(P.days[0]):repMode==="week"?`Week of ${P.label} ${P.end.getFullYear()}`:P.label;
+  const split=(p,f,c)=>{const t=p*4+f*9+c*4;return t>0?`${Math.round(p*400/t)}% / ${Math.round(f*900/t)}% / ${Math.round(c*400/t)}%`:"–";};
+  let h=`<div class="pr-head"><div><h1>Food diary</h1><div class="pr-sub">${escH(title)}</div></div>
+    <div class="pr-meta">${profile.kg} kg · ${profile.cm} cm · age ${currentAge()}<br>Made ${now.getDate()} ${M[now.getMonth()]} ${now.getFullYear()} with Home Gym Trainer</div></div>
+    <table class="pr-kv">
+      <tr><td>Daily energy target</td><td>${kj(calCfg.target)} kJ${calCfg.addBurn?" plus logged exercise":""}</td><td>Estimated maintenance</td><td>${kj(maint)} kJ</td></tr>
+      <tr><td>Protein target</td><td>${g(logged[0].mt.p)} g</td><td>Fat target</td><td>${g(logged[0].mt.f)} g</td></tr>
+    </table>`;
+  if(repMode!=="day"){
+    h+=`<h2>Summary</h2><table class="pr-kv">
+      <tr><td>Days logged</td><td>${n} of ${P.days.filter(k=>dateOf(k)<=dateOf(todayKey())).length}</td><td>Days on target</td><td>${onT} of ${n}</td></tr>
+      <tr><td>Average energy</td><td>${kj(avg("kcal"))} kJ / day</td><td>Average protein / fat / carbs</td><td>${g(avg("p"))} g / ${g(avg("f"))} g / ${g(avg("c"))} g</td></tr>
+      <tr><td>Energy from protein / fat / carbs</td><td>${split(avg("p"),avg("f"),avg("c"))}</td><td>Total vs maintenance</td><td>${def>=0?`${kj(def)} kJ under`:`${kj(-def)} kJ over`} (≈ ${Math.abs(def/7700).toFixed(2)} kg fat)</td></tr>
+      ${inP.length?`<tr><td>Weigh-ins</td><td colspan="3">${inP.map(w=>{const d=new Date(w.date);return `${d.getDate()} ${M[d.getMonth()]}: ${w.kg} kg`;}).join(" · ")}</td></tr>`:""}
+    </table>
+    <div class="pr-chart">${repChart(ds).replace(/ · tap a day to open it/,"")}</div>
+    <table class="pr-t"><thead><tr><th>Day</th><th>kJ</th><th>Target</th><th>Protein g</th><th>Fat g</th><th>Carbs g</th><th></th></tr></thead><tbody>
+      ${logged.map(d=>`<tr><td>${(k=>{const t=dateOf(k);return WD[t.getDay()].slice(0,3)+" "+t.getDate()+" "+M[t.getMonth()];})(d.k)}</td><td>${kj(d.kcal)}</td><td>${kj(d.target)}</td><td>${g(d.p)}</td><td>${g(d.f)}</td><td>${g(d.c)}</td><td>${d.kcal<=d.target?"under":"over"}</td></tr>`).join("")}
+      <tr class="pr-tot"><td>Average</td><td>${kj(avg("kcal"))}</td><td></td><td>${g(avg("p"))}</td><td>${g(avg("f"))}</td><td>${g(avg("c"))}</td><td></td></tr>
+    </tbody></table>`;
+  }
+  h+=`<h2>${repMode==="day"?"What was eaten":"Day by day"}</h2>`+logged.map(d=>{
+    const rows=d.eat.map(x=>{const q=x.q||1, uo=x.ml?"ml":"g", amt=x.g?(q>1?`${q} × ${Math.round(x.g/q)} ${uo}`:`${x.g} ${uo}`):(q>1?`${q} ×`:"");
+      return `<tr><td>${escH(x.food||x.label||"Quick add")}${x.ai?' <span class="pr-ai">Claude estimate</span>':""}</td><td>${amt||"–"}</td><td>${kj(x.kcal)}</td><td>${x.p!=null?g(x.p):"–"}</td><td>${x.f!=null?g(x.f):"–"}</td><td>${x.c?g(x.c):"–"}</td></tr>`;}).join("");
+    const burn=d.burn?`<div class="pr-note">Exercise logged: ${kj(d.burn)} kJ${(calLog[d.k]?.burn||[]).map(b=>b.label).filter(Boolean).length?` (${(calLog[d.k].burn).map(b=>escH(b.label)).filter(Boolean).join(", ")})`:""}</div>`:"";
+    return `<div class="pr-day"><h3>${long(d.k)}<span>${kj(d.kcal)} kJ of ${kj(d.target)} kJ · ${d.kcal<=d.target?`${kj(d.target-d.kcal)} under`:`${kj(d.kcal-d.target)} over`}</span></h3>
+      <table class="pr-t"><thead><tr><th>Food or drink</th><th>Amount</th><th>kJ</th><th>Protein g</th><th>Fat g</th><th>Carbs g</th></tr></thead><tbody>${rows}
+      <tr class="pr-tot"><td>Total</td><td></td><td>${kj(d.kcal)}</td><td>${g(d.p)}</td><td>${g(d.f)}</td><td>${g(d.c)}</td></tr></tbody></table>${burn}</div>`;}).join("");
+  h+=`<div class="pr-foot">Amounts are what was logged in the app. Values come from the app's food list, the person's own saved foods, or estimates by Claude where marked. Days with nothing logged are left out.</div>`;
+  let el=document.getElementById("printReport");
+  if(!el){el=document.createElement("div");el.id="printReport";document.body.appendChild(el);}
+  el.innerHTML=h;
+  const oldTitle=document.title;
+  document.title=`Food diary ${title}`;
+  document.body.classList.add("printing");
+  const done=()=>{document.body.classList.remove("printing");document.title=oldTitle;window.removeEventListener("afterprint",done);};
+  window.addEventListener("afterprint",done);
+  setTimeout(()=>{window.print();setTimeout(done,1500);},50);
 }
 function calChartSVG(rows){
   if(rows.length<2)return `<div class="calwtip">Log at least 2 days to see the trend chart.</div>`;
@@ -4531,7 +4613,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v49"]};
+ data:["Save & Settings","Backup your data · v50"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
