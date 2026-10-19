@@ -620,6 +620,42 @@
   .vtog button.on{background:var(--accent);color:#fff}
   .vpane[hidden]{display:none}
   .vpane .mmap{margin-bottom:12px}
+
+  /* detailed muscle map + muscle sheet */
+  .mmbody{fill:#e3e6e9}
+  .mmo{fill:#c3c9cf;stroke:#fff;stroke-width:.6;stroke-linejoin:round}
+  .mmp{fill:#e8502e;stroke:#fff;stroke-width:.6;stroke-linejoin:round}
+  .mms{fill:#f5a788;stroke:#fff;stroke-width:.6;stroke-linejoin:round}
+  svg[onclick] polygon[data-m]{cursor:pointer}
+  .mmlist{margin:-2px 0 12px}
+  .mmrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+  .mmlab{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:700;width:54px;display:flex;align-items:center;gap:5px}
+  .mdot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .mdot.p{background:#e8502e}.mdot.s{background:#f5a788}
+  .mchip{border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:15px;cursor:pointer}
+  .mchip.p{border-color:rgba(232,80,46,.7);background:rgba(232,80,46,.16)}
+  .mchip.s{border-color:rgba(245,167,136,.45)}
+  .mmhint{font-size:11.5px;color:var(--dim)}
+  .mmzoom svg{background:#e9ecef;border-radius:9px}
+  .mmap .mmzoom{margin-right:4px}
+  .msheet{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:none;align-items:flex-end;justify-content:center}
+  .msheet.on{display:flex}
+  .msbox{background:var(--card);width:100%;max-width:600px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-radius:18px 18px 0 0;padding:16px 16px calc(28px + env(safe-area-inset-bottom));animation:fade .2s}
+  body.sheetopen{overflow:hidden}
+  .mshead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .mshead h2{font-size:21px;font-weight:800;letter-spacing:-.3px}
+  .msarea{font-size:10px;letter-spacing:2px;color:var(--accent2);font-weight:700;text-transform:uppercase}
+  .msanat{font-size:12.5px;color:var(--dim)}
+  .msx{flex:0 0 auto;width:36px;height:36px;border-radius:11px;background:var(--card2);border:1px solid var(--line);color:var(--dim);font-size:15px;cursor:pointer}
+  .mssib{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .msblock{background:var(--card2);border-radius:11px;padding:10px 12px;margin-bottom:8px;font-size:13.5px}
+  .mslab{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:14px 0 6px}
+  .msblock .mslab{margin:0 0 3px}
+  .msex{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;background:var(--card2);border:none;color:var(--txt);border-radius:11px;padding:10px 12px;margin-bottom:6px;cursor:pointer;font-family:inherit}
+  .msex b{display:block;font-size:14px}.msex small{color:var(--dim);font-size:11.5px}
+  .msalso summary{color:var(--accent2);font-weight:600;font-size:13px;padding:8px 0;cursor:pointer}
+  .msnone{font-size:13px;color:var(--dim)}
+  .mapbtn{display:flex;align-items:center;gap:7px;padding:10px 14px;border-radius:11px;background:var(--card2);border:1.5px solid var(--line);color:var(--txt);font-size:14px;font-weight:700;cursor:pointer}
   .pdhint{font-size:10.5px;color:var(--dim);text-align:center;margin-top:5px}
   .pdtoggle{width:100%;margin-top:8px;background:var(--card2);border:none;border-radius:9px;padding:10px;font-size:12.5px;font-weight:700;color:var(--accent2)}
   .pdinline:empty{display:none}
@@ -717,6 +753,7 @@
         <svg viewBox="0 0 24 24"><path d="M3 5h18v2l-7 7v5l-4 2v-7L3 7z"/></svg>
         Filters <span class="filtcount" id="filtCount"></span>
       </button>
+      <button class="mapbtn" onclick="openMusclePicker()">Muscle map</button>
       <button class="filterclear" id="filterClear" onclick="clearFilters()" style="display:none">Clear</button>
     </div>
     <div id="filterPanel" style="display:none">
@@ -1539,40 +1576,316 @@ const MW_BASE="https://api.musclewiki.com";
 function save(){ try{localStorage.setItem(STORE_KEY,JSON.stringify(plans));localStorage.setItem(GOAL_KEY,goal);localStorage.setItem(MW_KEY,mwKey);localStorage.setItem(LOG_KEY,JSON.stringify(logs));}catch(e){} }
 function load(){ try{const p=localStorage.getItem(STORE_KEY);if(p)plans=JSON.parse(p);const g=localStorage.getItem(GOAL_KEY);if(g&&GOALS[g])goal=g;const k=localStorage.getItem(MW_KEY);if(k)mwKey=k;const l=localStorage.getItem(LOG_KEY);if(l)logs=JSON.parse(l);}catch(e){} }
 
-/* ---- MIT muscle map data (react-body-highlighter, MIT © GV79) ---- */
-const MM_ANT={"chest":["51.8367347 41.6326531 51.0204082 55.1020408 57.9591837 57.9591837 67.755102 55.5102041 70.6122449 47.3469388 62.0408163 41.6326531 ","29.7959184 46.5306122 31.4285714 55.5102041 40.8163265 57.9591837 48.1632653 55.1020408 47.755102 42.0408163 37.5510204 42.0408163"],"obliques":["68.5714286 63.2653061 67.3469388 57.1428571 58.7755102 59.5918367 60 64.0816327 60.4081633 83.2653061 65.7142857 78.7755102 66.5306122 69.7959184","33.877551 78.3673469 33.0612245 71.8367347 31.0204082 63.2653061 32.244898 57.1428571 40.8163265 59.1836735 39.1836735 63.2653061 39.1836735 83.6734694"],"abs":["56.3265306 59.1836735 57.9591837 64.0816327 58.3673469 77.9591837 58.3673469 92.6530612 56.3265306 98.3673469 55.1020408 104.081633 51.4285714 107.755102 51.0204082 84.4897959 50.6122449 67.3469388 51.0204082 57.1428571","43.6734694 58.7755102 48.5714286 57.1428571 48.9795918 67.3469388 48.5714286 84.4897959 48.1632653 107.346939 44.4897959 103.673469 40.8163265 91.4285714 40.8163265 78.3673469 41.2244898 64.4897959"],"biceps":["16.7346939 68.1632653 17.9591837 71.4285714 22.8571429 66.122449 28.9795918 53.877551 27.755102 49.3877551 20.4081633 55.9183673","71.4285714 49.3877551 70.2040816 54.6938776 76.3265306 66.122449 81.6326531 71.8367347 82.8571429 68.9795918 78.7755102 55.5102041"],"triceps":["69.3877551 55.5102041 69.3877551 61.6326531 75.9183673 72.6530612 77.5510204 70.2040816 75.5102041 67.3469388","22.4489796 69.3877551 29.7959184 55.5102041 29.7959184 60.8163265 22.8571429 73.0612245"],"neck":["55.5102041 23.6734694 50.6122449 33.4693878 50.6122449 39.1836735 61.6326531 40 70.6122449 44.8979592 69.3877551 36.7346939 63.2653061 35.1020408 58.3673469 30.6122449","28.9795918 44.8979592 30.2040816 37.1428571 36.3265306 35.1020408 41.2244898 30.2040816 44.4897959 24.4897959 48.9795918 33.877551 48.5714286 39.1836735 37.9591837 39.5918367"],"front-deltoids":["78.3673469 53.0612245 79.5918367 47.755102 79.1836735 41.2244898 75.9183673 37.9591837 71.0204082 36.3265306 72.244898 42.8571429 71.4285714 47.3469388","28.1632653 47.3469388 21.2244898 53.0612245 20 47.755102 20.4081633 40.8163265 24.4897959 37.1428571 28.5714286 37.1428571 26.9387755 43.2653061"],"head":["42.4489796 2.85714286 40 11.8367347 42.0408163 19.5918367 46.122449 23.2653061 49.7959184 25.3061224 54.6938776 22.4489796 57.5510204 19.1836735 59.1836735 10.2040816 57.1428571 2.44897959 49.7959184 0"],"abductors":["52.6530612 110.204082 54.2857143 124.897959 60 110.204082 62.0408163 100 64.8979592 94.2857143 60 92.6530612 56.7346939 104.489796","47.755102 110.612245 44.8979592 125.306122 42.0408163 115.918367 40.4081633 113.061224 39.5918367 107.346939 37.9591837 102.44898 34.6938776 93.877551 39.5918367 92.244898 41.6326531 99.1836735 43.6734694 105.306122"],"quadriceps":["34.6938776 98.7755102 37.1428571 108.163265 37.1428571 127.755102 34.2857143 137.142857 31.0204082 132.653061 29.3877551 120 28.1632653 111.428571 29.3877551 100.816327 32.244898 94.6938776","63.2653061 105.714286 64.4897959 100 66.9387755 94.6938776 70.2040816 101.22449 71.0204082 111.836735 68.1632653 133.061224 65.3061224 137.55102 62.4489796 128.571429 62.0408163 111.428571","38.7755102 129.387755 38.3673469 112.244898 41.2244898 118.367347 44.4897959 129.387755 42.8571429 135.102041 40 146.122449 36.3265306 146.530612 35.5102041 140","59.5918367 145.714286 55.5102041 128.979592 60.8163265 113.877551 61.2244898 130.204082 64.0816327 139.591837 62.8571429 146.530612","32.6530612 138.367347 26.5306122 145.714286 25.7142857 136.734694 25.7142857 127.346939 26.9387755 114.285714 29.3877551 133.469388","71.8367347 113.061224 73.877551 124.081633 73.877551 140.408163 72.6530612 145.714286 66.5306122 138.367347 70.2040816 133.469388"],"knees":["33.877551 140 34.6938776 143.265306 35.5102041 147.346939 36.3265306 151.020408 35.1020408 156.734694 29.7959184 156.734694 27.3469388 152.653061 27.3469388 147.346939 30.2040816 144.081633","65.7142857 140 72.244898 147.755102 72.244898 152.244898 69.7959184 157.142857 64.8979592 156.734694 62.8571429 151.020408"],"calves":["71.4285714 160.408163 73.4693878 153.469388 76.7346939 161.22449 79.5918367 167.755102 78.3673469 187.755102 79.5918367 195.510204 74.6938776 195.510204","24.8979592 194.693878 27.755102 164.897959 28.1632653 160.408163 26.122449 154.285714 24.8979592 157.55102 22.4489796 161.632653 20.8163265 167.755102 22.0408163 188.163265 20.8163265 195.510204","72.6530612 195.102041 69.7959184 159.183673 65.3061224 158.367347 64.0816327 162.44898 64.0816327 165.306122 65.7142857 177.142857","35.5102041 158.367347 35.9183673 162.44898 35.9183673 166.938776 35.1020408 172.244898 35.1020408 176.734694 32.244898 182.040816 30.6122449 187.346939 26.9387755 194.693878 27.3469388 187.755102 28.1632653 180.408163 28.5714286 175.510204 28.9795918 169.795918 29.7959184 164.081633 30.2040816 158.77551"],"forearm":["6.12244898 88.5714286 10.2040816 75.1020408 14.6938776 70.2040816 16.3265306 74.2857143 19.1836735 73.4693878 4.48979592 97.5510204 0 100","84.4897959 69.7959184 83.2653061 73.4693878 80 73.0612245 95.1020408 98.3673469 100 100.408163 93.4693878 89.3877551 89.7959184 76.3265306","77.5510204 72.244898 77.5510204 77.5510204 80.4081633 84.0816327 85.3061224 89.7959184 92.244898 101.22449 94.6938776 99.5918367","6.93877551 101.22449 13.4693878 90.6122449 18.7755102 84.0816327 21.6326531 77.1428571 21.2244898 71.8367347 4.89795918 98.7755102"]};
-const MM_POST={"head":["50.6382979 0 45.9574468 0.85106383 40.8510638 5.53191489 40.4255319 12.7659574 45.106383 20 55.7446809 20 59.1489362 13.6170213 59.5744681 4.68085106 55.7446809 1.27659574"],"trapezius":["44.6808511 21.7021277 47.6595745 21.7021277 47.2340426 38.2978723 47.6595745 64.6808511 38.2978723 53.1914894 35.3191489 40.8510638 31.0638298 36.5957447 39.1489362 33.1914894 43.8297872 27.2340426","52.3404255 21.7021277 55.7446809 21.7021277 56.5957447 27.2340426 60.8510638 32.7659574 68.9361702 36.5957447 64.6808511 40.4255319 61.7021277 53.1914894 52.3404255 64.6808511 53.1914894 38.2978723"],"back-deltoids":["29.3617021 37.0212766 22.9787234 39.1489362 17.4468085 44.2553191 18.2978723 53.6170213 24.2553191 49.3617021 27.2340426 46.3829787","71.0638298 37.0212766 78.2978723 39.5744681 82.5531915 44.6808511 81.7021277 53.6170213 74.893617 48.9361702 72.3404255 45.106383"],"upper-back":["31.0638298 38.7234043 28.0851064 48.9361702 28.5106383 55.3191489 34.0425532 75.3191489 47.2340426 71.0638298 47.2340426 66.3829787 36.5957447 54.0425532 33.6170213 41.2765957","68.9361702 38.7234043 71.9148936 49.3617021 71.4893617 56.1702128 65.9574468 75.3191489 52.7659574 71.0638298 52.7659574 66.3829787 63.4042553 54.4680851 66.3829787 41.7021277"],"triceps":["26.8085106 49.787234 17.8723404 55.7446809 14.4680851 72.3404255 16.5957447 81.7021277 21.7021277 63.8297872 26.8085106 55.7446809","73.6170213 50.212766 82.1276596 55.7446809 85.9574468 73.1914894 83.4042553 82.1276596 77.8723404 62.9787234 73.1914894 55.7446809","26.8085106 58.2978723 26.8085106 68.5106383 22.9787234 75.3191489 19.1489362 77.4468085 22.5531915 65.5319149","72.7659574 58.2978723 77.0212766 64.6808511 80.4255319 77.4468085 76.5957447 75.3191489 72.7659574 68.9361702"],"lower-back":["47.6595745 72.7659574 34.4680851 77.0212766 35.3191489 83.4042553 49.3617021 102.12766 46.8085106 82.9787234","52.3404255 72.7659574 65.5319149 77.0212766 64.6808511 83.4042553 50.6382979 102.12766 53.1914894 83.8297872"],"forearm":["86.3829787 75.7446809 91.0638298 83.4042553 93.1914894 94.0425532 100 106.382979 96.1702128 104.255319 88.0851064 89.3617021 84.2553191 83.8297872","13.6170213 75.7446809 8.93617021 83.8297872 6.80851064 93.6170213 0 106.382979 3.82978723 104.255319 12.3404255 88.5106383 15.7446809 82.9787234","81.2765957 79.5744681 77.4468085 77.8723404 79.1489362 84.6808511 91.0638298 103.829787 93.1914894 108.93617 94.4680851 104.680851","18.7234043 79.5744681 22.1276596 77.8723404 20.8510638 84.2553191 9.36170213 102.978723 6.80851064 108.510638 5.10638298 104.680851"],"gluteal":["44.6808511 99.5744681 30.212766 108.510638 29.787234 118.723404 31.4893617 125.957447 47.2340426 121.276596 49.3617021 114.893617","55.3191489 99.1489362 51.0638298 114.468085 52.3404255 120.851064 68.0851064 125.957447 69.787234 119.148936 69.3617021 108.510638"],"adductor":["48.0851064 122.978723 44.6808511 122.978723 41.2765957 125.531915 45.106383 144.255319 48.5106383 135.744681 48.9361702 129.361702","51.9148936 122.553191 55.7446809 123.404255 59.1489362 125.957447 54.893617 144.255319 51.9148936 136.170213 51.0638298 129.361702"],"hamstring":["28.9361702 122.12766 31.0638298 129.361702 36.5957447 125.957447 35.3191489 135.319149 34.4680851 150.212766 29.3617021 158.297872 28.9361702 146.808511 27.6595745 141.276596 27.2340426 131.489362","71.4893617 121.702128 69.3617021 128.93617 63.8297872 125.957447 65.5319149 136.595745 66.3829787 150.212766 71.0638298 158.297872 71.4893617 147.659574 72.7659574 142.12766 73.6170213 131.914894","38.7234043 125.531915 44.2553191 145.957447 40.4255319 166.808511 36.1702128 152.765957 37.0212766 135.319149","61.7021277 125.531915 63.4042553 136.170213 64.2553191 153.191489 60 166.808511 56.1702128 146.382979"],"knees":["34.4680851 153.191489 31.0638298 159.148936 33.6170213 166.382979 37.4468085 162.553191","66.3829787 153.617021 62.9787234 162.978723 66.8085106 166.382979 69.3617021 159.148936"],"calves":["29.3617021 160.425532 28.5106383 167.234043 24.6808511 179.574468 23.8297872 192.765957 25.5319149 197.021277 28.5106383 193.191489 29.787234 180 31.9148936 171.06383 31.9148936 166.808511","37.4468085 165.106383 35.3191489 167.659574 33.1914894 171.914894 31.0638298 180.425532 30.212766 191.914894 34.0425532 200 38.7234043 190.638298 39.1489362 168.93617","62.9787234 165.106383 61.2765957 168.510638 61.7021277 190.638298 66.3829787 199.574468 70.6382979 191.914894 68.9361702 179.574468 66.8085106 170.212766","70.6382979 160.425532 72.3404255 168.510638 75.7446809 179.148936 76.5957447 192.765957 74.4680851 196.595745 72.3404255 193.617021 70.6382979 179.574468 68.0851064 168.085106"],"left-soleus":["28.5106383 195.744681 30.212766 195.744681 33.6170213 201.702128 30.6382979 220 28.5106383 213.617021 26.8085106 198.297872"],"right-soleus":["69.787234 195.744681 71.9148936 195.744681 73.6170213 198.297872 71.9148936 213.191489 70.212766 219.574468 67.2340426 202.12766"]};
 const EX_MUS={"Bodyweight Squat":["quadriceps","gluteal","adductor"],"Goblet Squat":["quadriceps","gluteal","abs","adductor"],"Reverse Lunge":["quadriceps","gluteal","hamstring"],"Bulgarian Split Squat":["quadriceps","gluteal","hamstring"],"Step-Up":["quadriceps","gluteal"],"Calf Raise":["calves"],"Glute Bridge":["gluteal","hamstring"],"Single-Leg Glute Bridge":["gluteal","hamstring","abs"],"Romanian Deadlift":["hamstring","gluteal","lower-back"],"Kettlebell Swing":["gluteal","hamstring","lower-back","front-deltoids"],"Push-Up":["chest","triceps","front-deltoids"],"Dumbbell Chest Press":["chest","triceps","front-deltoids"],"Bench Press":["chest","triceps","front-deltoids"],"Chest Fly":["chest"],"Dip":["chest","triceps"],"Lat Pulldown":["upper-back","lower-back","biceps"],"Seated Cable Row":["upper-back","lower-back","biceps","trapezius"],"One-Arm Dumbbell Row":["upper-back","lower-back","biceps"],"Resistance Band Row":["upper-back","biceps","trapezius"],"Assisted Pull-Up":["upper-back","lower-back","biceps","back-deltoids"],"Pull-Up":["upper-back","lower-back","biceps","back-deltoids","trapezius"],"Dumbbell Shoulder Press":["front-deltoids","triceps","trapezius"],"Lateral Raise":["front-deltoids","back-deltoids"],"Band Pull-Apart":["back-deltoids","upper-back","trapezius"],"Face Pull":["back-deltoids","upper-back","trapezius"],"Pike Push-Up":["front-deltoids","triceps","trapezius"],"Hammer Curl":["biceps","forearm"],"Overhead Tricep Extension":["triceps"],"Tricep Dip (Bench)":["triceps"],"Cable Rope Pushdown":["triceps"],"Plank":["abs","obliques"],"Side Plank":["obliques","abs"],"Dead Bug":["abs"],"Hanging Knee Raise":["abs"],"Hanging Leg Raise":["abs"],"Russian Twist":["obliques","abs"],"Bike Intervals":["quadriceps","calves","hamstring"],"Treadmill Incline Walk":["quadriceps","gluteal","calves"],"Jump Rope":["calves","quadriceps"],"Boxing / Bag Work":["front-deltoids","obliques","abs"],"Kettlebell Circuit":["gluteal","quadriceps","upper-back","front-deltoids"],"Barbell Back Squat":["quadriceps","gluteal","adductor","abs","lower-back"],"Barbell Front Squat":["quadriceps","gluteal","abs","upper-back"],"Barbell Deadlift":["hamstring","gluteal","lower-back","upper-back","trapezius","forearm"],"Barbell Hip Thrust":["gluteal","hamstring"],"Close-Grip Bench Press":["triceps","chest","front-deltoids"],"Ab Wheel Rollout":["abs","obliques","upper-back","lower-back"],"Leg Extension":["quadriceps"],"Leg Curl":["hamstring"],"Barbell Lunge":["quadriceps","gluteal","hamstring","abs"],"Walking Lunge":["quadriceps","gluteal","hamstring"],"Wall Sit":["quadriceps"],"Split Squat":["quadriceps","gluteal"],"Cable Kickback":["gluteal"],"Good Morning":["hamstring","gluteal","lower-back"],"Decline Push-Up":["chest","front-deltoids","triceps"],"Barbell Floor Press":["chest","triceps"],"Chin-Up":["upper-back","lower-back","biceps"],"Straight-Arm Pulldown":["upper-back","lower-back"],"Barbell Shrug":["trapezius"],"Dumbbell High Pull":["trapezius","back-deltoids","upper-back"],"Inverted Row":["upper-back","biceps","trapezius"],"Arnold Press":["front-deltoids","back-deltoids","triceps"],"Upright Row":["front-deltoids","trapezius","biceps"],"Barbell Curl":["biceps","forearm"],"Incline Dumbbell Curl":["biceps"],"Concentration Curl":["biceps"],"Skull Crusher":["triceps"],"Tricep Kickback":["triceps"],"Wrist Curl":["forearm"],"Sit-Up":["abs"],"Crunch":["abs"],"Bicycle Crunch":["abs","obliques"],"Cable Woodchop":["obliques","abs"],"Mountain Climbers":["abs","front-deltoids","quadriceps"],"Farmer's Carry":["forearm","trapezius","abs","obliques"],"Suitcase Carry":["obliques","abs","forearm","trapezius"],"Hollow Hold":["abs"],"Burpees":["quadriceps","chest","front-deltoids","abs"],"Jumping Jacks":["calves","front-deltoids"],"Kettlebell Goblet Carry":["abs","quadriceps","forearm"],"Treadmill Intervals":["quadriceps","calves","hamstring"],"Smith Machine Squat":["quadriceps","gluteal","adductor","abs"],"Cable Pull-Through":["gluteal","hamstring","lower-back"],"Nordic Curl":["hamstring","gluteal"],"Cable Crossover":["chest"],"Low Cable Fly":["chest"],"Single-Arm Cable Row":["upper-back","lower-back","biceps"],"Wide-Grip Lat Pulldown":["upper-back","lower-back","biceps"],"Close-Grip Pulldown":["upper-back","lower-back","biceps"],"Cable Pallof Press":["obliques","abs"],"Band Tricep Pushdown":["triceps"],"Bent-Over Row":["upper-back","lower-back","biceps","trapezius"],"Bicep Curl":["biceps","forearm"],"Front Raise":["front-deltoids"],"Incline Press":["chest","front-deltoids","triceps"],"Overhead Press":["front-deltoids","triceps","trapezius","abs"],"Rear Delt Fly":["back-deltoids","upper-back"]};
 
-/* Render a muscle map (front+back) highlighting the muscles worked.
-   muscles: array of slugs. Returns HTML string. compact=smaller for cards. */
+/* Render a muscle map (front+back). Takes old coarse slugs or detailed muscle ids. */
 function muscleMapSVG(muscles, opts){
   opts=opts||{};
-  const active=new Set(muscles||[]);
-  const H=opts.h||130;
-  const base=opts.base||"#cdd2d8";
-  const hot=opts.hot||"#e8502e";
-  const line=opts.line||"#aab0b6";
-  function view(data){
-    let p="";
-    for(const mus in data){
-      const on=active.has(mus);
-      for(const pts of data[mus]){
-        p+=`<polygon points="${pts}" fill="${on?hot:base}" stroke="${line}" stroke-width="0.3"/>`;
-      }
-    }
-    return `<svg viewBox="0 0 100 200" style="height:${H}px;width:auto" xmlns="http://www.w3.org/2000/svg">${p}</svg>`;
-  }
-  return `<div class="mmap">
-    <div class="mmv">${view(MM_ANT)}<span>Front</span></div>
-    <div class="mmv">${view(MM_POST)}<span>Back</span></div>
-  </div>`;
+  const ids=new Set();(muscles||[]).forEach(m=>(OLD_MUS[m]||[m]).forEach(x=>ids.add(x)));
+  return bodyMapSVG([...ids],opts.sec||[],{h:Math.round((opts.h||130)*1.25)});
 }
 // combined muscles for a whole day's plan
 function musclesForDay(di){
   const arr=plans[di]||[];const s=new Set();
   arr.forEach(x=>{(EX_MUS[x.n]||[]).forEach(m=>s.add(m));});
   return [...s];
+}
+
+/* ---- Detailed muscle map (drawn for this app): one shape per muscle or head, left half mirrored ---- */
+const BODY_OUT="92,44 91,58 72,65 58,69 48,77 43,92 40,112 36,134 33,150 29,170 26,192 24,212 20,226 20,240 26,248 33,246 36,232 38,214 44,190 48,172 53,152 57,134 61,116 65,106 66,128 69,150 70,166 67,186 65,200 62,222 60,256 62,284 64,302 65,318 62,340 64,366 70,392 72,404 64,416 70,422 92,422 90,404 90,380 92,350 93,322 92,304 95,272 97,240 100,226";
+const MM_FRONT=[
+ ["trapU","92,50 91,58 74,65 86,57"],
+ ["deltF","72,66 63,68 57,82 54,97 52,108 59,105 64,90 70,77"],
+ ["deltS","63,68 54,71 47,79 43,93 44,106 52,108 54,97 57,82"],
+ ["chestU","98,67 98,84 82,87 70,95 63,101 63,93 69,80 75,70 88,68"],
+ ["chestM","98,86 98,118 91,124 79,122 70,114 64,104 70,97 82,89"],
+ ["serratus","65,110 72,116 70,121 65,117","65,121 73,127 71,132 66,129","67,133 74,138 72,143 68,141"],
+ ["abs","89,126 98,125 98,143 89,144","89,147 98,146 98,163 89,164","89,167 98,166 98,183 90,184","90,187 98,186 98,214 93,208"],
+ ["obl","72,123 87,128 87,190 81,201 69,195 70,172 68,145"],
+ ["bicL","46,108 42,120 40,134 42,143 47,139 48,120"],
+ ["bicS","50,107 48,120 47,139 51,145 55,131 58,114"],
+ ["brach","40,137 37,148 42,151 43,143","56,134 53,147 51,150 52,145"],
+ ["brachRad","36,152 31,170 28,186 32,189 38,170 44,154"],
+ ["flex","45,154 38,172 33,190 34,208 39,207 44,186 51,156"],
+ ["hipflex","70,199 82,202 92,216 87,224 76,215 67,212"],
+ ["add","89,224 98,229 96,262 91,272 87,244"],
+ ["rf","76,217 86,226 86,252 84,288 79,294 73,270 72,240"],
+ ["vl","65,214 75,217 71,240 72,270 78,294 71,302 65,296 61,262 62,232"],
+ ["vm","86,254 90,272 93,284 92,300 85,304 79,295 85,288"],
+ ["tib","68,324 77,322 80,350 78,386 74,388 70,362 66,342"],
+ ["gastro","82,322 91,325 91,350 87,368 82,350"],
+ ["soleus","88,370 90,356 90,382 88,398 85,388"],
+];
+const MM_BACK=[
+ ["trapU","93,46 99,48 99,70 88,72 73,67 85,60 91,56"],
+ ["trapM","99,72 99,94 91,98 77,86 74,70 88,74"],
+ ["trapL","99,96 99,142 95,132 90,114 92,100"],
+ ["deltR","73,68 62,70 56,82 53,99 51,108 58,104 64,90 72,79"],
+ ["deltS","62,70 53,73 47,80 43,94 44,106 51,108 53,99 56,82"],
+ ["cuff","75,80 83,92 86,107 81,115 73,111 69,97"],
+ ["rhomb","85,92 90,99 92,104 90,116 87,107"],
+ ["lats","66,107 72,113 82,117 90,119 94,140 93,160 86,180 75,172 70,160 68,140 67,124"],
+ ["erect","95,140 99,140 99,206 88,206 86,184 93,162"],
+ ["obl","70,165 75,174 86,184 86,198 68,195 70,180"],
+ ["triLat","45,108 41,120 39,136 43,141 48,124 50,109"],
+ ["triL","52,108 48,124 46,139 53,141 58,125 61,112"],
+ ["triM","42,142 47,140 53,142 51,151 41,150"],
+ ["ext","37,153 31,171 28,188 34,208 40,204 45,180 52,156"],
+ ["gluteMed","68,190 84,189 87,201 76,209 64,213 66,198"],
+ ["gluteMax","64,215 76,210 87,202 99,208 99,234 91,246 73,244 62,230"],
+ ["bf","62,236 72,246 80,251 78,291 72,301 64,295 60,262"],
+ ["semi","80,250 90,248 88,262 90,280 88,300 80,302 78,292"],
+ ["add","91,248 98,240 96,268 90,280 88,262"],
+ ["gastro","66,318 78,316 80,340 76,362 70,356 64,338","81,316 92,320 92,342 87,366 81,358"],
+ ["soleus","65,350 70,358 76,364 87,368 88,386 77,392 68,372"],
+];
+function mmMirror(pts){return pts.split(" ").map(p=>{const[x,y]=p.split(",");return (200-x)+","+y;}).join(" ");}
+// Detailed map. pri / sec: arrays of muscle ids (main, also works). opts.h height, opts.tap tap-to-open, opts.zoom adds a close-up of that muscle.
+function bodyMapSVG(pri,sec,opts){
+  opts=opts||{};
+  const P=new Set(pri||[]), S=new Set(sec||[]);
+  const H=opts.h||200;
+  function fig(data,h,vb){
+    let p=`<polygon points="${BODY_OUT} ${mmMirror(BODY_OUT).split(" ").reverse().join(" ")}" class="mmbody"/><ellipse cx="100" cy="27" rx="15" ry="18" class="mmbody"/>`;
+    for(const [id,...shapes] of data){
+      const c=P.has(id)?"mmp":S.has(id)?"mms":"mmo";
+      for(const pts of shapes){
+        for(const q of [pts,mmMirror(pts)])
+          p+=`<polygon points="${q}" class="${c}" data-m="${id}"/>`;
+      }
+    }
+    return `<svg viewBox="${vb||"16 6 168 420"}" style="height:${h}px;width:auto" xmlns="http://www.w3.org/2000/svg"${opts.tap?` onclick="mmTap(event)"`:""}>${p}</svg>`;
+  }
+  if(opts.zoom) return `<div class="mmap">${mmZoom(opts.zoom,fig,H)}<div class="mmv">${fig(MM_FRONT,H*.75)}<span>Front</span></div><div class="mmv">${fig(MM_BACK,H*.75)}<span>Back</span></div></div>`;
+  return `<div class="mmap">
+    <div class="mmv">${fig(MM_FRONT,H)}<span>Front</span></div>
+    <div class="mmv">${fig(MM_BACK,H)}<span>Back</span></div>
+  </div>`;
+}
+// Close-up of one muscle, cropped from the view (front/back) where it is biggest
+function mmZoom(id,fig,H){
+  const pts=d=>(d.find(x=>x[0]===id)||[]).slice(1).map(s=>s.split(" ").map(v=>v.split(",").map(Number)));
+  const area=d=>pts(d).reduce((a,q)=>a+Math.abs(q.reduce((t,v,i)=>{const w=q[(i+1)%q.length];return t+v[0]*w[1]-w[0]*v[1];},0)),0);
+  const data=area(MM_BACK)>area(MM_FRONT)?MM_BACK:MM_FRONT;
+  const all=pts(data).flat(), xs=all.map(v=>v[0]), ys=all.map(v=>v[1]);
+  if(!all.length) return "";
+  const cx=(Math.min(...xs)+Math.max(...xs))/2, cy=(Math.min(...ys)+Math.max(...ys))/2;
+  const h=Math.max(130,Math.max(...ys)-Math.min(...ys)+70), w=Math.max(h*.75,Math.max(...xs)-Math.min(...xs)+60);
+  return `<div class="mmv mmzoom">${fig(data,H,`${(cx-w/2).toFixed(1)} ${(cy-h/2).toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`)}<span>Close-up</span></div>`;
+}
+/* Every muscle / head on the map: [id, area, name, anatomy name, what it does, how to hit it] */
+const MUSCLES=[
+ ["chestU","Chest","Upper chest","Pec major, clavicular head","Lifts your arm forward and up and brings it across your body.","Press or fly on an incline (about 30°), or from a low cable upward. A slightly closer grip helps."],
+ ["chestM","Chest","Mid & lower chest","Pec major, sternal head","The biggest part of the chest. Brings your arm across and down toward your hips.","Flat presses, push-ups, dips with a forward lean and high-to-low cable crossovers."],
+ ["serratus","Chest","Serratus","Serratus anterior","Pulls your shoulder blade forward around the ribs. The 'finger' muscles on your side.","Push all the way out at the top of push-ups and presses (reach), overhead pressing and ab wheel rollouts."],
+ ["deltF","Shoulders","Front delts","Anterior deltoid","Raises your arm in front of you. Works in every press.","Overhead presses and front raises. Chest pressing already works it hard."],
+ ["deltS","Shoulders","Side delts","Lateral deltoid","Raises your arm out to the side. Gives shoulders their width.","Lateral raises (lead with the elbow, light weight, slow), upright rows, high pulls. Presses barely reach it."],
+ ["deltR","Shoulders","Rear delts","Posterior deltoid","Pulls your arm back and out. Balances the front of the shoulder.","Rear delt flies, face pulls, band pull-aparts. Rows with elbows flared out to the sides."],
+ ["cuff","Shoulders","Rotator cuff","Infraspinatus & teres minor","Rotates your arm outward and keeps the shoulder joint stable.","Face pulls with a turn-out at the end, band pull-aparts and rear delt flies. Light and controlled."],
+ ["trapU","Back","Upper traps","Trapezius, upper fibres","Shrugs your shoulders up toward your ears and supports the neck.","Shrugs, heavy carries, deadlifts and high pulls."],
+ ["trapM","Back","Middle traps","Trapezius, middle fibres","Squeezes your shoulder blades together.","Rows with a pause and a squeeze, face pulls, band pull-aparts, rear delt flies."],
+ ["trapL","Back","Lower traps","Trapezius, lower fibres","Pulls your shoulder blades down. Good for posture and healthy shoulders.","Pull-downs and pull-ups starting by pulling the shoulders down, and face pulls with arms high."],
+ ["rhomb","Back","Rhomboids","Rhomboid major & minor","Sits under the traps between the shoulder blades and pulls them together.","Same as middle traps: rows, inverted rows and pull-aparts, squeezing the blades together."],
+ ["lats","Back","Lats","Latissimus dorsi (with teres major)","The big wing muscles. Pull your arms down and back to your sides.","Pull-ups, pull-downs, straight-arm pulldowns and rows pulling the elbow toward the hip."],
+ ["erect","Back","Lower back","Erector spinae","Runs along both sides of the spine. Holds your back straight and extends it.","Deadlifts, Romanian deadlifts, good mornings. Every squat and row works it to hold you still."],
+ ["bicL","Arms","Biceps, long head","Biceps brachii, long head","The outer head that makes the biceps 'peak'. Bends the elbow and turns the palm up.","Curls with arms behind your body (incline curl), narrow grip and hammer-style curls."],
+ ["bicS","Arms","Biceps, short head","Biceps brachii, short head","The inner head that gives the biceps thickness.","Curls with arms in front of your body (concentration, preacher), a wide grip, and chin-ups."],
+ ["brach","Arms","Brachialis","Brachialis","Lies under the biceps and is the strongest elbow bender. Pushes the biceps up and widens the arm.","Hammer curls (thumb up) and reverse curls (palms down), chin-ups."],
+ ["brachRad","Arms","Brachioradialis","Brachioradialis","The top of the forearm near the elbow. Bends the elbow with the thumb up.","Hammer curls and reverse curls, high pulls."],
+ ["flex","Arms","Forearm flexors (grip)","Wrist & finger flexors","The inside of the forearm. Closes your grip and bends the wrist.","Wrist curls, heavy carries, dead hangs and holding heavy deadlifts."],
+ ["ext","Arms","Forearm extensors","Wrist & finger extensors","The back of the forearm. Opens the hand and lifts the wrist back.","Reverse wrist curls, reverse curls and hammer curls."],
+ ["triL","Arms","Triceps, long head","Triceps brachii, long head","The biggest head, on the inner back of the arm. Also pulls the arm down.","Arms overhead or behind you: overhead extensions, skull crushers to behind the head."],
+ ["triLat","Arms","Triceps, lateral head","Triceps brachii, lateral head","The outer head that gives the horseshoe shape.","Pushdowns, close-grip presses, dips and kickbacks with arms at your sides."],
+ ["triM","Arms","Triceps, medial head","Triceps brachii, medial head","Deep, near the elbow. Works in every elbow straightening, most at lockout.","Pushdowns with a reverse grip, kickbacks and close-grip presses to full lockout."],
+ ["abs","Core","Abs","Rectus abdominis","One long muscle (the six-pack) that curls your ribs toward your hips. Crunches bias the top, leg raises the bottom.","Crunches and sit-ups for the upper part, hanging knee/leg raises for the lower, planks and rollouts to hold still."],
+ ["obl","Core","Obliques","External & internal obliques","The sides of your waist. Twist and bend you sideways, and stop you twisting.","Side planks, woodchops, Pallof press, suitcase carries, bicycle crunches."],
+ ["hipflex","Hips","Hip flexors","Iliopsoas & rectus femoris top","Lifts your knee toward your chest.","Hanging knee and leg raises, mountain climbers, sit-ups."],
+ ["gluteMax","Hips","Glutes","Gluteus maximus","The biggest muscle in the body. Pushes your hips forward and drives you up out of a squat.","Hip thrusts and bridges (squeeze at the top), deep squats and lunges, Romanian deadlifts, kickbacks."],
+ ["gluteMed","Hips","Side glutes","Gluteus medius","Upper outer hip. Lifts the leg out sideways and keeps your hips level on one leg.","Single-leg work: split squats, step-ups, single-leg bridges, suitcase carries, side planks."],
+ ["add","Hips","Inner thighs","Adductors","Pull your legs together and help you out of the bottom of a squat.","Wide-stance and deep squats, lunges, Romanian deadlifts."],
+ ["rf","Legs","Quads, rectus femoris","Rectus femoris","The middle quad. Straightens the knee and lifts the thigh.","Leg extensions (lean back a little), sissy-style squats, step-ups."],
+ ["vl","Legs","Quads, outer","Vastus lateralis","The outer sweep of the thigh, the biggest quad.","Squats, leg press style moves, leg extensions and lunges."],
+ ["vm","Legs","Quads, teardrop","Vastus medialis","The teardrop above the inner knee. Works most when the knee goes fully straight and deep.","Deep squats with knees forward, split squats, leg extensions to full lockout."],
+ ["bf","Legs","Hamstrings, outer","Biceps femoris","The outer hamstring. Bends the knee and pushes the hip back.","Leg curls with toes turned out, Romanian deadlifts, Nordic curls."],
+ ["semi","Legs","Hamstrings, inner","Semitendinosus & semimembranosus","The two inner hamstrings. Bend the knee and drive the hips forward.","Leg curls with toes turned in, Nordic curls, Romanian deadlifts and good mornings."],
+ ["gastro","Legs","Calves, gastrocnemius","Gastrocnemius (two heads)","The upper calf you can see. Points the foot, strongest with a straight knee.","Standing calf raises with straight knees, jump rope, a full stretch at the bottom."],
+ ["soleus","Legs","Calves, soleus","Soleus","Under the gastrocnemius. Does the work when the knee is bent.","Seated or bent-knee calf raises, incline walking."],
+ ["tib","Legs","Shins","Tibialis anterior","The front of the shin. Lifts your toes and protects the knees and shins.","Toe raises with your back against a wall, walking on your heels."],
+];
+const MUS=Object.fromEntries(MUSCLES.map(m=>[m[0],{id:m[0],area:m[1],name:m[2],anat:m[3],does:m[4],how:m[5]}]));
+// Old coarse slugs (EX_MUS / day maps) to detailed ids
+const OLD_MUS={"chest":["chestU","chestM"],"front-deltoids":["deltF"],"back-deltoids":["deltR"],"biceps":["bicL","bicS"],
+ "triceps":["triL","triLat","triM"],"forearm":["flex","ext","brachRad"],"abs":["abs"],"obliques":["obl"],
+ "trapezius":["trapU","trapM","trapL"],"upper-back":["lats","rhomb","trapM"],"lower-back":["erect"],
+ "gluteal":["gluteMax","gluteMed"],"hamstring":["bf","semi"],"quadriceps":["rf","vl","vm"],"calves":["gastro","soleus"],
+ "adductor":["add"],"abductors":["gluteMed"]};
+/* Exercise -> "main muscles | also works" */
+const EX_DET={
+"Bodyweight Squat":"vl vm rf gluteMax|add erect abs",
+"Goblet Squat":"vl vm rf gluteMax|add abs erect",
+"Reverse Lunge":"gluteMax vl vm|rf add gluteMed semi bf",
+"Bulgarian Split Squat":"vl vm gluteMax|rf add gluteMed semi",
+"Step-Up":"vl vm gluteMax|rf gluteMed gastro",
+"Calf Raise":"gastro|soleus",
+"Glute Bridge":"gluteMax|bf semi gluteMed",
+"Single-Leg Glute Bridge":"gluteMax gluteMed|bf semi abs obl",
+"Romanian Deadlift":"semi bf gluteMax|erect add flex trapU",
+"Kettlebell Swing":"gluteMax bf semi|erect abs deltF flex",
+"Push-Up":"chestM|chestU deltF triLat triM serratus abs",
+"Dumbbell Chest Press":"chestM|chestU deltF triLat triM",
+"Bench Press":"chestM|chestU deltF triLat triM",
+"Incline Press":"chestU deltF|chestM triLat triM serratus",
+"Chest Fly":"chestM chestU|deltF bicS",
+"Dip":"chestM triLat triM triL|deltF",
+"Lat Pulldown":"lats|trapL rhomb bicS bicL brach deltR",
+"Seated Cable Row":"lats trapM rhomb|deltR bicL bicS brach erect",
+"One-Arm Dumbbell Row":"lats|rhomb trapM deltR bicS bicL brach",
+"Resistance Band Row":"trapM rhomb|lats deltR bicS bicL",
+"Assisted Pull-Up":"lats|trapL rhomb bicS bicL brach",
+"Pull-Up":"lats|trapL rhomb bicS bicL brach flex abs",
+"Dumbbell Shoulder Press":"deltF|deltS triLat triM triL trapU",
+"Lateral Raise":"deltS|trapU deltF",
+"Band Pull-Apart":"deltR trapM rhomb|cuff trapL",
+"Face Pull":"deltR cuff|trapM rhomb trapL",
+"Pike Push-Up":"deltF|deltS triLat triM chestU trapU serratus",
+"Bicep Curl":"bicS bicL|brach flex",
+"Hammer Curl":"brach brachRad|bicL ext",
+"Overhead Tricep Extension":"triL|triLat triM",
+"Tricep Dip (Bench)":"triLat triM|triL deltF chestM",
+"Band Tricep Pushdown":"triLat triM|triL",
+"Plank":"abs|obl deltF serratus gluteMax",
+"Side Plank":"obl|gluteMed abs",
+"Dead Bug":"abs|obl hipflex",
+"Hanging Knee Raise":"abs hipflex|obl flex",
+"Hanging Leg Raise":"abs hipflex|obl flex lats",
+"Russian Twist":"obl|abs hipflex",
+"Bike Intervals":"vl vm rf|gluteMax gastro semi bf",
+"Treadmill Incline Walk":"gluteMax gastro soleus|semi bf vl vm",
+"Jump Rope":"gastro soleus|deltS flex vl",
+"Boxing / Bag Work":"deltF obl|chestM triLat serratus abs gastro",
+"Kettlebell Circuit":"gluteMax bf semi|deltF vl vm abs flex trapU",
+"Barbell Back Squat":"vl vm rf gluteMax|add erect abs",
+"Barbell Front Squat":"vl vm rf|gluteMax abs erect trapM",
+"Barbell Deadlift":"gluteMax semi bf erect|lats trapU trapM flex vl vm add",
+"Overhead Press":"deltF|deltS triLat triM triL trapU abs serratus",
+"Bent-Over Row":"lats trapM rhomb|deltR erect bicL bicS brach semi",
+"Barbell Hip Thrust":"gluteMax|bf semi gluteMed add",
+"Close-Grip Bench Press":"triLat triM triL|chestM deltF",
+"Ab Wheel Rollout":"abs|lats obl serratus deltF hipflex",
+"Leg Extension":"rf vl vm|",
+"Leg Curl":"bf semi|gastro",
+"Barbell Lunge":"vl vm gluteMax|rf add gluteMed semi",
+"Walking Lunge":"vl vm gluteMax|rf add gluteMed semi gastro",
+"Wall Sit":"vl vm rf|gluteMax",
+"Split Squat":"vl vm gluteMax|rf add gluteMed",
+"Cable Kickback":"gluteMax|gluteMed bf",
+"Good Morning":"semi bf erect|gluteMax add",
+"Decline Push-Up":"chestU deltF|chestM triLat triM serratus",
+"Barbell Floor Press":"chestM triLat triM|chestU deltF",
+"Chin-Up":"lats bicS bicL|brach trapL rhomb",
+"Straight-Arm Pulldown":"lats|triL serratus abs",
+"Barbell Shrug":"trapU|flex trapM",
+"Dumbbell High Pull":"trapU deltS|deltR trapM bicL brachRad",
+"Inverted Row":"trapM rhomb lats|deltR bicS bicL brach abs",
+"Arnold Press":"deltF deltS|triLat triM trapU",
+"Front Raise":"deltF|chestU serratus",
+"Rear Delt Fly":"deltR|trapM rhomb cuff",
+"Upright Row":"deltS trapU|deltF bicL brachRad",
+"Barbell Curl":"bicS bicL|brach flex",
+"Incline Dumbbell Curl":"bicL|bicS brach",
+"Concentration Curl":"bicS|bicL brach",
+"Skull Crusher":"triL triLat|triM",
+"Tricep Kickback":"triLat triM|triL",
+"Wrist Curl":"flex|",
+"Sit-Up":"abs hipflex|obl",
+"Crunch":"abs|obl",
+"Bicycle Crunch":"obl abs|hipflex",
+"Cable Woodchop":"obl|abs deltF serratus",
+"Mountain Climbers":"abs hipflex|deltF obl rf",
+"Farmer's Carry":"flex trapU|obl abs gluteMed gastro",
+"Suitcase Carry":"obl gluteMed flex|trapU abs erect",
+"Hollow Hold":"abs|hipflex obl",
+"Burpees":"chestM vl gluteMax|deltF triLat abs gastro",
+"Jumping Jacks":"gastro deltS|gluteMed add soleus",
+"Kettlebell Goblet Carry":"abs|flex bicL brach vl erect",
+"Treadmill Intervals":"vl gastro gluteMax|semi bf soleus rf hipflex",
+"Smith Machine Squat":"vl vm rf gluteMax|add abs",
+"Cable Pull-Through":"gluteMax|semi bf erect",
+"Nordic Curl":"bf semi|gastro gluteMax",
+"Cable Crossover":"chestM|chestU deltF serratus",
+"Low Cable Fly":"chestU|chestM deltF bicS",
+"Single-Arm Cable Row":"lats|trapM rhomb deltR bicL bicS",
+"Wide-Grip Lat Pulldown":"lats|trapL rhomb deltR bicL brach",
+"Close-Grip Pulldown":"lats|bicS bicL brach trapL rhomb",
+"Cable Rope Pushdown":"triLat triM|triL",
+"Cable Pallof Press":"obl abs|gluteMed",
+};
+function exDet(n){const s=EX_DET[n];if(!s)return null;const[a,b]=s.split("|");return{pri:a.split(" ").filter(Boolean),sec:(b||"").split(" ").filter(Boolean)};}
+// Muscles worked pane for one exercise: detailed map plus tappable names of each muscle/head
+function musclePane(e,extra){
+  const d=exDet(e.n);
+  if(!d) return EX_MUS[e.n]?`<div class="mapwrap">${muscleMapSVG(EX_MUS[e.n])}${extra||""}</div>`:"";
+  const chip=(id,c)=>MUS[id]?`<button class="mchip ${c}" onclick="openMuscle('${id}')">${MUS[id].name}</button>`:"";
+  return `<div class="mapwrap">${bodyMapSVG(d.pri,d.sec,{h:280,tap:true})}${extra||""}</div>
+    <div class="mmlist">
+      <div class="mmrow"><span class="mmlab"><i class="mdot p"></i>Main</span>${d.pri.map(id=>chip(id,"p")).join("")}</div>
+      ${d.sec.length?`<div class="mmrow"><span class="mmlab"><i class="mdot s"></i>Also</span>${d.sec.map(id=>chip(id,"s")).join("")}</div>`:""}
+      <div class="mmhint">Tap a muscle to see what it does and the best exercises for it.</div>
+    </div>`;
+}
+function mmTap(ev){
+  const m=ev.target.getAttribute&&ev.target.getAttribute("data-m");
+  if(m&&MUS[m]){ev.stopPropagation();openMuscle(m);}
+}
+// Exercises that work a muscle: main first (most targeted first), then the ones that also work it
+function exercisesFor(id){
+  const main=[],also=[];
+  LIB.forEach(e=>{const d=exDet(e.n);if(!d)return;
+    if(d.pri.includes(id))main.push([e,d.pri.length]);else if(d.sec.includes(id))also.push(e);});
+  main.sort((a,b)=>a[1]-b[1]);
+  return{main:main.map(x=>x[0]),also};
+}
+function musSheet(html){
+  let s=document.getElementById("musSheet");
+  if(!s){s=document.createElement("div");s.id="musSheet";s.className="msheet";
+    s.onclick=ev=>{if(ev.target===s)closeMuscle();};document.body.appendChild(s);}
+  s.innerHTML=`<div class="msbox">${html}</div>`;
+  s.classList.add("on");document.body.classList.add("sheetopen");
+  s.querySelector(".msbox").scrollTop=0;
+}
+function closeMuscle(){const s=document.getElementById("musSheet");if(s)s.classList.remove("on");document.body.classList.remove("sheetopen");}
+function exRowHTML(e){
+  return `<button class="msex" onclick="goToExercise('${enc(e.n)}')"><span><b>${e.n}</b><small>${e.eq}</small></span><span class="lvl ${e.lvl}">${e.lvl}</span></button>`;
+}
+function openMuscle(id){
+  const m=MUS[id];if(!m)return;
+  const sib=MUSCLES.filter(x=>x[1]===m.area);
+  const ex=exercisesFor(id);
+  musSheet(`<div class="mshead"><div><div class="msarea">${m.area}</div><h2>${m.name}</h2><div class="msanat">${m.anat}</div></div><button class="msx" onclick="closeMuscle()">✕</button></div>
+    <div class="mssib">${sib.map(x=>`<button class="mchip ${x[0]===id?"p":""}" onclick="openMuscle('${x[0]}')">${x[2]}</button>`).join("")}</div>
+    ${bodyMapSVG([id],[],{h:190,tap:true,zoom:id})}
+    <div class="msblock"><div class="mslab">What it does</div>${m.does}</div>
+    <div class="msblock"><div class="mslab">How to hit it</div>${m.how}</div>
+    <div class="mslab">Best exercises in your library</div>
+    ${ex.main.length?ex.main.map(exRowHTML).join(""):`<div class="msnone">Nothing in your library works this as a main muscle yet. These help, and "How to hit it" above has more.</div>`}
+    ${ex.also.length?`<details class="msalso"${ex.main.length?"":" open"}><summary>Also works it (${ex.also.length})</summary>${ex.also.map(exRowHTML).join("")}</details>`:""}`);
+}
+// Whole-body picker: tap any muscle on the map or pick from the list
+function openMusclePicker(){
+  const areas=[...new Set(MUSCLES.map(m=>m[1]))];
+  musSheet(`<div class="mshead"><div><h2>Muscle map</h2><div class="msanat">Tap a muscle to see the best exercises for it</div></div><button class="msx" onclick="closeMuscle()">✕</button></div>
+    ${bodyMapSVG([],[],{h:340,tap:true})}
+    ${areas.map(a=>`<div class="mslab">${a}</div><div class="mssib">${MUSCLES.filter(m=>m[1]===a).map(m=>`<button class="mchip" onclick="openMuscle('${m[0]}')">${m[2]}</button>`).join("")}</div>`).join("")}`);
+}
+// Jump from the muscle sheet to that exercise in the Library, opened
+function goToExercise(n){
+  closeMuscle();
+  libQuery="";const sb=document.getElementById("libSearch");if(sb)sb.value="";
+  libFilters={pattern:"all",muscle:"all",sub:"all",equip:"all"};
+  if(typeof curEquip!=="undefined")curEquip=null;
+  switchView("lib");renderFilterChips();renderLib();
+  const card=[...document.querySelectorAll("#libList .ex")].find(c=>(c.dataset.n||"").replace(/\\'/g,"'")===n);
+  if(card){if(!card.classList.contains("open"))openOnly(card);setTimeout(()=>card.scrollIntoView({behavior:"smooth",block:"start"}),60);}
 }
 
 
@@ -1683,7 +1996,7 @@ function pdFail(img){const d=img.closest(".pdemo");if(!d)return;const h=d.nextEl
   d.outerHTML=`<div class="viderr">Demo photos need an internet connection.</div>`;if(h&&h.classList.contains("pdhint"))h.remove();}
 // Library: animated demo with a toggle to the muscle map
 function libVisual(e,map,slot){
-  if(map===undefined) map=EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n]):"";
+  if(map===undefined) map=musclePane(e);
   if(slot===undefined) slot=`<div class="mediaslot"></div>`;
   if(!(mwKey||hasPhotoDemo(e.n))) return map;   // no demo available: just the muscles
   if(!map) return slot;
@@ -1826,7 +2139,7 @@ function renderLib(){
     if(libFilters.sub!=="all" && !((EX_MUS[e.n]||[]).includes(libFilters.sub))) return false;
     if(libFilters.equip!=="all" && !(EX_EQ[e.n]||[]).includes(libFilters.equip)) return false;
     if(libQuery){
-      const hay=(e.n+" "+e.m+" "+e.eq+" "+(EX_MUS[e.n]||[]).join(" ")).toLowerCase();
+      const d=exDet(e.n);const hay=(e.n+" "+e.m+" "+e.eq+" "+(EX_MUS[e.n]||[]).join(" ")+" "+(d?d.pri.concat(d.sec).map(id=>MUS[id].name+" "+MUS[id].anat).join(" "):"")).toLowerCase();
       if(!hay.includes(libQuery)) return false;
     }
     return true;
@@ -3026,7 +3339,7 @@ function renderTrain(){
     ${dateBar()}
     <div class="trtop">${train.title} · exercise ${done+1} of ${total}${ssLabel?` · <span class="trss">${ssLabel}</span>`:""}</div>
     <div class="trcard">
-      ${libVisual(e,`<div class="mapwrap">${EX_MUS[e.n]?muscleMapSVG(EX_MUS[e.n],{h:120}):""}${lastWeightBadge(e)}</div>`,`<div class="mediaslot" id="media-tr"></div>`)}
+      ${libVisual(e,musclePane(e,lastWeightBadge(e)),`<div class="mediaslot" id="media-tr"></div>`)}
       <div class="trnamerow"><h2 class="trname">${e.n} <span class="lvl ${e.lvl}" style="font-size:9px">${e.lvl}</span></h2>
         <button class="trshuffle" onclick="shuffleCurrent()" aria-label="Swap this exercise">⇄ Swap</button></div>
       <div class="trsug">${suggestFor(e)}</div>
@@ -4630,7 +4943,7 @@ const TITLES={plan:["Plan","Build a session or pick a workout type"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v51"]};
+ data:["Save & Settings","Backup your data · v52"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
