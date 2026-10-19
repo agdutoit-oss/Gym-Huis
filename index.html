@@ -238,6 +238,123 @@
   .lhrow span:nth-child(2){text-align:center}
   .lhrow span:last-child{text-align:right;text-transform:capitalize}
 
+  /* PLAN TAB: week overview, day editor, sheets */
+  body.noscroll{overflow:hidden}
+  .pwprog{background:linear-gradient(140deg,rgba(232,80,46,.16),rgba(232,80,46,.03));border:1px solid rgba(232,80,46,.45);border-radius:16px;padding:14px;display:grid;gap:10px}
+  .pwtop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .pwname{font-weight:800;font-size:17px}
+  .pwwk{font-size:12px;color:var(--accent2);font-weight:700;white-space:nowrap}
+  .pwbar{height:5px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}
+  .pwbar i{display:block;height:100%;background:var(--accent);border-radius:5px}
+  .pwseg{display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,.25);border-radius:10px;padding:3px}
+  .pwseg button{padding:8px 4px;border-radius:8px;border:none;background:none;font-size:12.5px;color:var(--dim);font-weight:700;cursor:pointer}
+  .pwseg button.on{background:var(--card2);color:var(--txt)}
+  .pwnext{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .pwnext b{font-size:15px}
+  .pwgo{background:var(--accent);color:#fff;font-weight:700;border:none;border-radius:10px;padding:9px 14px;font-size:13.5px;white-space:nowrap;cursor:pointer}
+  .pwhint{font-size:12px;color:var(--dim);line-height:1.45}
+  .pwlab{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:20px 0 8px}
+  .pwdays{display:grid;gap:8px}
+  .pwday{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;text-align:left;width:100%;color:var(--txt);font:inherit;cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:transform .15s,opacity .15s}
+  .pwday.rest{background:transparent;border-style:dashed}
+  .pwday.rest .pwdn{color:var(--dim);font-weight:600}
+  .pwday.today{border-color:var(--accent)}
+  .pwday.lift{transform:scale(1.02);opacity:.85;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .pwday.drop{outline:2px dashed var(--accent2);outline-offset:2px}
+  .pwdl{font-size:12px;font-weight:800;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;text-align:center;line-height:1.15}
+  .pwdl small{display:block;font-size:10px;color:var(--dim);font-weight:600;letter-spacing:0}
+  .pwdt{display:flex;flex-direction:column;min-width:0}
+  .pwdn{font-weight:700;font-size:15px}
+  .pwdm{font-size:12px;color:var(--dim)}
+  .pwchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+  .pwmc{font-size:10.5px;padding:2px 7px;border-radius:20px;background:var(--card2);color:var(--txt)}
+  .pwchev{color:var(--dim);font-size:20px}
+  .pwvol{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+  .pwvrow{display:grid;grid-template-columns:84px 1fr 30px;gap:8px;align-items:center;padding:5px 0;width:100%;text-align:left;background:none;border:none;color:var(--txt);font:inherit;cursor:pointer}
+  .pwvn{font-size:12.5px}
+  .pwvs{font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--dim)}
+  .pwtrack{position:relative;height:10px;border-radius:6px;background:rgba(255,255,255,.05)}
+  .pwband{position:absolute;top:0;bottom:0;background:rgba(62,192,122,.13);border-left:1px solid rgba(62,192,122,.5);border-right:1px solid rgba(62,192,122,.5)}
+  .pwfill{position:absolute;left:0;top:2px;bottom:2px;border-radius:4px}
+  .pwfill.lo,.pwleg i.lo{background:var(--amber)} .pwfill.ok,.pwleg i.ok{background:var(--good)} .pwfill.hi,.pwleg i.hi{background:var(--blue)}
+  .pwvdet{grid-column:1/-1;font-size:12px;color:var(--dim);padding:2px 0 6px;line-height:1.45}
+  .pwvdet b{color:var(--amber)}
+  .pwleg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-top:8px}
+  .pwleg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+  .pwbtns{display:flex;gap:8px;margin-top:14px}
+  .pwback{background:none;border:none;color:var(--accent2);font-weight:700;font-size:15px;padding:2px 0 8px;cursor:pointer}
+  .pdhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .pdtitle{background:none;border:none;color:var(--txt);text-align:left;font-size:22px;font-weight:800;letter-spacing:-.3px;padding:0;cursor:pointer;min-width:0}
+  .pdtitle small{display:block;font-size:11.5px;font-weight:700;color:var(--accent2);letter-spacing:1px;text-transform:uppercase}
+  .pdpen{font-size:14px;color:var(--dim);font-weight:400}
+  .pdmore,.pexmore{flex:0 0 auto;width:36px;height:36px;border-radius:10px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:17px;cursor:pointer;line-height:1}
+  .pdmeta{font-size:12.5px;color:var(--dim);margin-top:4px}
+  .pdlist{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .pex{background:var(--card);border:1px solid var(--line);border-radius:14px}
+  .pex.ss{border-left:3px solid var(--blue)}
+  .pex.noanim .ex-body{transition:none}
+  .pexss{font-size:10.5px;font-weight:800;color:var(--blue);letter-spacing:1px;text-transform:uppercase;padding:9px 12px 0}
+  .pexmain{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 2px}
+  .pexhdl{flex:0 0 30px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:18px;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+  .pextxt{flex:1;min-width:0;cursor:pointer}
+  .pextxt h4{font-size:14.5px;font-weight:700}
+  .pextxt .pm{font-size:11.5px;color:var(--dim)}
+  .pextgt{margin-top:6px;background:rgba(232,80,46,.12);color:var(--accent2);border:1px solid rgba(232,80,46,.35);border-radius:8px;padding:4px 9px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .pextgt span{color:var(--dim);font-weight:600}
+  .pextgt.on{border-color:var(--accent);background:rgba(232,80,46,.22)}
+  .pex.dragging{position:relative;z-index:5;box-shadow:0 10px 30px rgba(0,0,0,.5);border-color:var(--accent2)}
+  .pedit{border-top:1px solid var(--line);margin:0 12px;padding:10px 0 12px;display:grid;gap:10px}
+  .perow{display:grid;grid-template-columns:44px 1fr;align-items:center;gap:8px}
+  .perow>span{font-size:12px;color:var(--dim)}
+  .pepills{display:flex;flex-wrap:wrap;gap:5px}
+  .pepills button{padding:6px 10px;border-radius:9px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:12.5px;cursor:pointer}
+  .pepills button.on{background:rgba(232,80,46,.2);border-color:var(--accent)}
+  .pdadd{display:block;width:100%;margin-top:10px;border:1.5px dashed var(--line);background:none;border-radius:14px;padding:13px;color:var(--accent2);font-weight:700;font-size:14px;cursor:pointer}
+  .pdstart{width:100%;margin-top:10px}
+  .psheet{position:fixed;inset:0;z-index:300}
+  .psscrim{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+  .pspanel{position:absolute;left:0;right:0;bottom:0;max-width:600px;margin:0 auto;max-height:86vh;display:flex;flex-direction:column;background:var(--card);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:0 16px env(safe-area-inset-bottom);animation:psup .22s ease-out}
+  @keyframes psup{from{transform:translateY(40px);opacity:.4}}
+  @media (prefers-reduced-motion:reduce){.pspanel{animation:none}}
+  .psgrab{width:38px;height:5px;border-radius:5px;background:var(--line);margin:8px auto 2px;flex:0 0 auto}
+  .pshead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0 10px;flex:0 0 auto}
+  .pshead b{font-size:17px}
+  .pshead button{background:none;border:none;color:var(--dim);font-size:14px;font-weight:600;cursor:pointer}
+  .psbody{overflow-y:auto;flex:1;min-height:0;-webkit-overflow-scrolling:touch;padding-bottom:10px}
+  .psfoot{padding:10px 0 12px;border-top:1px solid var(--line);flex:0 0 auto}
+  .psact{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:13px 2px;border:none;border-bottom:1px solid var(--line);background:none;color:var(--txt);font-size:15px;cursor:pointer}
+  .psact:last-child{border-bottom:0}
+  .psact i{font-style:normal;min-width:30px;text-align:center;font-size:15px;color:var(--dim);font-weight:700}
+  .psact small{display:block;color:var(--dim);font-size:12px}
+  .psact.red{color:#ff6b5a}
+  .psinput{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:11px 12px;color:var(--txt);font:inherit;font-size:16px}
+  .pschips{display:flex;gap:6px;overflow-x:auto;padding:10px 0;scrollbar-width:none}
+  .pschips::-webkit-scrollbar{display:none}
+  .pschips button{flex:0 0 auto;padding:6px 11px;border-radius:20px;background:var(--card2);border:1px solid var(--line);font-size:12.5px;color:var(--dim);cursor:pointer}
+  .pschips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .paddrow{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 2px;border:none;border-bottom:1px solid var(--line);background:none;color:var(--txt);cursor:pointer}
+  .paddtxt{flex:1;min-width:0}
+  .paddtxt b{display:block;font-size:14.5px}
+  .paddtxt small{display:block;font-size:12px;color:var(--dim)}
+  .paddwhy{font-size:11px;color:var(--good);font-weight:600}
+  .paddbox{flex:0 0 26px;height:26px;border-radius:8px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800}
+  .paddrow.on .paddbox{background:var(--accent);border-color:var(--accent);color:#fff}
+  .paddrow.in{opacity:.45}
+  .psdays{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-bottom:6px}
+  .psdays button{padding:10px;border-radius:11px;background:var(--card2);border:1px solid var(--line);color:var(--txt);text-align:left;cursor:pointer}
+  .psdays button b{display:block;font-size:14px}
+  .psdays button small{color:var(--dim);font-size:11.5px}
+  .psdays button:disabled{opacity:.35}
+  .pstpl{display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;color:var(--txt);cursor:pointer}
+  .pstpl.cur{border-color:var(--accent)}
+  .pstpl b{font-size:15px}
+  .pstw{display:flex;gap:4px;margin-top:8px}
+  .pstw span{flex:1;text-align:center;font-size:10px;padding:4px 0;border-radius:6px;background:var(--card2);color:var(--dim)}
+  .pstw span.on{background:rgba(232,80,46,.25);color:var(--txt);font-weight:700}
+  .utoast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);z-index:250;background:#f2f4f7;color:#111;border-radius:12px;padding:10px 12px 10px 14px;display:flex;gap:14px;align-items:center;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:.25s}
+  .utoast.show{opacity:1;pointer-events:auto;transform:translateX(-50%)}
+  .utoast button{background:none;border:none;color:var(--accent);font-weight:800;font-size:14px;cursor:pointer}
+
   /* PLAN SUBTABS */
   .subtabs{display:flex;gap:7px;margin-bottom:16px}
   .subtab{flex:1;padding:10px 6px;border-radius:11px;background:var(--card2);color:var(--dim);font-size:13px;font-weight:700;border:1.5px solid transparent;cursor:pointer}
@@ -770,8 +887,12 @@
   <!-- PLAN (Build + My Week combined) -->
   <div class="view on" id="v-plan">
 
-    <!-- BUILD sub-panel -->
-    <div id="planBuild">
+    <div id="planWeek"></div>
+    <div id="planDay" style="display:none"></div>
+    <!-- one-off session builder -->
+    <div id="planBuild" style="display:none">
+      <button class="pwback" onclick="setPlanView('week')">‹ Week</button>
+      <div class="pwhint" style="margin-bottom:12px">Build a single workout for today, or save it to a day.</div>
       <div class="bsec">
         <div class="blab">Quick pick a workout type</div>
         <div class="fchips" id="buildMoves"></div>
@@ -806,8 +927,7 @@
       <div class="summary" id="planSummary" style="display:none"></div>
       <div id="planList"></div>
       <div class="planactions">
-        <button class="btn ghost" onclick="clearDay()">Clear day</button>
-        <button class="btn primary" onclick="gotoLib()">+ Add exercises</button>
+        <button class="btn ghost" onclick="editDayInPlan()">✎ Change this day in Plan</button>
       </div>
     </div>
     <!-- when actively training: the player -->
@@ -1013,6 +1133,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="utoast" id="utoast" role="status"></div>
 
 <script>
 /* ---------------- ICONS ---------------- */
@@ -2454,31 +2575,20 @@ function renderDaySelect(){
 function setDay(i){curDay=i;renderDaySelect();renderPlan();}
 function gotoLib(){switchView('lib');}
 
-function renderPlan(){
+function renderPlan(){renderTrainDay();renderPlanTab();}
+function editDayInPlan(){switchView('plan');openPlanDay(curDay);}
+// Train tab: the chosen day's workout, ready to start (changes happen in Plan)
+function renderTrainDay(){
   const nameEl=document.getElementById("planDayName");
   if(!nameEl)return;   // elements live in the Train tab; skip if not present
 
-  // program banner
   const banner=document.getElementById("programBanner");
   if(banner){
-    if(program.active){
-      banner.innerHTML=`<div class="progban">
-        <div class="pb-top"><span class="pb-name">${PROGRAM.name}</span><span class="pb-week">Week ${programWeek()} of 6</span></div>
-        <div class="pb-desc">${PROGRAM.desc}</div>
-        <button class="pb-stop" onclick="stopProgram()">Stop following</button>
-      </div>`;
-    } else {
-      banner.innerHTML=`<div class="progban off">
-        <div class="pb-desc"><b>Stick to one program.</b> ${PROGRAM.desc}.</div>
-        <button class="btn primary" style="width:100%;margin-top:8px" onclick="loadProgram()">Load 5-day program</button>
-      </div>`;
-    }
+    const nd=planMode.mode==="order"?nextUpDay():null;
+    banner.innerHTML=nd!=null?`<div class="pwhint" style="margin-bottom:8px">Next up in your plan: <b style="color:var(--txt)">${escH(dayTitle(nd))}</b> (${DAYNAMES[nd]})</div>`:"";
   }
-
-  // day label (program name for that day, if following)
-  const dayName = program.active && curDay<=4
-    ? `${DAYNAMES[curDay]} · ${PROGRAM.days[curDay].label}`
-    : DAYNAMES[curDay];
+  const arr0=plans[curDay]||[];
+  const dayName = arr0.length ? `${DAYNAMES[curDay]} · ${dayTitle(curDay)}` : DAYNAMES[curDay];
   nameEl.textContent=dayName;
   const arr=plans[curDay]||[];
   document.getElementById("planCount").textContent=arr.length?`${arr.length} exercise${arr.length!==1?"s":""}`:"empty";
@@ -2489,9 +2599,7 @@ function renderPlan(){
 
   if(!arr.length){
     sumEl.style.display="none";
-    listEl.innerHTML = (program.active && (curDay===5||curDay===6))
-      ? `<div class="addhint">Rest day 😌<br>The 5-day program trains Mon–Fri. Recover, eat, and come back strong.</div>`
-      : `<div class="addhint">No exercises yet.<br>Go to the <b>Library</b> and tap <b>+</b> to add moves to ${DAYNAMES[curDay]}.</div>`;
+    listEl.innerHTML = `<div class="addhint">Rest day 😌<br>Nothing planned for ${DAYNAMES[curDay]}. Tap below to add a workout in Plan.</div>`;
     return;
   }
   // muscle summary
@@ -2526,12 +2634,10 @@ function planItemHTML(x,i){
         <div class="ph" onclick="togCard(this)">
           <h4>${e.n} <span class="lvl ${e.lvl}" style="font-size:8px">${e.lvl}</span></h4>
           <div class="pm">${e.m}</div>
-          <div class="ps">${suggestFor(e)}</div>
+          <div class="ps">${targetText(x)}</div>
           ${lastTag(e)?`<div class="lastline">${lastTag(e)}</div>`:''}
         </div>
         <div class="chev" onclick="togCard(this)">›</div>
-        <button class="rm swap" onclick="swapInDay(${i})" title="Swap">⇄</button>
-        <button class="rm" onclick="removeFromDay(${i})">×</button>
       </div>
       ${exDetailBody(e,false)}
     </div>`;
@@ -2565,9 +2671,440 @@ function swapInDay(i){
 function removeFromDay(i){plans[curDay].splice(i,1);if(!plans[curDay].length)delete plans[curDay];save();renderPlan();renderDaySelect();renderLib();}
 function clearDay(){if(!plans[curDay]||!plans[curDay].length)return;if(confirm(`Clear all exercises from ${DAYNAMES[curDay]}?`)){delete plans[curDay];save();renderPlan();renderDaySelect();renderLib();}}
 
+/* ---------------- PLAN TAB: week overview + day editor ---------------- */
+const DAYNAMES_KEY="hgt_daynames_v1", PLANMODE_KEY="hgt_planmode_v1";
+let dayNames={};                          // {dayIndex: "Legs — Quads"} names you gave your workouts
+let planMode={mode:"weekday",next:0};     // weekday = fixed days; order = the next workout waits for you
+let planView="week";                      // week | day | build
+let planVolOpen=null, planEditOpen=-1;
+function loadPlanMeta(){try{const a=localStorage.getItem(DAYNAMES_KEY);if(a)dayNames=JSON.parse(a)||{};const b=localStorage.getItem(PLANMODE_KEY);if(b)planMode=Object.assign(planMode,JSON.parse(b));}catch(e){}}
+function savePlanMeta(){try{localStorage.setItem(DAYNAMES_KEY,JSON.stringify(dayNames));localStorage.setItem(PLANMODE_KEY,JSON.stringify(planMode));}catch(e){}}
+
+const PLAN_TEMPLATES=[
+ {id:"munitio",name:PROGRAM.name,desc:"Legs, Push, Pull, Legs, Upper · Mon to Fri",
+  days:Object.fromEntries(Object.entries(PROGRAM.days).map(([d,v])=>[d,{name:v.label,ex:v.ex}]))},
+ {id:"ul",name:"4-Day Upper / Lower",desc:"Each muscle twice a week, rest on Wednesday",days:{
+   0:{name:"Upper A",ex:["Bench Press","Bent-Over Row","Overhead Press","Lat Pulldown","Cable Rope Pushdown","Barbell Curl"]},
+   1:{name:"Lower A",ex:["Smith Machine Squat","Romanian Deadlift","Leg Extension","Leg Curl","Calf Raise","Plank"]},
+   3:{name:"Upper B",ex:["Incline Press","Seated Cable Row","Lateral Raise","Face Pull","Overhead Tricep Extension","Hammer Curl"]},
+   4:{name:"Lower B",ex:["Bulgarian Split Squat","Barbell Hip Thrust","Nordic Curl","Leg Extension","Calf Raise","Hanging Knee Raise"]}}},
+ {id:"fb",name:"3-Day Full Body",desc:"Shortest week · the whole body each session",days:{
+   0:{name:"Full Body A",ex:["Smith Machine Squat","Bench Press","Seated Cable Row","Leg Curl","Lateral Raise","Plank"]},
+   2:{name:"Full Body B",ex:["Romanian Deadlift","Overhead Press","Lat Pulldown","Leg Extension","Cable Rope Pushdown","Barbell Curl"]},
+   4:{name:"Full Body C",ex:["Bulgarian Split Squat","Incline Press","Chin-Up","Barbell Hip Thrust","Face Pull","Ab Wheel Rollout"]}}},
+];
+
+// Specific muscles (EX_DET main muscles) rolled up into the groups the weekly sets count uses
+const VOL_GROUP={chestU:"Chest",chestM:"Chest",lats:"Back",trapM:"Back",rhomb:"Back",trapL:"Back",deltF:"Shoulders",deltS:"Shoulders",deltR:"Rear delts",cuff:"Rear delts",bicL:"Biceps",bicS:"Biceps",brach:"Biceps",triL:"Triceps",triLat:"Triceps",triM:"Triceps",vl:"Quads",vm:"Quads",rf:"Quads",gluteMax:"Glutes",gluteMed:"Glutes",bf:"Hamstrings",semi:"Hamstrings",gastro:"Calves",soleus:"Calves",abs:"Core",obl:"Core"};
+const VOL_ORDER=["Chest","Back","Shoulders","Rear delts","Biceps","Triceps","Quads","Hamstrings","Glutes","Calves","Core"];
+function exGroups(n){
+  const e=exByName(n);if(e&&e.grp==="cardio")return ["Cardio"];
+  const d=(EX_DET[n]||"").split("|")[0].split(" ").filter(Boolean);
+  return [...new Set(d.map(x=>VOL_GROUP[x]).filter(Boolean))];
+}
+
+// Sets / reps / rest: what you set on the exercise, otherwise what your training goal suggests
+const GOAL_REST={strength:120,endurance:45,fatloss:60};
+const REP_OPTS=["5","6-8","6-10","8-12","10-12","12-15","15-20"], HOLD_OPTS=["20-30s","30-45s","45-60s"], REST_OPTS=[45,60,90,120,180];
+function defTarget(e){
+  const r=GOALS[goal].rep(e)||"";
+  const m=/^(\d+)\s*×\s*(.+)$/.exec(r);
+  return m?{sets:+m[1],reps:m[2],rest:GOAL_REST[goal]}:{sets:1,reps:r,rest:GOAL_REST[goal]};
+}
+function itemTarget(x){const e=exByName(x.n);const d=e?defTarget(e):{sets:3,reps:"8-12",rest:90};return {sets:x.sets||d.sets,reps:x.reps||d.reps,rest:x.rest||d.rest};}
+function restTxt(s){return s<120?s+"s":(s%60?(s/60).toFixed(1):s/60)+" min";}
+function targetText(x){
+  const e=exByName(x.n);
+  if(e&&e.grp==="cardio"&&!x.sets)return suggestFor(e);
+  const t=itemTarget(x);return `${t.sets} × ${t.reps} · rest ${restTxt(t.rest)}`;
+}
+
+function planDays(){return [0,1,2,3,4,5,6].filter(d=>plans[d]&&plans[d].length);}
+function todayIdx(){return (new Date().getDay()+6)%7;}
+function nextUpDay(){const ds=planDays();if(!ds.length)return null;return ds[(planMode.next||0)%ds.length];}
+function autoDayName(d){
+  const c={};(plans[d]||[]).forEach(x=>{const p=EX_PAT[x.n];if(p&&p!=="core")c[p]=(c[p]||0)+1;});
+  const k=Object.keys(c).sort((a,b)=>c[b]-c[a]);
+  if(!k.length)return "Workout";
+  if(k.length>=2&&c[k[1]]>=2)return k.includes("legs")?"Full body":"Upper body";
+  return {push:"Push",pull:"Pull",legs:"Legs",cardio:"Cardio"}[k[0]]||"Workout";
+}
+function dayTitle(d){
+  if(!plans[d]||!plans[d].length)return "Rest";
+  if(dayNames[d])return dayNames[d];
+  if(program.active&&(program.id||"munitio")==="munitio"&&PROGRAM.days[d])return PROGRAM.days[d].label;
+  return autoDayName(d);
+}
+function dayMins(d){
+  const arr=plans[d]||[];if(!arr.length)return 0;
+  let s=0;arr.forEach(x=>{const t=itemTarget(x);s+=t.sets*40+(t.sets-1)*t.rest+60;});
+  return Math.round((5+s/60)/5)*5;
+}
+function daySets(d){const c={};(plans[d]||[]).forEach(x=>{const t=itemTarget(x);exGroups(x.n).forEach(g=>{if(g!=="Cardio")c[g]=(c[g]||0)+t.sets;});});return c;}
+function weekSets(){const c={};VOL_ORDER.forEach(g=>c[g]=0);for(let d=0;d<7;d++){const s=daySets(d);for(const g in s)if(g in c)c[g]+=s[g];}return c;}
+
+/* undo instead of "are you sure?" */
+let planUndo=null,utT;
+function planSnap(msg){planUndo={plans:JSON.parse(JSON.stringify(plans)),names:Object.assign({},dayNames),program:Object.assign({},program),next:planMode.next};undoToast(msg);}
+function undoToast(msg){
+  const t=document.getElementById("utoast");if(!t)return;
+  t.innerHTML=`<span>${escH(msg)}</span><button onclick="planDoUndo()">Undo</button>`;
+  t.classList.add("show");clearTimeout(utT);utT=setTimeout(()=>t.classList.remove("show"),5000);
+}
+function planDoUndo(){
+  if(!planUndo)return;
+  plans=planUndo.plans;dayNames=planUndo.names;program=planUndo.program;planMode.next=planUndo.next;planUndo=null;
+  save();savePlanMeta();saveProgram();
+  document.getElementById("utoast").classList.remove("show");
+  planRefresh();
+}
+function planRefresh(){renderPlan();renderDaySelect();renderLib();}
+
+/* bottom sheet */
+function planSheet(title,body,foot){
+  planSheetClose();
+  const s=document.createElement("div");s.id="psheet";s.className="psheet";
+  s.innerHTML=`<div class="psscrim" onclick="planSheetClose()"></div><div class="pspanel" role="dialog" aria-label="${escH(title)}"><div class="psgrab"></div>
+    <div class="pshead"><b>${escH(title)}</b><button onclick="planSheetClose()">Close</button></div>
+    <div class="psbody">${body}</div>${foot?`<div class="psfoot">${foot}</div>`:""}</div>`;
+  document.body.appendChild(s);document.body.classList.add("noscroll");
+  return s;
+}
+function planSheetClose(){const s=document.getElementById("psheet");if(s)s.remove();document.body.classList.remove("noscroll");}
+function dayGridSheet(title,fn,skip){
+  window._dayPick=fn;
+  planSheet(title,`<div class="psdays">${DAYNAMES.map((d,i)=>`<button ${i===skip?"disabled":""} onclick="_dayPick(${i})"><b>${d.slice(0,3)}</b><small>${plans[i]&&plans[i].length?escH(dayTitle(i)):"Rest"}</small></button>`).join("")}</div>`);
+}
+
+/* ---------- views ---------- */
+function renderPlanTab(){
+  const wk=document.getElementById("planWeek");if(!wk)return;
+  wk.style.display=planView==="week"?"block":"none";
+  document.getElementById("planDay").style.display=planView==="day"?"block":"none";
+  document.getElementById("planBuild").style.display=planView==="build"?"block":"none";
+  const gb=document.getElementById("goalBar");
+  if(gb&&document.getElementById("v-plan").classList.contains("on"))gb.style.display=planView==="build"?"block":"none";
+  if(planView==="week")renderPlanWeek();
+  else if(planView==="day")renderPlanDay();
+}
+function setPlanView(v){planView=v;planEditOpen=-1;renderPlanTab();window.scrollTo(0,0);}
+function openPlanDay(d){curDay=d;renderDaySelect();setPlanView("day");}
+function setPlanMode(m){
+  planMode.mode=m;
+  if(m==="order"){const ds=planDays();const i=ds.indexOf(todayIdx());planMode.next=i>=0?i:0;curDay=nextUpDay()??curDay;}
+  savePlanMeta();renderPlan();renderDaySelect();
+}
+function startPlanDay(d){curDay=d;startTrainingFromDay();}
+
+function renderPlanWeek(){
+  const el=document.getElementById("planWeek");
+  const order=planMode.mode==="order";
+  const ds=planDays();
+  const tpl=program.active?PLAN_TEMPLATES.find(t=>t.id===(program.id||"munitio")):null;
+  const wkN=program.active?programWeek():0;
+  const nd=nextUpDay(), td=todayIdx();
+  const focusDay=order?nd:td;
+  const focusHas=focusDay!=null&&plans[focusDay]&&plans[focusDay].length;
+  let h=`<div class="pwprog">
+    <div class="pwtop"><span class="pwname">${escH(tpl?tpl.name:"My own plan")}</span>${tpl?`<span class="pwwk">Week ${wkN} of 6</span>`:""}</div>
+    ${tpl?`<div class="pwbar"><i style="width:${wkN/6*100}%"></i></div>`:""}
+    <div class="pwseg" role="group" aria-label="How your days work">
+      <button class="${order?"":"on"}" onclick="setPlanMode('weekday')">Fixed weekdays</button>
+      <button class="${order?"on":""}" onclick="setPlanMode('order')">In order, any day</button>
+    </div>
+    ${ds.length?`<div class="pwnext"><div><div class="pwhint">${order?"Next up":"Today"}</div><b>${focusHas?escH(dayTitle(focusDay)):"Rest day"}</b></div>
+      ${focusHas?`<button class="pwgo" onclick="startPlanDay(${focusDay})">▶ Start</button>`:""}</div>`:""}
+    <div class="pwhint">${order?"Miss a day and nothing is skipped. The next workout waits for you.":"Each workout belongs to a weekday. Pick “In order” if you often miss days."}</div>
+  </div>
+  <div class="pwlab">${order?"Your workouts, in order":"This week"}</div><div class="pwdays">`;
+  if(order){
+    ds.forEach((d,i)=>{h+=pwDayCard(d,String(i+1),`${DAYNAMES[d].slice(0,3)}`,d===nd);});
+    if(!ds.length)h+=`<div class="addhint">No workouts yet. Tap <b>Change program</b> below, or switch to Fixed weekdays to add one to a day.</div>`;
+  }else{
+    for(let d=0;d<7;d++)h+=pwDayCard(d,DAYNAMES[d].slice(0,3),"",d===td);
+  }
+  h+=`</div><div class="pwhint" style="padding:6px 2px 0">Tap a day to change it. Hold a day and drag it onto another to swap them.</div>`;
+
+  const ws=weekSets(),max=26;
+  h+=`<div class="pwlab">Sets per muscle this week</div><div class="pwvol">`;
+  VOL_ORDER.forEach(g=>{
+    const v=ws[g],cls=v<10?"lo":v>20?"hi":"ok",open=planVolOpen===g;
+    h+=`<button class="pwvrow" onclick="togPlanVol('${g}')" aria-expanded="${open}"><span class="pwvn">${g}</span><span class="pwtrack"><span class="pwband" style="left:${10/max*100}%;width:${10/max*100}%"></span><span class="pwfill ${cls}" style="width:${Math.min(v,max)/max*100}%"></span></span><span class="pwvs">${v}</span>`;
+    if(open){
+      const src=[];for(let d=0;d<7;d++)(plans[d]||[]).forEach(x=>{if(exGroups(x.n).includes(g))src.push(`${DAYNAMES[d].slice(0,3)} ${x.n} (${itemTarget(x).sets})`);});
+      h+=`<span class="pwvdet">${src.length?escH(src.join(" · ")):"Nothing this week works it directly."}${v<10?` <b>Add ${10-v} or more sets</b>, for example on a day that already trains nearby muscles.`:""}</span>`;
+    }
+    h+=`</button>`;
+  });
+  h+=`<div class="pwleg"><span><i class="lo"></i>Under 10 sets</span><span><i class="ok"></i>10 to 20, the usual range for growth</span><span><i class="hi"></i>Over 20</span></div></div>
+  <div class="pwbtns"><button class="btn ghost" onclick="planTemplatesSheet()">Change program</button><button class="btn ghost" onclick="setPlanView('build')">One-off workout</button></div>`;
+  el.innerHTML=h;
+  wirePlanWeek();
+}
+function togPlanVol(g){planVolOpen=planVolOpen===g?null:g;renderPlanWeek();}
+function pwDayCard(d,lab,sm,hl){
+  const arr=plans[d]||[];
+  if(!arr.length)return `<button class="pwday rest ${hl?"today":""}" data-d="${d}"><span class="pwdl">${lab}</span><span class="pwdt"><span class="pwdn">Rest</span><span class="pwdm">Tap to add a workout</span></span><span class="pwchev">+</span></button>`;
+  const ds=daySets(d);const mus=Object.keys(ds).sort((a,b)=>ds[b]-ds[a]).slice(0,4).map(m=>`<span class="pwmc">${m}</span>`).join("");
+  return `<button class="pwday ${hl?"today":""}" data-d="${d}"><span class="pwdl">${lab}${sm?`<small>${sm}</small>`:""}</span>
+    <span class="pwdt"><span class="pwdn">${escH(dayTitle(d))}</span><span class="pwdm">${arr.length} exercise${arr.length!==1?"s":""} · about ${dayMins(d)} min</span><span class="pwchips">${mus}</span></span><span class="pwchev">›</span></button>`;
+}
+// Tap opens a day; hold then drag onto another day swaps the two
+function wirePlanWeek(){
+  document.querySelectorAll("#planWeek .pwday").forEach(b=>{
+    let lp=null,drag=false,sy=0,over=null,dragged=false;
+    const clear=()=>document.querySelectorAll("#planWeek .pwday.drop").forEach(x=>x.classList.remove("drop"));
+    b.addEventListener("pointerdown",e=>{sy=e.clientY;drag=false;dragged=false;clearTimeout(lp);
+      lp=setTimeout(()=>{drag=true;b.classList.add("lift");try{b.setPointerCapture(e.pointerId);}catch(_){}if(navigator.vibrate)navigator.vibrate(15);},420);});
+    b.addEventListener("pointermove",e=>{
+      if(!drag){if(Math.abs(e.clientY-sy)>8)clearTimeout(lp);return;}
+      e.preventDefault();clear();
+      const t=document.elementFromPoint(e.clientX,e.clientY);const c=t&&t.closest("#planWeek .pwday");
+      over=c&&c!==b?c:null;if(over)over.classList.add("drop");
+    });
+    b.addEventListener("touchmove",e=>{if(drag)e.preventDefault();},{passive:false});
+    const end=()=>{clearTimeout(lp);if(!drag)return;drag=false;dragged=true;b.classList.remove("lift");clear();
+      if(over){const a=+b.dataset.d,c=+over.dataset.d;over=null;swapPlanDays(a,c);}};
+    b.addEventListener("pointerup",end);b.addEventListener("pointercancel",end);
+    b.addEventListener("click",()=>{if(dragged){dragged=false;return;}openPlanDay(+b.dataset.d);});
+    b.addEventListener("contextmenu",e=>e.preventDefault());
+  });
+}
+function swapPlanDays(a,c){
+  if(a===c)return;
+  planSnap(`Swapped ${DAYNAMES[a].slice(0,3)} and ${DAYNAMES[c].slice(0,3)}`);
+  const ta=dayTitle(a),tc=dayTitle(c),pa=plans[a],pc=plans[c];
+  if(pc&&pc.length)plans[a]=pc;else delete plans[a];
+  if(pa&&pa.length)plans[c]=pa;else delete plans[c];
+  if(plans[a])dayNames[a]=tc;else delete dayNames[a];
+  if(plans[c])dayNames[c]=ta;else delete dayNames[c];
+  save();savePlanMeta();planRefresh();
+}
+
+function renderPlanDay(keepOpen){
+  const el=document.getElementById("planDay");
+  const d=curDay,arr=plans[d]||[];
+  const prevOpen=keepOpen?el.querySelector(".pex.open"):null;
+  const openIdx=prevOpen?+prevOpen.dataset.i:-1;
+  const order=planMode.mode==="order";
+  const lab=order&&arr.length?`Workout ${planDays().indexOf(d)+1} · ${DAYNAMES[d]}`:DAYNAMES[d];
+  let h=`<button class="pwback" onclick="setPlanView('week')">‹ Week</button>
+    <div class="pdhead"><button class="pdtitle" ${arr.length?'onclick="pdRename()"':""}><small>${lab}</small>${escH(arr.length?dayTitle(d):"Rest day")}${arr.length?' <span class="pdpen">✎</span>':""}</button>
+    <button class="pdmore" onclick="pdMenu()" aria-label="Day options">⋯</button></div>`;
+  if(arr.length){
+    const ds=daySets(d);
+    h+=`<div class="pdmeta">${arr.length} exercise${arr.length!==1?"s":""} · about ${dayMins(d)} min · sets per muscle:</div>
+      <div class="pwchips">${Object.keys(ds).sort((a,b)=>ds[b]-ds[a]).map(m=>`<span class="pwmc">${m} ${ds[m]}</span>`).join("")}</div>
+      <div class="pdlist" id="pdList">`;
+    const ids=[];arr.forEach(x=>{if(x.ss&&!ids.includes(x.ss))ids.push(x.ss);});
+    arr.forEach((x,i)=>{h+=pexHTML(x,i,x.ss&&(i===0||arr[i-1].ss!==x.ss)?String.fromCharCode(65+ids.indexOf(x.ss)):"");});
+    h+=`</div><button class="pdadd" onclick="planAddSheet()">+ Add exercises</button>
+      <button class="btn primary pdstart" onclick="startTrainingFromDay()">▶ Start this workout</button>
+      <div class="pwhint" style="padding:8px 2px 0">Tap an exercise to see how it's done. Tap the orange numbers to change sets, reps and rest. Drag ≡ to change the order.</div>`;
+  }else{
+    h+=`<div class="addhint" style="margin-top:14px">Nothing planned for ${DAYNAMES[d]}.<br>Add exercises, or copy a workout you already have.
+      <div class="pwbtns"><button class="btn ghost" onclick="pdCopyFrom()">Copy a day</button><button class="btn primary" onclick="planAddSheet()">Add exercises</button></div></div>`;
+  }
+  el.innerHTML=h;
+  el.querySelectorAll(".pexhdl").forEach(wirePexDrag);
+  if(openIdx>=0){const c=el.querySelector(`.pex[data-i="${openIdx}"]`);if(c){c.classList.add("open","noanim");const slot=c.querySelector(".mediaslot");if(slot&&arr[openIdx])loadExerciseMedia(arr[openIdx].n,slot);setTimeout(()=>c.classList.remove("noanim"),50);}}
+}
+function pexHTML(x,i,ssLetter){
+  const e=exByName(x.n);if(!e)return "";
+  const t=itemTarget(x),timed=e.timed,editing=planEditOpen===i;
+  const reps=timed?HOLD_OPTS:REP_OPTS;const ro=reps.includes(t.reps)?reps:[...reps,t.reps];
+  const ed=editing?`<div class="pedit">
+      <div class="perow"><span>Sets</span><div class="qty"><button onclick="pexSets(${i},-1)" aria-label="Fewer sets">−</button><span>${t.sets}</span><button onclick="pexSets(${i},1)" aria-label="More sets">+</button></div></div>
+      <div class="perow"><span>${timed?"Hold":"Reps"}</span><div class="pepills">${ro.map(r=>`<button class="${r===t.reps?"on":""}" onclick="pexSet(${i},'reps','${r}')">${r}</button>`).join("")}</div></div>
+      <div class="perow"><span>Rest</span><div class="pepills">${REST_OPTS.map(r=>`<button class="${r===t.rest?"on":""}" onclick="pexSet(${i},'rest',${r})">${restTxt(r)}</button>`).join("")}</div></div>
+    </div>`:"";
+  return `<div class="pex exp ${x.ss?"ss":""}" data-i="${i}" data-n="${enc(e.n)}">
+    ${ssLetter?`<div class="pexss">Superset ${ssLetter} · back to back, then rest</div>`:""}
+    <div class="pexmain">
+      <span class="pexhdl" aria-label="Drag to reorder">≡</span>
+      <div class="pextxt"><div onclick="togCard(this)"><h4>${e.n} <span class="lvl ${e.lvl}" style="font-size:8px">${e.lvl}</span></h4><div class="pm">${e.m}</div></div>
+        <button class="pextgt ${editing?"on":""}" onclick="pexToggleEdit(${i})">${tgtHTML(x)}</button>
+        ${lastTag(e)?`<div class="lastline">${lastTag(e)}</div>`:""}</div>
+      <div class="chev" onclick="togCard(this)">›</div>
+      <button class="pexmore" onclick="pexMenu(${i})" aria-label="Options for ${e.n}">⋯</button>
+    </div>
+    ${ed}
+    ${exDetailBody(e,false)}
+  </div>`;
+}
+function tgtHTML(x){const s=targetText(x),k=s.indexOf(" · ");return k<0?s:s.slice(0,k)+`<span>${s.slice(k)}</span>`;}
+function pexToggleEdit(i){planEditOpen=planEditOpen===i?-1:i;renderPlanDay(true);}
+function pexFix(x){const t=itemTarget(x);x.sets=x.sets||t.sets;x.reps=x.reps||t.reps;x.rest=x.rest||t.rest;}
+function pexSets(i,dv){const x=plans[curDay][i];pexFix(x);x.sets=Math.max(1,Math.min(10,x.sets+dv));save();renderPlanDay(true);}
+function pexSet(i,k,v){const x=plans[curDay][i];pexFix(x);x[k]=k==="rest"?+v:v;save();renderPlanDay(true);}
+
+// drag the ≡ handle to change the order
+function wirePexDrag(h){
+  h.addEventListener("pointerdown",e=>{
+    e.preventDefault();
+    const row=h.closest(".pex"),list=document.getElementById("pdList");if(!row||!list)return;
+    try{h.setPointerCapture(e.pointerId);}catch(_){}
+    row.classList.add("dragging");
+    const y0=e.clientY,top0=row.offsetTop;let moved=false;
+    const move=ev=>{
+      moved=true;
+      const fingerTop=top0+(ev.clientY-y0),mid=fingerTop+row.offsetHeight/2;
+      const target=[...list.children].filter(r=>r!==row).find(r=>mid<r.offsetTop+r.offsetHeight/2);
+      if(target){if(row.nextElementSibling!==target)list.insertBefore(row,target);}else if(list.lastElementChild!==row)list.appendChild(row);
+      row.style.transform=`translateY(${fingerTop-row.offsetTop}px)`;
+    };
+    const up=()=>{
+      h.removeEventListener("pointermove",move);h.removeEventListener("pointerup",up);h.removeEventListener("pointercancel",up);
+      row.classList.remove("dragging");row.style.transform="";
+      if(!moved)return;
+      const arr=plans[curDay];
+      const order=[...list.children].map(r=>arr[+r.dataset.i]);
+      if(order.every((x,i)=>x===arr[i]))return;
+      // a superset only stays if its exercises are still next to each other
+      [...new Set(order.filter(x=>x.ss).map(x=>x.ss))].forEach(id=>{
+        const ix=order.map((x,i)=>x.ss===id?i:-1).filter(i=>i>=0);
+        if(ix.length<2||ix[ix.length-1]-ix[0]!==ix.length-1)order.forEach(x=>{if(x.ss===id)delete x.ss;});
+      });
+      plans[curDay]=order;planEditOpen=-1;save();renderPlanDay();renderTrainDay();
+    };
+    h.addEventListener("pointermove",move);h.addEventListener("pointerup",up);h.addEventListener("pointercancel",up);
+  });
+}
+
+/* ---------- sheets: exercise and day options ---------- */
+function pexMenu(i){
+  const arr=plans[curDay],x=arr[i],nx=arr[i+1];
+  planSheet(x.n,`
+    <button class="psact" onclick="pexSwapSheet(${i})"><i>⇄</i><span>Swap for another<small>Works the same muscles. Sets and reps stay.</small></span></button>
+    ${x.ss?`<button class="psact" onclick="pexUnSS(${i})"><i>⛓</i><span>Take out of the superset</span></button>`
+      :nx?`<button class="psact" onclick="pexSS(${i})"><i>⛓</i><span>Superset with the next one<small>${escH(nx.n)}</small></span></button>`:""}
+    <button class="psact" onclick="pexMoveSheet(${i})"><i>→</i><span>Move to another day</span></button>
+    <button class="psact red" onclick="pexRemove(${i})"><i>×</i><span>Remove</span></button>`);
+}
+function pexSwapSheet(i){
+  const arr=plans[curDay],x=arr[i],g=exGroups(x.n)[0],cur=exByName(x.n);
+  const alts=LIB.map((e,li)=>({e,li})).filter(o=>o.e.n!==x.n&&!arr.some(y=>y.n===o.e.n)&&(g?exGroups(o.e.n)[0]===g:o.e.grp===(cur&&cur.grp)));
+  planSheet(`Swap ${x.n}`,alts.length?alts.map(o=>`<button class="psact" onclick="pexDoSwap(${i},${o.li})"><i>⇄</i><span>${o.e.n}<small>${o.e.m}</small></span></button>`).join("")
+    :`<div class="pwhint">No other ${g||"similar"} exercises in the library.</div>`);
+}
+function pexDoSwap(i,li){
+  const x=plans[curDay][i],n=LIB[li].n;planSnap(`Swapped in ${n}`);
+  const nx={n};if(x.sets){nx.sets=x.sets;nx.reps=x.reps;nx.rest=x.rest;}if(x.ss)nx.ss=x.ss;
+  // keep sets/rest but use the new exercise's own rep style if hold vs reps differ
+  if(nx.reps&&!!LIB[li].timed!==/s$/.test(nx.reps))delete nx.reps;
+  plans[curDay][i]=nx;save();planSheetClose();planRefresh();
+}
+function pexSS(i){const arr=plans[curDay];const id=arr[i+1].ss||("ss"+Date.now());arr[i].ss=id;arr[i+1].ss=id;save();planSheetClose();toast("Superset made");planRefresh();}
+function pexUnSS(i){const arr=plans[curDay];const id=arr[i].ss;delete arr[i].ss;const left=arr.filter(y=>y.ss===id);if(left.length<2)left.forEach(y=>delete y.ss);save();planSheetClose();planRefresh();}
+function pexMoveSheet(i){
+  dayGridSheet("Move to which day?",d=>{
+    const it=plans[curDay][i];planSnap(`Moved ${it.n} to ${DAYNAMES[d]}`);
+    plans[curDay].splice(i,1);delete it.ss;
+    const left=plans[curDay];[...new Set(left.filter(y=>y.ss).map(y=>y.ss))].forEach(id=>{const m=left.filter(y=>y.ss===id);if(m.length<2)m.forEach(y=>delete y.ss);});
+    if(!left.length)delete plans[curDay];
+    if(!plans[d])plans[d]=[];plans[d].push(it);
+    save();planSheetClose();planRefresh();
+  },curDay);
+}
+function pexRemove(i){
+  const arr=plans[curDay],it=arr[i];planSnap(`Removed ${it.n}`);
+  arr.splice(i,1);
+  if(it.ss){const m=arr.filter(y=>y.ss===it.ss);if(m.length<2)m.forEach(y=>delete y.ss);}
+  if(!arr.length){delete plans[curDay];delete dayNames[curDay];}
+  if(planEditOpen>=0)planEditOpen=-1;
+  save();savePlanMeta();planSheetClose();planRefresh();
+}
+function pdMenu(){
+  const d=curDay,has=plans[d]&&plans[d].length;
+  planSheet(has?dayTitle(d):DAYNAMES[d],`
+    ${has?`<button class="psact" onclick="pdRename()"><i>✎</i><span>Rename</span></button>
+    <button class="psact" onclick="pdCopyTo()"><i>⧉</i><span>Copy this workout to…<small>Keeps this one too</small></span></button>
+    <button class="psact" onclick="pdSwapWith()"><i>⇅</i><span>Swap with another day</span></button>`:""}
+    <button class="psact" onclick="pdCopyFrom()"><i>↧</i><span>Copy from another day<small>Replaces what's here</small></span></button>
+    ${has?`<button class="psact red" onclick="pdRest()"><i>☾</i><span>Make it a rest day</span></button>`:""}`);
+}
+function pdRename(){
+  const d=curDay;
+  const s=planSheet("Name this workout",`<input id="pdName" class="psinput" maxlength="30" value="${escH(dayTitle(d))}">
+    <div class="pepills" style="margin:10px 0 4px">${["Push","Pull","Legs","Upper","Lower","Full body","Arms","Legs — Quads","Legs — Glutes"].map(n=>`<button onclick="document.getElementById('pdName').value=this.textContent">${n}</button>`).join("")}</div>`,
+    `<button class="btn primary" style="width:100%" onclick="pdSaveName()">Save</button>`);
+  const inp=s.querySelector("#pdName");if(inp){inp.addEventListener("keydown",e=>{if(e.key==="Enter")pdSaveName();});}
+}
+function pdSaveName(){const v=(document.getElementById("pdName").value||"").trim();if(v)dayNames[curDay]=v;savePlanMeta();planSheetClose();planRefresh();}
+function pdCopyTo(){
+  const d=curDay;
+  dayGridSheet("Copy to which day?",t=>{planSnap(`Copied to ${DAYNAMES[t]}`);plans[t]=JSON.parse(JSON.stringify(plans[d]));dayNames[t]=dayTitle(d);save();savePlanMeta();planSheetClose();planRefresh();},d);
+}
+function pdSwapWith(){const d=curDay;dayGridSheet("Swap with which day?",t=>{planSheetClose();swapPlanDays(d,t);},d);}
+function pdCopyFrom(){
+  const d=curDay,ds=planDays().filter(x=>x!==d);
+  if(!ds.length){toast("No other workouts to copy yet");return;}
+  window._dayPick=s=>{planSnap(`Copied ${dayTitle(s)}`);plans[d]=JSON.parse(JSON.stringify(plans[s]));dayNames[d]=dayTitle(s);save();savePlanMeta();planSheetClose();planRefresh();};
+  planSheet("Copy which workout?",ds.map(s=>`<button class="psact" onclick="_dayPick(${s})"><i>${DAYNAMES[s].slice(0,3)}</i><span>${escH(dayTitle(s))}<small>${plans[s].length} exercises</small></span></button>`).join(""));
+}
+function pdRest(){const d=curDay;planSnap(`${DAYNAMES[d]} is now a rest day`);delete plans[d];delete dayNames[d];save();savePlanMeta();planSheetClose();planRefresh();}
+
+/* ---------- add exercises: search, muscle chips, suggestions, pick several ---------- */
+let padd={filter:"All",q:"",picked:[]};
+const ADD_CHIPS=["Suggested","All",...VOL_ORDER,"Cardio"];
+function planAddSheet(){
+  const ws=weekSets();const low=VOL_ORDER.filter(g=>ws[g]<10);
+  padd={filter:low.length?"Suggested":"All",q:"",picked:[],low};
+  const s=planSheet("Add exercises",`<input id="paddQ" class="psinput" placeholder="Search, e.g. curl or hamstrings" autocomplete="off">
+    <div class="pschips" id="paddChips"></div><div id="paddList"></div>`,`<button class="btn primary" style="width:100%" id="paddOk" onclick="paddCommit()"></button>`);
+  s.querySelector("#paddQ").addEventListener("input",e=>{padd.q=e.target.value.trim().toLowerCase();paddDraw();});
+  paddDraw();
+}
+function paddDraw(){
+  const arr=plans[curDay]||[];
+  const inDay=n=>arr.some(y=>y.n===n);
+  const dayG=new Set(Object.keys(daySets(curDay)));
+  let list=LIB.map((e,li)=>({e,li,g:exGroups(e.n)}));
+  const sugg=!padd.q&&padd.filter==="Suggested";
+  if(padd.q)list=list.filter(o=>o.e.n.toLowerCase().includes(padd.q)||o.e.m.toLowerCase().includes(padd.q)||o.g.join(" ").toLowerCase().includes(padd.q));
+  else if(sugg)list=list.filter(o=>o.g.length&&padd.low.includes(o.g[0])&&!inDay(o.e.n)).sort((a,b)=>(dayG.has(b.g[0])-dayG.has(a.g[0]))||((b.e.compound?1:0)-(a.e.compound?1:0)));
+  else if(padd.filter!=="All")list=list.filter(o=>o.g.includes(padd.filter));
+  document.getElementById("paddChips").innerHTML=ADD_CHIPS.map(f=>`<button class="${!padd.q&&f===padd.filter?"on":""}" onclick="paddFilter('${f}')">${f==="Suggested"?"★ Suggested":f}</button>`).join("");
+  document.getElementById("paddList").innerHTML=(sugg?`<div class="pwhint" style="padding:2px 0 6px">${padd.low.length?`For muscles under 10 sets a week: ${padd.low.join(", ")}.`:"Every muscle is in range this week."}</div>`:"")+
+    (list.map(o=>{const on=padd.picked.includes(o.li),already=inDay(o.e.n);
+      const why=sugg?`<div class="paddwhy">+${defTarget(o.e).sets} sets for ${o.g[0]}</div>`:"";
+      return `<button class="paddrow ${on?"on":""} ${already?"in":""}" ${already?"disabled":""} onclick="paddPick(${o.li})"><span class="paddtxt"><b>${o.e.n}</b><small>${already?"Already in this workout":o.e.m}</small>${already?"":why}</span><span class="paddbox">${on?"✓":""}</span></button>`;}).join("")
+     ||`<div class="pwhint">Nothing matches “${escH(padd.q)}”.</div>`);
+  const ok=document.getElementById("paddOk"),n=padd.picked.length;
+  ok.textContent=n?`Add ${n} to ${dayTitle(curDay)==="Rest"?DAYNAMES[curDay]:dayTitle(curDay)}`:"Tap exercises to pick them";
+  ok.disabled=!n;ok.style.opacity=n?1:.5;
+}
+function paddFilter(f){padd.filter=f;padd.q="";const q=document.getElementById("paddQ");if(q)q.value="";paddDraw();}
+function paddPick(li){const i=padd.picked.indexOf(li);if(i>=0)padd.picked.splice(i,1);else padd.picked.push(li);paddDraw();}
+function paddCommit(){
+  if(!padd.picked.length)return;
+  if(!plans[curDay])plans[curDay]=[];
+  padd.picked.forEach(li=>{const n=LIB[li].n;if(!plans[curDay].some(y=>y.n===n))plans[curDay].push({n});});
+  save();toast(`Added ${padd.picked.length} to ${DAYNAMES[curDay]}`);planSheetClose();planRefresh();
+}
+
+/* ---------- programs ---------- */
+function planTemplatesSheet(){
+  const cur=program.active?(program.id||"munitio"):null;
+  planSheet("Start from a program",PLAN_TEMPLATES.map(t=>`<button class="pstpl ${cur===t.id?"cur":""}" onclick="loadPlanTemplate('${t.id}')"><b>${escH(t.name)}</b>${cur===t.id?' <span class="pwhint">· current</span>':""}
+    <div class="pwhint">${escH(t.desc)}</div><div class="pstw">${DAYNAMES.map((d,i)=>`<span class="${t.days[i]?"on":""}">${d.slice(0,2)}</span>`).join("")}</div></button>`).join("")+
+    `<div class="pwhint" style="padding:2px 2px 10px">Picking one replaces your week and restarts the 6-week count. You can undo it, and your training history is kept.</div>
+    ${program.active?`<button class="psact" onclick="planStopProgram()"><i>⏹</i><span>Stop the 6-week count<small>Keeps your days as they are</small></span></button>`:""}`);
+}
+function loadPlanTemplate(id){
+  const t=PLAN_TEMPLATES.find(x=>x.id===id);if(!t)return;
+  planSnap(`Loaded ${t.name}`);
+  plans={};dayNames={};
+  Object.entries(t.days).forEach(([d,v])=>{plans[d]=v.ex.filter(n=>exByName(n)).map(n=>({n}));dayNames[d]=v.name;});
+  program={active:true,startDate:new Date().toISOString(),id:t.id};
+  planMode.next=0;
+  save();saveProgram();savePlanMeta();planSheetClose();planRefresh();
+}
+function planStopProgram(){program={active:false,startDate:null};saveProgram();planSheetClose();toast("6-week count stopped. Your days stay as they are");planRefresh();}
+
 /* ---------------- DATA (export/import) ---------------- */
 function exportPlans(){
-  const data=JSON.stringify({goal,plans,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods});
+  const data=JSON.stringify({goal,plans,dayNames,planMode,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods});
   const ta=document.createElement("textarea");
   ta.value=data;document.body.appendChild(ta);ta.select();
   try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
@@ -2589,6 +3126,9 @@ function doImport(){
   if(!txt){toast("Paste text first");return;}
   try{const d=JSON.parse(txt);
     if(d.plans)plans=d.plans;
+    if(d.dayNames)dayNames=d.dayNames;
+    if(d.planMode)planMode=Object.assign(planMode,d.planMode);
+    savePlanMeta();
     if(d.goal&&GOALS[d.goal])goal=d.goal;
     if(d.logs)logs=d.logs;
     if(d.foodLog)foodLog=d.foodLog;
@@ -3105,12 +3645,12 @@ function saveSessionToDay(){
 function commitSessionToDay(di){
   if(isNaN(di)||di<0||di>6)return;
   plans[di]=session.map(s=>s.ss?({n:s.n,ss:s.ss}):({n:s.n}));
-  save();
+  delete dayNames[di];
+  save();savePlanMeta();
   const p=document.getElementById("daypick");if(p)p.remove();
   toast(`Saved to ${DAYNAMES[di]}`);
-  curDay=di;
   renderLib();
-  switchView('train');
+  openPlanDay(di);
 }
 
 /* ---------------- TIMER ---------------- */
@@ -3297,12 +3837,12 @@ let train={active:false, list:[], idx:0, title:"", done:{}};
 
 // Build a flat training list from an array of {n, ss?} items, tagging superset groups
 function buildTrainList(arr){
-  return arr.map((x,i)=>({n:x.n, ss:x.ss||null}));
+  return arr.map((x,i)=>({n:x.n, ss:x.ss||null, sets:x.sets, reps:x.reps, rest:x.rest}));
 }
 function startTrainingFromDay(){
   const arr=plans[curDay]||[];
   if(!arr.length){toast("This day is empty");return;}
-  train={active:true, list:buildTrainList(arr), idx:0, title:DAYNAMES[curDay], done:{}};
+  train={active:true, list:buildTrainList(arr), idx:0, title:dayTitle(curDay), done:{}, day:curDay};
   switchView('train');focusTrainCard();
 }
 function startTrainingFromSession(){
@@ -3342,7 +3882,7 @@ function renderTrain(){
       ${libVisual(e,musclePane(e,lastWeightBadge(e)),`<div class="mediaslot" id="media-tr"></div>`)}
       <div class="trnamerow"><h2 class="trname">${e.n} <span class="lvl ${e.lvl}" style="font-size:9px">${e.lvl}</span></h2>
         <button class="trshuffle" onclick="shuffleCurrent()" aria-label="Swap this exercise">⇄ Swap</button></div>
-      <div class="trsug">${suggestFor(e)}</div>
+      <div class="trsug">${targetText(cur)}</div>
       <div class="trmus">${e.m}</div>
       ${logBlock(e,"-tr")}
       ${demoLinks(e,true)}
@@ -3464,6 +4004,11 @@ function endTraining(finished){
   const nDone=Object.keys(train.done||{}).length;
   const total=train.list.length;
   train.active=false;
+  // "In order" plans: the next workout moves on once this one was done
+  if(planMode.mode==="order"&&train.day!=null&&(finished||nDone>0)){
+    const ds=planDays();const k=ds.indexOf(train.day);
+    if(k>=0){planMode.next=k+1;savePlanMeta();curDay=nextUpDay()??curDay;}
+  }
   if(finished||nDone>0){
     toast(nDone>=total ? "Workout complete 💪" : `Ended · ${nDone} of ${total} done`);
   }
@@ -4938,12 +5483,12 @@ function loadFood(){try{
 }catch(e){}}
 
 /* ---------------- NAV ---------------- */
-const TITLES={plan:["Plan","Build a session or pick a workout type"],
+const TITLES={plan:["Plan","Your week at a glance"],
  train:["Train","Pick a day, then start your workout"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v52"]};
+ data:["Save & Settings","Backup your data · v53"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -4965,7 +5510,7 @@ function switchView(v){
   const gear=document.querySelector(".gearbtn");
   if(gear)gear.classList.toggle("on",v==="data");
   const gb=document.getElementById("goalBar");
-  if(gb)gb.style.display = (v==="plan"||v==="train"||v==="lib") ? "block" : "none";
+  if(gb)gb.style.display = ((v==="plan"&&planView==="build")||v==="train"||v==="lib") ? "block" : "none";
   document.getElementById("hTitle").textContent=TITLES[v][0];
   document.getElementById("hSub").textContent=TITLES[v][1];
   window.scrollTo({top:0,behavior:"smooth"});
@@ -5192,7 +5737,8 @@ function commitRepeat(key,di){
   const list=workoutFromDay(key);
   if(!list.length)return;
   plans[di]=list.map(x=>x.ss?({n:x.n,ss:x.ss}):({n:x.n}));
-  save();
+  delete dayNames[di];
+  save();savePlanMeta();
   document.getElementById("hdp-"+key).innerHTML="";
   toast(`Saved to ${DAYNAMES[di]}`);
   curDay=di;
@@ -5210,7 +5756,9 @@ loadCal();
 loadMyFoods();
 loadAi();
 loadProgramState();
+loadPlanMeta();
 addLegMachineToPlans();
+if(planMode.mode==="order"){const nd=nextUpDay();if(nd!=null)curDay=nd;}
 renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();
 </script>
 <script>
