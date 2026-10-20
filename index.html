@@ -696,6 +696,8 @@
   .trcard .loglast{text-align:left}
   .trcard .loghint{text-align:left}
   .trnav{display:flex;gap:8px;margin-top:12px}
+  /* keep Prev/Next pinned just above the bottom bar so they're never cut off */
+  #trainActive .trnav{position:sticky;bottom:var(--navh,64px);z-index:50;background:var(--bg);margin:12px -14px 0;padding:8px 14px;box-shadow:0 -8px 14px -6px rgba(0,0,0,.45)}
   .trshuffle{background:rgba(77,159,255,.12);border:1px solid rgba(77,159,255,.4);color:var(--blue);font-size:12px;font-weight:700;padding:7px 14px;border-radius:9px;cursor:pointer;margin:2px 0 8px}
   .trshuffle:active{background:rgba(77,159,255,.22)}
   .trnav .btn{flex:1;padding:13px 6px;font-size:13px}
@@ -5491,7 +5493,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v54"]};
+ data:["Save & Settings","Backup your data · v55"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -5753,6 +5755,9 @@ let toastT;
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1600);}
 
 /* ---------------- INIT ---------------- */
+// measure the bottom bar so pinned controls sit right above it
+function setNavH(){const n=document.querySelector(".nav");if(n)document.documentElement.style.setProperty("--navh",n.offsetHeight+"px");}
+setNavH();window.addEventListener("resize",setNavH);
 load();
 loadFood();
 loadCal();
