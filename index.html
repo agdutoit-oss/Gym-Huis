@@ -243,6 +243,19 @@
   .pwprog{background:linear-gradient(140deg,rgba(232,80,46,.16),rgba(232,80,46,.03));border:1px solid rgba(232,80,46,.45);border-radius:16px;padding:14px;display:grid;gap:10px}
   .pwtop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
   .pwname{font-weight:800;font-size:17px}
+  .pwplanrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .pwplanbtn{background:none;border:none;color:var(--txt);text-align:left;padding:0;cursor:pointer;min-width:0}
+  .pwplanbtn small{display:block;font-size:10.5px;font-weight:700;color:var(--accent2);letter-spacing:1px;text-transform:uppercase}
+  .pwplanbtn span{font-weight:800;font-size:18px}
+  .pwplanbtn i{font-style:normal;color:var(--dim);font-size:14px}
+  .pwtrain,.pstrain{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--good);background:rgba(62,192,122,.14);border:1px solid rgba(62,192,122,.4);border-radius:20px;padding:3px 9px;white-space:nowrap}
+  .pwsub{font-size:13px;font-weight:700;color:var(--dim)}
+  .psplan{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;color:var(--txt);cursor:pointer}
+  .psplan.open{border-color:var(--accent)}
+  .psplantxt{flex:1;min-width:0}
+  .psplantxt b{display:block;font-size:15px}
+  .psplantxt small{display:block;font-size:12px;color:var(--dim)}
+  .psopen{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--accent2);border:1px solid rgba(232,80,46,.45);border-radius:20px;padding:3px 9px}
   .pwwk{font-size:12px;color:var(--accent2);font-weight:700;white-space:nowrap}
   .pwbar{height:5px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}
   .pwbar i{display:block;height:100%;background:var(--accent);border-radius:5px}
@@ -2569,7 +2582,8 @@ function quickAdd(name,btn){
 }
 
 /* ---------------- RENDER: PLANNER ---------------- */
-function renderDaySelect(){
+function renderDaySelect(){asPlan(trainingId(),renderDaySelectRaw);}
+function renderDaySelectRaw(){
   const el=document.getElementById("daySelect");
   if(!el)return;
   el.innerHTML=DAYNAMES.map((d,i)=>{
@@ -2581,16 +2595,17 @@ function setDay(i){curDay=i;renderDaySelect();renderPlan();}
 function gotoLib(){switchView('lib');}
 
 function renderPlan(){renderTrainDay();renderPlanTab();}
-function editDayInPlan(){switchView('plan');openPlanDay(curDay);}
-// Train tab: the chosen day's workout, ready to start (changes happen in Plan)
-function renderTrainDay(){
+function editDayInPlan(){if(planLib)openPlanById(planLib.training);switchView('plan');openPlanDay(curDay);}
+// Train tab: the chosen day of the plan you're training, ready to start (changes happen in Plan)
+function renderTrainDay(){asPlan(trainingId(),renderTrainDayRaw);}
+function renderTrainDayRaw(){
   const nameEl=document.getElementById("planDayName");
   if(!nameEl)return;   // elements live in the Train tab; skip if not present
 
   const banner=document.getElementById("programBanner");
   if(banner){
     const nd=planMode.mode==="order"?nextUpDay():null;
-    banner.innerHTML=nd!=null?`<div class="pwhint" style="margin-bottom:8px">Next up in your plan: <b style="color:var(--txt)">${escH(dayTitle(nd))}</b> (${DAYNAMES[nd]})</div>`:"";
+    banner.innerHTML=`<div class="pwhint" style="margin-bottom:8px">Training: <b style="color:var(--txt)">${escH(planName(trainingId()))}</b>${nd!=null?` · next up <b style="color:var(--txt)">${escH(dayTitle(nd))}</b> (${DAYNAMES[nd]})`:""}</div>`;
   }
   const arr0=plans[curDay]||[];
   const dayName = arr0.length ? `${DAYNAMES[curDay]} · ${dayTitle(curDay)}` : DAYNAMES[curDay];
@@ -2751,9 +2766,10 @@ function weekSets(){const c={};VOL_ORDER.forEach(g=>c[g]=0);for(let d=0;d<7;d++)
 /* undo instead of "are you sure?" */
 let planUndo=null,utT;
 function planSnap(msg){planUndo={plans:JSON.parse(JSON.stringify(plans)),names:Object.assign({},dayNames),program:Object.assign({},program),next:planMode.next};undoToast(msg);}
-function undoToast(msg){
+function undoToast(msg,fn){
   const t=document.getElementById("utoast");if(!t)return;
-  t.innerHTML=`<span>${escH(msg)}</span><button onclick="planDoUndo()">Undo</button>`;
+  window._undoFn=fn||planDoUndo;
+  t.innerHTML=`<span>${escH(msg)}</span><button onclick="_undoFn()">Undo</button>`;
   t.classList.add("show");clearTimeout(utT);utT=setTimeout(()=>t.classList.remove("show"),5000);
 }
 function planDoUndo(){
@@ -2799,7 +2815,7 @@ function setPlanMode(m){
   if(m==="order"){const ds=planDays();const i=ds.indexOf(todayIdx());planMode.next=i>=0?i:0;curDay=nextUpDay()??curDay;}
   savePlanMeta();renderPlan();renderDaySelect();
 }
-function startPlanDay(d){curDay=d;startTrainingFromDay();}
+function startPlanDay(d){curDay=d;startOpenDay();}
 
 function renderPlanWeek(){
   const el=document.getElementById("planWeek");
@@ -2810,9 +2826,13 @@ function renderPlanWeek(){
   const nd=nextUpDay(), td=todayIdx();
   const focusDay=order?nd:td;
   const focusHas=focusDay!=null&&plans[focusDay]&&plans[focusDay].length;
+  const tr=isTrainingOpen(),counting=tpl&&program.trained;
   let h=`<div class="pwprog">
-    <div class="pwtop"><span class="pwname">${escH(tpl?tpl.name:"My own plan")}</span>${tpl?`<span class="pwwk">Week ${wkN} of 6</span>`:""}</div>
-    ${tpl?`<div class="pwbar"><i style="width:${wkN/6*100}%"></i></div>`:""}
+    <div class="pwplanrow"><button class="pwplanbtn" onclick="plansSheet()"><small>Plan${planLib&&planLib.order.length>1?` · ${planLib.order.length} saved`:""}</small><span>${escH(planName())} <i>▾</i></span></button>
+      ${tr?`<span class="pwtrain">Training now</span>`:`<button class="pwgo" onclick="trainOpenPlan()">Train this plan</button>`}</div>
+    ${!tr?`<div class="pwhint">You're training “${escH(planName(trainingId()))}”. Changes here don't touch it.</div>`:""}
+    ${tpl?`<div class="pwtop"><span class="pwsub">${escH(tpl.name)}</span><span class="pwwk">${counting?`Week ${wkN} of 6`:"6 weeks"}</span></div>`:""}
+    ${counting?`<div class="pwbar"><i style="width:${wkN/6*100}%"></i></div>`:""}
     <div class="pwseg" role="group" aria-label="How your days work">
       <button class="${order?"":"on"}" onclick="setPlanMode('weekday')">Fixed weekdays</button>
       <button class="${order?"on":""}" onclick="setPlanMode('order')">In order, any day</button>
@@ -2904,7 +2924,7 @@ function renderPlanDay(keepOpen){
     const ids=[];arr.forEach(x=>{if(x.ss&&!ids.includes(x.ss))ids.push(x.ss);});
     arr.forEach((x,i)=>{h+=pexHTML(x,i,x.ss&&(i===0||arr[i-1].ss!==x.ss)?String.fromCharCode(65+ids.indexOf(x.ss)):"");});
     h+=`</div><button class="pdadd" onclick="planAddSheet()">+ Add exercises</button>
-      <button class="btn primary pdstart" onclick="startTrainingFromDay()">▶ Start this workout</button>
+      <button class="btn primary pdstart" onclick="startOpenDay()">▶ Start this workout</button>
       <div class="pwhint" style="padding:8px 2px 0">Tap an exercise to see how it's done. Tap the orange numbers to change sets, reps and rest. Drag ≡ to change the order.</div>`;
   }else{
     h+=`<div class="addhint" style="margin-top:14px">Nothing planned for ${DAYNAMES[d]}.<br>Add exercises, or copy a workout you already have.
@@ -3101,15 +3121,119 @@ function loadPlanTemplate(id){
   planSnap(`Loaded ${t.name}`);
   plans={};dayNames={};
   Object.entries(t.days).forEach(([d,v])=>{plans[d]=v.ex.filter(n=>exByName(n)).map(n=>({n}));dayNames[d]=v.name;});
-  program={active:true,startDate:new Date().toISOString(),id:t.id};
+  program={active:true,startDate:new Date().toISOString(),id:t.id,trained:isTrainingOpen()};
   planMode.next=0;
   save();saveProgram();savePlanMeta();planSheetClose();planRefresh();
 }
+/* ---------- several plans: one open in the Plan tab, one you're training ---------- */
+// The open plan lives in the usual globals (plans, dayNames, planMode, program) and their storage keys;
+// every other plan is kept whole in planLib.store until you open it.
+const PLANLIB_KEY="hgt_planlib_v1";
+let planLib=null;   // {open, training, names:{id:name}, order:[ids], store:{id:{plans,dayNames,planMode,program}}}
+function capturePlan(){return {plans,dayNames,planMode,program};}
+function applyPlan(p){plans=p.plans||{};dayNames=p.dayNames||{};planMode=Object.assign({mode:"weekday",next:0},p.planMode||{});program=p.program||{active:false,startDate:null};}
+function savePlanLib(){try{if(planLib)localStorage.setItem(PLANLIB_KEY,JSON.stringify(planLib));}catch(e){}}
+function loadPlanLib(){
+  try{const s=localStorage.getItem(PLANLIB_KEY);if(s)planLib=JSON.parse(s);}catch(e){}
+  if(!planLib||!planLib.names||!planLib.names[planLib.open]){
+    // first run: the plan already on the phone becomes plan 1, the one you're training
+    const t=program.active?PLAN_TEMPLATES.find(x=>x.id===(program.id||"munitio")):null;
+    if(program.active)program.trained=true;
+    planLib={open:"p1",training:"p1",names:{p1:t?t.name:"My plan"},order:["p1"],store:{}};
+    saveProgram();savePlanLib();
+  }
+  if(!planLib.store)planLib.store={};
+  if(!planLib.order)planLib.order=Object.keys(planLib.names);
+  if(!planLib.names[planLib.training])planLib.training=planLib.open;
+}
+function persistOpenPlan(){save();savePlanMeta();saveProgram();savePlanLib();}
+function trainingId(){return planLib?planLib.training:null;}
+function isTrainingOpen(){return !planLib||planLib.open===planLib.training;}
+function planName(id){return planLib?(planLib.names[id||planLib.open]||"My plan"):"My plan";}
+// Run fn with another plan in the globals, e.g. Train showing the plan you're training while Plan has a different one open
+function asPlan(id,fn,write){
+  if(!planLib||id==null||id===planLib.open||!planLib.store[id])return fn();
+  const keep=capturePlan();applyPlan(planLib.store[id]);
+  try{return fn();}
+  finally{planLib.store[id]=capturePlan();applyPlan(keep);if(write)persistOpenPlan();}
+}
+function openPlanById(id){
+  if(!planLib||id===planLib.open||!planLib.store[id])return;
+  planLib.store[planLib.open]=JSON.parse(JSON.stringify(capturePlan()));
+  applyPlan(planLib.store[id]);delete planLib.store[id];planLib.open=id;
+  planUndo=null;persistOpenPlan();
+}
+function planSummary(id){
+  const p=id===planLib.open?capturePlan():planLib.store[id];if(!p)return "";
+  const n=[0,1,2,3,4,5,6].filter(d=>p.plans&&p.plans[d]&&p.plans[d].length).length;
+  const t=p.program&&p.program.active?PLAN_TEMPLATES.find(x=>x.id===(p.program.id||"munitio")):null;
+  return `${n} workout${n!==1?"s":""} a week${p.planMode&&p.planMode.mode==="order"?", in order":""}${t&&t.name!==planLib.names[id]?` · ${t.name}`:""}`;
+}
+
+function plansSheet(){
+  const rows=planLib.order.filter(id=>planLib.names[id]).map(id=>{
+    const open=id===planLib.open,tr=id===planLib.training;
+    return `<button class="psplan ${open?"open":""}" onclick="pickPlan('${id}')"><span class="psplantxt"><b>${escH(planLib.names[id])}</b><small>${escH(planSummary(id))}</small></span>
+      ${tr?`<span class="pstrain">Training</span>`:""}${open?`<span class="psopen">Open</span>`:""}</button>`;}).join("");
+  planSheet("Your plans",`${rows}
+    <div class="pwhint" style="padding:6px 2px 4px">Tap a plan to open it here. Train always follows the plan marked <b>Training</b>, so you can work on your next plan without changing today's workout.</div>
+    <button class="psact" onclick="newPlanSheet()"><i>＋</i><span>New plan</span></button>
+    <button class="psact" onclick="planRenameSheet()"><i>✎</i><span>Rename “${escH(planName())}”</span></button>
+    ${planLib.order.length>1?`<button class="psact red" onclick="deleteOpenPlan()"><i>×</i><span>Delete “${escH(planName())}”</span></button>`:""}`);
+}
+function pickPlan(id){openPlanById(id);planSheetClose();planView="week";planRefresh();window.scrollTo(0,0);}
+function newPlanSheet(){
+  planSheet("New plan",`
+    <button class="psact" onclick="newPlan('copy')"><i>⧉</i><span>Copy of “${escH(planName())}”<small>Start from what you have and change it</small></span></button>
+    <button class="psact" onclick="newPlan('empty')"><i>○</i><span>Empty plan<small>Add your own days and exercises</small></span></button>
+    ${PLAN_TEMPLATES.map(t=>`<button class="psact" onclick="newPlan('${t.id}')"><i>★</i><span>${escH(t.name)}<small>${escH(t.desc)}</small></span></button>`).join("")}`);
+}
+function newPlan(kind){
+  const id="p"+Date.now().toString(36);let data,name;
+  if(kind==="copy"){data=JSON.parse(JSON.stringify(capturePlan()));if(data.program)data.program.trained=false;name=`${planName()} (copy)`;}
+  else if(kind==="empty"){data={plans:{},dayNames:{},planMode:{mode:"weekday",next:0},program:{active:false,startDate:null}};name="New plan";}
+  else{
+    const t=PLAN_TEMPLATES.find(x=>x.id===kind);if(!t)return;
+    data={plans:{},dayNames:{},planMode:{mode:"weekday",next:0},program:{active:true,startDate:new Date().toISOString(),id:t.id,trained:false}};
+    Object.entries(t.days).forEach(([d,v])=>{data.plans[d]=v.ex.filter(n=>exByName(n)).map(n=>({n}));data.dayNames[d]=v.name;});
+    name=t.name;
+  }
+  planLib.store[id]=data;planLib.names[id]=name;planLib.order.push(id);
+  openPlanById(id);planView="week";planRefresh();window.scrollTo(0,0);
+  planRenameSheet(true);
+}
+function planRenameSheet(isNew){
+  const s=planSheet(isNew?"Name your new plan":"Rename this plan",`<input id="plName" class="psinput" maxlength="32" value="${escH(planName())}">
+    <div class="pepills" style="margin:10px 0 4px">${["Base","Strength block","Hypertrophy","Cut","Deload week","Summer"].map(n=>`<button onclick="document.getElementById('plName').value=this.textContent">${n}</button>`).join("")}</div>
+    ${isNew?`<div class="pwhint" style="margin-top:8px">It's open now. You're still training “${escH(planName(planLib.training))}” until you tap <b>Train this plan</b>.</div>`:""}`,
+    `<button class="btn primary" style="width:100%" onclick="savePlanName()">Save</button>`);
+  const inp=s.querySelector("#plName");if(inp)inp.addEventListener("keydown",e=>{if(e.key==="Enter")savePlanName();});
+}
+function savePlanName(){const v=(document.getElementById("plName").value||"").trim();if(v){planLib.names[planLib.open]=v;savePlanLib();}planSheetClose();planRefresh();}
+function deleteOpenPlan(){
+  if(planLib.order.length<2)return;
+  if(planLib.open===planLib.training){planSheetClose();toast("This is the plan you're training. Train another plan first.");return;}
+  const id=planLib.open,name=planName(),data=JSON.parse(JSON.stringify(capturePlan())),idx=planLib.order.indexOf(id);
+  openPlanById(planLib.training);
+  delete planLib.store[id];delete planLib.names[id];planLib.order=planLib.order.filter(x=>x!==id);savePlanLib();
+  planSheetClose();planView="week";planRefresh();
+  undoToast(`Deleted “${name}”`,()=>{planLib.store[id]=data;planLib.names[id]=name;planLib.order.splice(idx,0,id);savePlanLib();document.getElementById("utoast").classList.remove("show");planRefresh();});
+}
+function trainOpenPlan(){
+  if(!planLib)return;
+  planLib.training=planLib.open;
+  // a program's 6-week count starts the first time you train it
+  if(program.active&&!program.trained){program.startDate=new Date().toISOString();}
+  program.trained=true;
+  if(planMode.mode==="order"){const nd=nextUpDay();if(nd!=null)curDay=nd;}
+  persistOpenPlan();toast(`Now training ${planName()}`);planRefresh();
+}
+
 function planStopProgram(){program={active:false,startDate:null};saveProgram();planSheetClose();toast("6-week count stopped. Your days stay as they are");planRefresh();}
 
 /* ---------------- DATA (export/import) ---------------- */
 function exportPlans(){
-  const data=JSON.stringify({goal,plans,dayNames,planMode,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods});
+  const data=JSON.stringify({goal,plans,dayNames,planMode,planLib,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods});
   const ta=document.createElement("textarea");
   ta.value=data;document.body.appendChild(ta);ta.select();
   try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
@@ -3132,7 +3256,8 @@ function doImport(){
   try{const d=JSON.parse(txt);
     if(d.plans)plans=d.plans;
     if(d.dayNames)dayNames=d.dayNames;
-    if(d.planMode)planMode=Object.assign(planMode,d.planMode);
+    if(d.planMode)planMode=Object.assign({mode:"weekday",next:0},d.planMode);
+    if(d.planLib&&d.planLib.names){planLib=d.planLib;savePlanLib();}
     savePlanMeta();
     if(d.goal&&GOALS[d.goal])goal=d.goal;
     if(d.logs)logs=d.logs;
@@ -3844,10 +3969,12 @@ let train={active:false, list:[], idx:0, title:"", done:{}};
 function buildTrainList(arr){
   return arr.map((x,i)=>({n:x.n, ss:x.ss||null, sets:x.sets, reps:x.reps, rest:x.rest}));
 }
-function startTrainingFromDay(){
+function startTrainingFromDay(){const id=trainingId();asPlan(id,()=>startTrainingFromDayRaw(id));}
+function startOpenDay(){startTrainingFromDayRaw(planLib?planLib.open:null);}
+function startTrainingFromDayRaw(planId){
   const arr=plans[curDay]||[];
   if(!arr.length){toast("This day is empty");return;}
-  train={active:true, list:buildTrainList(arr), idx:0, title:dayTitle(curDay), done:{}, day:curDay};
+  train={active:true, list:buildTrainList(arr), idx:0, title:dayTitle(curDay), done:{}, day:curDay, planId};
   switchView('train');focusTrainCard();
 }
 function startTrainingFromSession(){
@@ -4010,10 +4137,11 @@ function endTraining(finished){
   const total=train.list.length;
   train.active=false;
   // "In order" plans: the next workout moves on once this one was done
-  if(planMode.mode==="order"&&train.day!=null&&(finished||nDone>0)){
+  if(train.day!=null&&(finished||nDone>0))asPlan(train.planId??trainingId(),()=>{
+    if(planMode.mode!=="order")return;
     const ds=planDays();const k=ds.indexOf(train.day);
     if(k>=0){planMode.next=k+1;savePlanMeta();curDay=nextUpDay()??curDay;}
-  }
+  },true);
   if(finished||nDone>0){
     toast(nDone>=total ? "Workout complete 💪" : `Ended · ${nDone} of ${total} done`);
   }
@@ -5493,7 +5621,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v55"]};
+ data:["Save & Settings","Backup your data · v56"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -5766,7 +5894,8 @@ loadAi();
 loadProgramState();
 loadPlanMeta();
 addLegMachineToPlans();
-if(planMode.mode==="order"){const nd=nextUpDay();if(nd!=null)curDay=nd;}
+loadPlanLib();
+asPlan(trainingId(),()=>{if(planMode.mode==="order"){const nd=nextUpDay();if(nd!=null)curDay=nd;}});
 renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();
 </script>
 <script>
