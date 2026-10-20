@@ -252,6 +252,8 @@
   .pwsub{font-size:13px;font-weight:700;color:var(--dim)}
   .psplan{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;color:var(--txt);cursor:pointer}
   .psplan.open{border-color:var(--accent)}
+  .hplanchips{padding:0 0 12px}
+  .hdplan{font-size:12px;font-weight:700;color:var(--accent2);margin:1px 0}
   .psplantxt{flex:1;min-width:0}
   .psplantxt b{display:block;font-size:15px}
   .psplantxt small{display:block;font-size:12px;color:var(--dim)}
@@ -2532,6 +2534,7 @@ function saveLog(btn,name,t,cid){
     if(pos>=0){
       if(train.list[pos].ss) entry.ss=train.list[pos].ss;
       entry.ord=pos;
+      tagEntryWithPlan(entry);
       train.done[pos]=true;
       markedPos=pos;
     }
@@ -3229,6 +3232,27 @@ function trainOpenPlan(){
   persistOpenPlan();toast(`Now training ${planName()}`);planRefresh();
 }
 
+
+// One-off (v57): add Arné's "Trojanator" plan (Trojan 5 Day Workout PDF) to Your plans, without opening or training it.
+// Exercises the gym has no machine for use the closest one in the library.
+function addTrojanatorPlan(){
+  try{if(localStorage.getItem("hgt_mig_trojanator_v1"))return;}catch(e){return;}
+  if(!planLib)return;
+  const has=Object.values(planLib.names).includes("Trojanator");
+  if(!has){
+    const D={
+      0:["Chest & Biceps",[["Cable Crossover",3,"12-15"],["Bench Press",4,"12"],["Incline Press",3,"8-15"],["Concentration Curl",3,"10-15"],["Incline Dumbbell Curl",3,"8-12"]]],
+      1:["Back & Triceps",[["Wide-Grip Lat Pulldown",3,"8-12"],["Seated Cable Row",4,"15"],["Rear Delt Fly",3,"12"],["Cable Rope Pushdown",3,"15"],["Overhead Tricep Extension",3,"20"]]],
+      2:["Legs & Shoulders",[["Smith Machine Squat",3,"8-12"],["Bulgarian Split Squat",3,"12-15"],["Leg Extension",3,"12-20"],["Leg Curl",3,"12-20"],["Calf Raise",4,"25"],["Dumbbell Shoulder Press",3,"8-12"],["Lateral Raise",3,"15"],["Rear Delt Fly",3,"12"]]],
+      3:["Back, Arms & Front Delts",[["Wide-Grip Lat Pulldown",3,"8-12"],["Bent-Over Row",3,"6-10"],["Bicep Curl",4,"20"],["Incline Dumbbell Curl",3,"8-12"],["Front Raise",3,"15-20"]]],
+      4:["Legs, Delts & Chest",[["Smith Machine Squat",3,"8-12"],["Leg Extension",3,"12-20"],["Leg Curl",3,"12-20"],["Rear Delt Fly",3,"12"],["Cable Crossover",3,"12-15"],["Dumbbell Chest Press",3,"8-12"]]]};
+    const data={plans:{},dayNames:{},planMode:{mode:"weekday",next:0},program:{active:false,startDate:null}};
+    for(const d in D){data.dayNames[d]=D[d][0];data.plans[d]=D[d][1].filter(x=>exByName(x[0])).map(([n,sets,reps])=>({n,sets,reps,rest:90}));}
+    let id="trojanator";while(planLib.names[id])id+="_";
+    planLib.store[id]=data;planLib.names[id]="Trojanator";planLib.order.push(id);savePlanLib();
+  }
+  try{localStorage.setItem("hgt_mig_trojanator_v1","1");}catch(e){}
+}
 function planStopProgram(){program={active:false,startDate:null};saveProgram();planSheetClose();toast("6-week count stopped. Your days stay as they are");planRefresh();}
 
 /* ---------------- DATA (export/import) ---------------- */
@@ -3974,7 +3998,7 @@ function startOpenDay(){startTrainingFromDayRaw(planLib?planLib.open:null);}
 function startTrainingFromDayRaw(planId){
   const arr=plans[curDay]||[];
   if(!arr.length){toast("This day is empty");return;}
-  train={active:true, list:buildTrainList(arr), idx:0, title:dayTitle(curDay), done:{}, day:curDay, planId};
+  train={active:true, list:buildTrainList(arr), idx:0, title:dayTitle(curDay), done:{}, day:curDay, planId, planName:planLib&&planId?planName(planId):null};
   switchView('train');focusTrainCard();
 }
 function startTrainingFromSession(){
@@ -4087,6 +4111,7 @@ function autoLogCurrent(){
   const entry={date:ld.toISOString(),sets:[set],carried:!!last};
   if(cur.ss)entry.ss=cur.ss;
   entry.ord=i;
+  tagEntryWithPlan(entry);
   logs[cur.n].push(entry);
   train.done[i]=true;
   save();renderDaySelect();
@@ -5621,7 +5646,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v56"]};
+ data:["Save & Settings","Backup your data · v58"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -5655,6 +5680,14 @@ function switchView(v){
 
 /* ---------------- WORKOUT HISTORY ---------------- */
 // Group all logged entries by calendar day
+// Remember which plan and day a logged exercise came from, so History can show and filter by plan
+function tagEntryWithPlan(entry){
+  if(!train.active||!train.planId)return;
+  entry.planId=train.planId;entry.plan=train.planName||planName(train.planId);entry.pday=train.title;
+}
+function entryPlanName(en){return en.planId&&planLib&&planLib.names[en.planId]?planLib.names[en.planId]:en.plan;}
+let histPlan="all";
+function setHistPlan(p){histPlan=p;renderHistory();}
 function historyByDay(){
   const days={};  // "YYYY-MM-DD" -> [{name, entry}]
   for(const name in logs){
@@ -5753,9 +5786,14 @@ function renderHistory(){
     ${freqRows}
   </div>`;
 
-  // ---- session list ----
-  listEl.innerHTML=keys.map(k=>{
-    const items=days[k];
+  // ---- session list, optionally just one plan ----
+  const planNames=[...new Set(keys.flatMap(k=>days[k].map(it=>entryPlanName(it.entry)).filter(Boolean)))];
+  if(histPlan!=="all"&&!planNames.includes(histPlan))histPlan="all";
+  const shown=histPlan==="all"?keys:keys.filter(k=>days[k].some(it=>entryPlanName(it.entry)===histPlan));
+  const planChips=planNames.length?`<div class="pschips hplanchips"><button class="${histPlan==="all"?"on":""}" onclick="setHistPlan('all')">All plans</button>${planNames.map(n=>`<button class="${histPlan===n?"on":""}" onclick="setHistPlan(this.dataset.p)" data-p="${escH(n)}">${escH(n)}</button>`).join("")}</div>`:"";
+  listEl.innerHTML=planChips+shown.map(k=>{
+    const items=histPlan==="all"?days[k]:days[k].filter(it=>entryPlanName(it.entry)===histPlan);
+    const tags=[...new Set(items.filter(it=>entryPlanName(it.entry)).map(it=>`${entryPlanName(it.entry)}${it.entry.pday?` · ${it.entry.pday}`:""}`))];
     const mus=new Set();
     items.forEach(it=>{(EX_MUS[it.name]||[]).forEach(m=>mus.add(m));});
     const len=sessionLength(items);
@@ -5793,7 +5831,7 @@ function renderHistory(){
 
     return `<div class="hday">
       <div class="hdhead">
-        <div><div class="hdname">${prettyDate(k)}</div><div class="hddate">${new Date(k).toLocaleDateString()} · ${timeStr}${len?` · ${len} min`:""}</div></div>
+        <div><div class="hdname">${prettyDate(k)}</div>${tags.length?`<div class="hdplan">${tags.map(escH).join("<br>")}</div>`:""}<div class="hddate">${new Date(k).toLocaleDateString()} · ${timeStr}${len?` · ${len} min`:""}</div></div>
         <span class="hdcount">${items.length} exercise${items.length!==1?"s":""}</span>
       </div>
       ${mus.size?`<div class="hdmap">${muscleMapSVG([...mus],{h:95})}</div>`:""}
@@ -5895,6 +5933,7 @@ loadProgramState();
 loadPlanMeta();
 addLegMachineToPlans();
 loadPlanLib();
+addTrojanatorPlan();
 asPlan(trainingId(),()=>{if(planMode.mode==="order"){const nd=nextUpDay();if(nd!=null)curDay=nd;}});
 renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();renderLib();renderDaySelect();renderPlan();
 </script>
