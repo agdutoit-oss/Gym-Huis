@@ -2116,11 +2116,14 @@ function photoDemo(name){
 function pdFail(img){const d=img.closest(".pdemo");if(!d)return;const h=d.nextElementSibling;
   d.outerHTML=`<div class="viderr">Demo photos need an internet connection.</div>`;if(h&&h.classList.contains("pdhint"))h.remove();}
 // Library: animated demo with a toggle to the muscle map
-function libVisual(e,map,slot){
+// musclesFirst: the Plan tab puts "Muscles worked" first and opens on it; everywhere else "How to" comes first
+function libVisual(e,map,slot,musclesFirst){
   if(map===undefined) map=musclePane(e);
   if(slot===undefined) slot=`<div class="mediaslot"></div>`;
   if(!(mwKey||hasPhotoDemo(e.n))) return map;   // no demo available: just the muscles
   if(!map) return slot;
+  if(musclesFirst)return `<div class="vtog"><button class="on" onclick="libPane(this,0)">Muscles worked</button><button onclick="libPane(this,1)">▶ How to</button></div>
+    <div class="vpane">${map}</div><div class="vpane" hidden>${slot}</div>`;
   return `<div class="vtog"><button class="on" onclick="libPane(this,0)">▶ How to</button><button onclick="libPane(this,1)">Muscles worked</button></div>
     <div class="vpane">${slot}</div><div class="vpane" hidden>${map}</div>`;
 }
@@ -2337,9 +2340,9 @@ function ytLinks(e){
   return `<div class="demorow">${links.join("")}</div>`;
 }
 // Shared expandable detail body used by Library, Build and Planner cards.
-function exDetailBody(e,withMedia){
+function exDetailBody(e,withMedia,musclesFirst){
   return `<div class="ex-body"><div class="ex-pad">
-    ${libVisual(e)}
+    ${libVisual(e,undefined,undefined,musclesFirst)}
     <span class="equiptag">🏋 ${e.eq}</span>
     ${demoLinks(e,true)}
     ${logBlock(e)}
@@ -2929,7 +2932,7 @@ function pexHTML(x,i,ssLetter){
       <button class="pexmore" onclick="pexMenu(${i})" aria-label="Options for ${e.n}">⋯</button>
     </div>
     ${ed}
-    ${exDetailBody(e,false)}
+    ${exDetailBody(e,false,true)}
   </div>`;
 }
 function tgtHTML(x){const s=targetText(x),k=s.indexOf(" · ");return k<0?s:s.slice(0,k)+`<span>${s.slice(k)}</span>`;}
@@ -3542,7 +3545,7 @@ function gitemHTML(i){
         </div>`}
       </div>
       <div class="swapbox" id="swap-${i}"></div>
-      ${ssMode?"":exDetailBody(e,false)}
+      ${ssMode?"":exDetailBody(e,false,true)}
     </div>`;
 }
 
@@ -5488,7 +5491,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v53"]};
+ data:["Save & Settings","Backup your data · v54"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
