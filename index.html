@@ -4727,14 +4727,20 @@ function calEditHtml(x,i){
   return `<div class="fitem ceditor"><div style="flex:1;min-width:0">
     <div class="fdhead" style="margin-top:0">Fix what you logged</div>
     <input id="ceName" class="calinput" style="width:100%" value="${escH(name)}" placeholder="What was it?" ${builtin?"disabled":""}>
-    <div class="cerow">${num("ceQ","How many",q)}${num("ceK","Total kJ",kj(x.kcal))}</div>
-    <div class="cerow">${num("ceG",`Total ${x.ml?"ml":"grams"}`,x.g||"","optional")}${num("ceP","Protein g",x.p!=null?r1(x.p):"","optional")}${num("ceF","Fat g",x.f!=null?r1(x.f):"","optional")}</div>
-    <div class="cehint">Change the grams and the kJ, protein and fat follow.</div>
+    ${x.g>0
+      ? `<div class="cerow">${num("ceG",`Amount (${calEditUnit(x)})`,x.g)}${num("ceK","Total kJ",kj(x.kcal))}</div>
+    <div class="cerow">${num("ceP","Protein g",x.p!=null?r1(x.p):"","optional")}${num("ceF","Fat g",x.f!=null?r1(x.f):"","optional")}</div>
+    <div class="cehint">Change the amount and the kJ, protein and fat follow.</div>`
+      : `<div class="cerow">${num("ceQ","How many",q)}${num("ceK","Total kJ",kj(x.kcal))}</div>
+    <div class="cerow">${num("ceG",`Total ${calEditUnit(x)==="ml"?"ml":"grams"}`,"","optional")}${num("ceP","Protein g",x.p!=null?r1(x.p):"","optional")}${num("ceF","Fat g",x.f!=null?r1(x.f):"","optional")}</div>
+    <div class="cehint">Add the grams if you know them, and the kJ, protein and fat follow.</div>`}
     <div class="cehint" id="ceEach"></div>
     ${builtin?`<div class="cehint">This food is from the built-in list, so only this entry changes.</div>`:`<label class="calchk"><input type="checkbox" id="ceRem" checked onchange="calEditHint()"> Use these numbers next time too</label>`}
     <div class="aibtns"><button class="btn primary" onclick="calEditSave(${i})">Save</button><button class="btn ghost" onclick="calEdit(-1)">Cancel</button></div>
   </div></div>`;
 }
+// Drinks and anything named in ml are measured in ml, everything else in grams
+function calEditUnit(x){return x.ml||/\d\s*ml\b/i.test(x.food||x.label||"")?"ml":"g";}
 // While editing: changing the grams rescales kcal, protein and fat (unless you typed those yourself)
 let calEditOrig=null, calEditTyped={};
 function calEditInput(id){
@@ -4755,26 +4761,28 @@ function calEditScale(){
 function calEdit(i){
   const x=i>=0?calDay(selKey).eat[i]:null;
   calEditOrig=x?{g:+x.g||0,k:+x.kcal||0,p:+x.p||0,f:+x.f||0,food:x.food}:null; calEditTyped={};
-  calEditIdx=i;renderCal();if(i>=0){calEditHint();document.getElementById("ceQ")?.focus();}}
+  calEditIdx=i;renderCal();if(i>=0){calEditHint();const f=document.getElementById(x.g>0?"ceG":"ceQ");if(f){f.focus();f.select?.();}}}
 function calEditHint(){
   const el=document.getElementById("ceEach"); if(!el)return;
   const v=id=>parseFloat(document.getElementById(id)?.value);
-  const q=Math.max(1,Math.round(v("ceQ")||1)), k=v("ceK"), g=v("ceG");
-  const x=calDay(selKey).eat[calEditIdx]||{}, uo=x.ml?"ml":"g";
+  const x=calDay(selKey).eat[calEditIdx]||{}, uo=calEditUnit(x);
+  const q=document.getElementById("ceQ")?Math.max(1,Math.round(v("ceQ")||1)):(x.q||1), k=v("ceK"), g=v("ceG");
   const next=!isBuiltinFood(x.food)&&document.getElementById("ceRem")?.checked;
   el.textContent = isNaN(k)?"" : q>1 ? `That's ${Math.round(k/q)} kJ each${g>0?` (${Math.round(g/q)} ${uo} each)`:""}.${next?` Next time, 1 counts as ${Math.round(k/q)} kJ.`:""}` : "";
 }
 function calEditSave(i){
   const x=calDay(selKey).eat[i]; if(!x)return;
   const v=id=>{const n=parseFloat(document.getElementById(id)?.value);return isNaN(n)?null:n;};
-  const q=Math.max(1,Math.round(v("ceQ")||1)), kJin=v("ceK");
+  const q=document.getElementById("ceQ")?Math.max(1,Math.round(v("ceQ")||1)):(x.q||1), kJin=v("ceK");
   if(kJin==null||kJin<0){toast("Enter the total kJ");return;}
+  if(document.getElementById("ceQ")==null&&!(v("ceG")>0)){toast("Enter the amount");return;}
   const k=Math.round(kJin)===kj(x.kcal)?+x.kcal:toKcal(kJin);   // unchanged kJ keeps the exact stored value
   const g=v("ceG")||0, p=v("ceP")||0, f=v("ceF")||0;
   const builtin=isBuiltinFood(x.food), oldName=x.food||x.label||"";
   const name=builtin?x.food:((document.getElementById("ceName")?.value||"").trim()||oldName||"Food");
   x.q=q; x.kcal=r2(k); x.p=r1(p); x.f=r1(f); x.label=name;
   if(g>0)x.g=Math.round(g); else delete x.g;
+  if(calEditUnit(x)==="ml")x.ml=true;
   x.unit={kcal:k/q,g:g>0?g/q:undefined,p:p/q,f:f/q,c:x.c!=null?x.c/q:undefined};
   if(!builtin){
     if(document.getElementById("ceRem")?.checked){ rememberFood(name,{k,g,p,f,ml:x.ml},q,oldName); x.food=name; }
@@ -5646,7 +5654,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v58"]};
+ data:["Save & Settings","Backup your data · v59"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
