@@ -991,14 +991,16 @@
 
     <div class="fdhead">Or type kJ directly</div>
     <div class="caladd">
-      <input type="number" inputmode="numeric" id="calInput" class="calinput" placeholder="kJ eaten">
-      <input type="text" id="calLabel" class="calinput callbl" placeholder="What (optional)">
-      <button class="btn primary" style="flex:0 0 70px" onclick="addCal()">Add</button>
+      <input type="text" id="calLabel" class="calinput" style="flex:1" placeholder="What (optional)">
     </div>
     <div class="caladd">
-      <input type="number" inputmode="decimal" id="calProt" class="calinput" placeholder="Protein g (optional)">
-      <input type="number" inputmode="decimal" id="calFat" class="calinput" placeholder="Fat g (optional)">
-      <div style="flex:0 0 70px"></div>
+      <input type="number" inputmode="decimal" id="calAmt" class="calinput" placeholder="g / ml (optional)">
+      <input type="number" inputmode="numeric" id="calInput" class="calinput" placeholder="kJ eaten">
+    </div>
+    <div class="caladd">
+      <input type="number" inputmode="decimal" id="calProt" class="calinput" placeholder="Protein g">
+      <input type="number" inputmode="decimal" id="calFat" class="calinput" placeholder="Fat g">
+      <button class="btn primary" style="flex:0 0 70px" onclick="addCal()">Add</button>
     </div>
     <div id="calQuick" class="calquick"></div>
 
@@ -4662,13 +4664,14 @@ function addCal(){
   const lbl=(lEl.value||"").trim();
   const pEl=document.getElementById("calProt"), fEl=document.getElementById("calFat");
   const num=el=>{const n=parseFloat(el?.value);return isNaN(n)||n<0?0:n;};
-  const p=num(pEl), f=num(fEl), mac=(pEl?.value||fEl?.value)?{p:r1(p),f:r1(f)}:{};
+  const aEl=document.getElementById("calAmt"), g=Math.round(num(aEl)), ml=g>0&&/\bml\b|milk|coffee|tea|juice|drink|shake|soda|beer|wine/i.test(lbl);
+  const p=num(pEl), f=num(fEl), mac=(pEl?.value||fEl?.value)?{p:r1(p),f:r1(f)}:{}, amt=g>0?{g,...(ml?{ml:true}:{})}:{};
   if(lbl&&!isBuiltinFood(lbl)){
     const old=myFoods.find(x=>x.n.toLowerCase()===lbl.toLowerCase());
-    if(!old||old.each)rememberFood(lbl,{k:v,g:0,p,f},1,null);   // latest typed numbers win for a serving
-    calDay(selKey).eat.push({kcal:v,label:lbl,food:findFood(lbl)?.n||lbl,q:1,unit:{kcal:v,...mac},...mac});
-  }else calDay(selKey).eat.push({kcal:v,label:lbl,...mac,...(mac.p!=null?{q:1,unit:{kcal:v,...mac}}:{})});
-  saveCal(); vEl.value=""; lEl.value=""; if(pEl)pEl.value=""; if(fEl)fEl.value=""; renderCal();
+    if(g>0||!old||old.each)rememberFood(lbl,{k:v,g,p,f,ml},1,null);   // latest typed numbers win
+    calDay(selKey).eat.push({kcal:v,label:lbl,food:findFood(lbl)?.n||lbl,q:1,...amt,unit:{kcal:v,...(g>0?{g}:{}),...mac},...mac});
+  }else calDay(selKey).eat.push({kcal:v,label:lbl,...amt,...mac,...(mac.p!=null||g>0?{q:1,unit:{kcal:v,...(g>0?{g}:{}),...mac}}:{})});
+  saveCal(); vEl.value=""; lEl.value=""; if(aEl)aEl.value=""; if(pEl)pEl.value=""; if(fEl)fEl.value=""; renderCal();
   toast(`+${kJin} kJ`);
 }
 function quickCal(n){ calDay(selKey).eat.push({kcal:toKcal(n),label:""}); saveCal(); renderCal(); toast(`+${n} kJ`); }
@@ -4761,7 +4764,7 @@ function calEditScale(){
 function calEdit(i){
   const x=i>=0?calDay(selKey).eat[i]:null;
   calEditOrig=x?{g:+x.g||0,k:+x.kcal||0,p:+x.p||0,f:+x.f||0,food:x.food}:null; calEditTyped={};
-  calEditIdx=i;renderCal();if(i>=0){calEditHint();const f=document.getElementById(x.g>0?"ceG":"ceQ");if(f){f.focus();f.select?.();}}}
+  calEditIdx=i;renderCal();if(i>=0){calEditHint();const f=document.getElementById(x.g>0?"ceG":"ceQ");if(f)f.focus();}}
 function calEditHint(){
   const el=document.getElementById("ceEach"); if(!el)return;
   const v=id=>parseFloat(document.getElementById(id)?.value);
@@ -5678,7 +5681,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v61"]};
+ data:["Save & Settings","Backup your data · v63"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -5991,6 +5994,21 @@ document.addEventListener("visibilitychange",()=>{
 });
 // Also when the browser restores the page from its back/forward cache
 window.addEventListener("pageshow",e=>{if(e.persisted)openStartTab();});
+// Tapping into a box that already has something in it puts the cursor at the end, ready to backspace
+function caretToEnd(el){
+  const v=el.value; if(!v)return;
+  try{el.setSelectionRange(v.length,v.length);}
+  catch(e){el.value="";el.value=v;}   // number boxes don't allow setSelectionRange
+}
+document.addEventListener("focusin",e=>{
+  const el=e.target;
+  if(!(el instanceof HTMLTextAreaElement||(el instanceof HTMLInputElement&&/^(text|number|search|tel|url|email|)$/.test(el.type))))return;
+  if(el.readOnly||el.disabled)return;
+  el._caretAt=Date.now();
+  setTimeout(()=>{if(document.activeElement===el)caretToEnd(el);},0);   // iOS places the cursor after focus
+});
+// iOS can place the cursor where you tapped once the tap ends, so fix it again on that first tap
+document.addEventListener("click",e=>{const el=e.target;if(el._caretAt&&Date.now()-el._caretAt<600&&document.activeElement===el){el._caretAt=0;caretToEnd(el);}},true);
 </script>
 </body>
 </html>
