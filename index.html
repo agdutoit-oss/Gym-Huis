@@ -5301,7 +5301,8 @@ function fcPick(name){
     fcGramsManual=true;
   }else if(!fcGramsManual||!g.value){
     const u=fcUnitOf(f);
-    g.value = u ? (FOOD_UNITS[f.n]?u[0]*2:u[0]) : "";
+    const last=fcLastAmount(f.n);
+    g.value = u ? (FOOD_UNITS[f.n]?u[0]*2:u[0]) : (last||"");
     fcGramsManual=false;
   }
   // "large latte", "2 cans coke", "black label quart": use that serving size
@@ -5313,6 +5314,14 @@ function fcPick(name){
   fcNum=null; fcSize=null;
   fcRender();
   if(!g.value)g.focus();
+}
+// The amount (g or ml) you logged last time for this food, newest day first
+function fcLastAmount(name){
+  for(const k of Object.keys(calLog).sort().reverse()){
+    const e=calLog[k].eat||[];
+    for(let i=e.length-1;i>=0;i--){const x=e[i]; if(x.g>0&&findFood(x.food)?.n===name)return Math.round(x.g);}
+  }
+  return null;
 }
 function fcGramsTyped(){fcGramsManual=true;fcRender();}
 function fcSetGrams(v){document.getElementById("fcGrams").value=v;fcGramsManual=true;fcRender();}
@@ -5329,7 +5338,9 @@ function fcRender(){
     return;
   }
   const u=fcUnitOf(fcSel), sz=fcSizesOf(fcSel), uo=uoM(fcSel);
-  const opts = sz ? sz : u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} g`]);
+  let opts = sz ? sz : u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} ${uo}`]);
+  const last=!fcSel.each&&fcLastAmount(fcSel.n);
+  if(last&&!opts.some(([v])=>v===last))opts=[[last,`last time ${last} ${uo}`],...opts];
   units.innerHTML=opts.map(([v,l])=>`<button class="chip ${g===v?"on":""}" onclick="fcSetGrams(${v})">${l}</button>`).join("");
   if(!g||g<=0){
     prev.innerHTML=fcSel.each?`<b>${escH(fcSel.n)}</b>: ${kj(fcSel.k)} kJ each. How many?`:`<b>${escH(fcSel.n)}</b>: ${kj(fcSel.k)} kJ per 100 ${uo}. How much did you have?`;
@@ -5654,7 +5665,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v59"]};
+ data:["Save & Settings","Backup your data · v60"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
