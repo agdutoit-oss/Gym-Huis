@@ -4712,7 +4712,7 @@ function rememberFood(name,tot,q,oldName){
     food={n:name,c:"My foods",k:r2(tot.k/q),p:r1((tot.p||0)/q),f:r1((tot.f||0)/q),each:true};
   }
   myFoods=myFoods.filter(x=>{const n=x.n.toLowerCase();return n!==name.toLowerCase()&&(!oldName||n!==oldName.toLowerCase());});
-  myFoods.unshift(food); saveMyFoods();
+  myFoods.unshift(fcWeighable(food)); saveMyFoods();
 }
 function calItemHtml(x,i){
   const q=x.q||1, uo=x.ml?"ml":"g";
@@ -5223,7 +5223,18 @@ Object.assign(FOOD_BOOST,{"Coca-Cola Original":6,"Castle Lager":5,"Castle Lite":
 /* ---- Food calculator: pick a food, enter grams, it works out kcal + macros ---- */
 const MYFOOD_KEY="hgt_myfoods_v1";
 let myFoods=[];   // [{n,c:"My foods",p,f,k}] per 100 g
-function loadMyFoods(){try{const m=localStorage.getItem(MYFOOD_KEY);if(m)myFoods=JSON.parse(m)||[];}catch(e){}}
+function loadMyFoods(){try{const m=localStorage.getItem(MYFOOD_KEY);if(m)myFoods=(JSON.parse(m)||[]).map(fcWeighable);}catch(e){}}
+// The weight or volume written in a name, e.g. "Risotto (300g)" or "Milk (1 cup, 250 ml)"
+function nameAmount(n){const m=/(\d+(?:[.,]\d+)?)\s*(g|ml)\b/i.exec(n||"");return m?{v:parseFloat(m[1].replace(",",".")),ml:m[2].toLowerCase()==="ml"}:null;}
+// A per-serving food whose name gives its weight becomes per 100 g with that serving size,
+// so any amount can be typed and kJ, protein and fat scale with it
+function fcWeighable(f){
+  const a=f&&f.each&&nameAmount(f.n); if(!a||!(a.v>0))return f;
+  const per=v=>Math.round((+v||0)/a.v*1000)/10;
+  const o={n:f.n,c:f.c,k:r2((+f.k||0)/a.v*100),p:per(f.p),f:per(f.f),u:[a.v,"serving"]};
+  if(a.ml)o.ml=true;
+  return o;
+}
 function saveMyFoods(){try{localStorage.setItem(MYFOOD_KEY,JSON.stringify(myFoods));}catch(e){}}
 function escH(t){return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function allFoods(){return myFoods.concat(FOODS,DRINKS);}
@@ -5333,12 +5344,14 @@ function fcRender(){
   const btn=document.getElementById("fcAddBtn");
   if(btn)btn.textContent=`Add to ${dayLabel(selKey).toLowerCase()==="today"?"today":dayLabel(selKey)}`;
   if(!fcSel){
+    if(gEl)gEl.placeholder="g / ml";
     units.innerHTML="";
     prev.innerHTML=`Type what you ate. Pick a food from the list and enter the grams, or tap ✨ Ask Claude for anything else, like a takeaway meal.`;
     return;
   }
   const u=fcUnitOf(fcSel), sz=fcSizesOf(fcSel), uo=uoM(fcSel);
-  let opts = sz ? sz : u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} ${uo}`]);
+  if(gEl)gEl.placeholder=fcSel.each?"how many":uo;
+  let opts = sz ? sz : u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}${!fcSel.each&&u[1]==="serving"?` · ${Math.round(n*u[0])} ${uo}`:""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} ${uo}`]);
   const last=!fcSel.each&&fcLastAmount(fcSel.n);
   if(last&&!opts.some(([v])=>v===last))opts=[[last,`last time ${last} ${uo}`],...opts];
   units.innerHTML=opts.map(([v,l])=>`<button class="chip ${g===v?"on":""}" onclick="fcSetGrams(${v})">${l}</button>`).join("");
@@ -5665,7 +5678,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v60"]};
+ data:["Save & Settings","Backup your data · v61"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
