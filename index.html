@@ -583,6 +583,9 @@
   .aik{font-weight:800;color:var(--accent2);white-space:nowrap}
   .aisrc{font-size:11.5px;color:var(--dim);margin:6px 0 2px;line-height:1.45}
   .aibtns{display:flex;gap:8px;margin-top:8px}
+  .aiparts{font-size:12px;color:var(--dim);margin:2px 0 8px 10px;border-left:2px solid var(--line);padding-left:8px}
+  .aiparts div{display:flex;justify-content:space-between;gap:8px;line-height:1.6}
+  .aiparts span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
   .aiwork{font-size:12.5px;line-height:1.5;color:var(--txt);background:var(--card2);border-radius:8px;padding:8px 10px;margin:8px 0 4px;font-variant-numeric:tabular-nums}
   .aiconf{font-size:12px;font-weight:700;margin:6px 0 2px;color:var(--good)}
   .aiconf.rough{color:#f0a030}
@@ -4715,6 +4718,7 @@ function rememberFood(name,tot,q,oldName){
     food={n:name,c:"My foods",k:r2(tot.k/q),p:r1((tot.p||0)/q),f:r1((tot.f||0)/q),each:true};
   }
   myFoods=myFoods.filter(x=>{const n=x.n.toLowerCase();return n!==name.toLowerCase()&&(!oldName||n!==oldName.toLowerCase());});
+  const parts=tot.parts||prev?.parts; if(parts?.length){food.parts=parts;food.partsQ=tot.parts?q:(prev.partsQ||1);}
   myFoods.unshift(fcWeighable(food)); saveMyFoods();
 }
 function calItemHtml(x,i){
@@ -4730,6 +4734,7 @@ function calEditHtml(x,i){
   return `<div class="fitem ceditor"><div style="flex:1;min-width:0">
     <div class="fdhead" style="margin-top:0">Fix what you logged</div>
     <input id="ceName" class="calinput" style="width:100%" value="${escH(name)}" placeholder="What was it?" ${builtin?"disabled":""}>
+    ${(()=>{const fd=findFood(x.food), pr=x.parts||fd?.parts; return pr?.length?`<div class="cehint" style="margin:8px 0 4px">Made of${x.parts?"":(fd.partsQ>1?` (for ${fd.partsQ})`:"")}:</div>${partsHtml(pr)}`:"";})()}
     ${x.g>0
       ? `<div class="cerow">${num("ceG",`Amount (${calEditUnit(x)})`,x.g)}${num("ceK","Total kJ",kj(x.kcal))}</div>
     <div class="cerow">${num("ceP","Protein g",x.p!=null?r1(x.p):"","optional")}${num("ceF","Fat g",x.f!=null?r1(x.f):"","optional")}</div>
@@ -4822,7 +4827,7 @@ function saveAi(){try{localStorage.setItem(AI_KEY,aiKey);localStorage.setItem(AI
 
 const AI_TOOL={
   name:"log_meal",
-  description:"Record the nutrition of what the user ate. Call this once with every food in the description as its own item.",
+  description:"Record the nutrition of what the user ate. Call this once. Each item is one thing as it was eaten: a dish, a drink or a separate food. A sandwich, burger, salad or plate of food is ONE item, with what it is made of listed in its ingredients.",
   strict:true,
   input_schema:{
     type:"object",
@@ -4836,9 +4841,15 @@ const AI_TOOL={
           count:{type:"integer",description:"How many portions or pieces this is, e.g. 2 for '2 x twister', 3 for '3 packs'. Use 1 when it was measured by weight or volume."},
           protein_g:{type:"number"},
           fat_g:{type:"number"},
-          carbs_g:{type:"number"}
+          carbs_g:{type:"number"},
+          ingredients:{type:"array",description:"What this item is made of, with each part's share of the totals (they should add up to the item). Empty for a single food or a branded item you have one figure for.",items:{
+            type:"object",
+            properties:{name:{type:"string"},grams:{type:"number"},kcal:{type:"number"},protein_g:{type:"number"},fat_g:{type:"number"},carbs_g:{type:"number"}},
+            required:["name","grams","kcal","protein_g","fat_g","carbs_g"],
+            additionalProperties:false
+          }}
         },
-        required:["name","grams","kcal","count","protein_g","fat_g","carbs_g"],
+        required:["name","grams","kcal","count","protein_g","fat_g","carbs_g","ingredients"],
         additionalProperties:false
       }},
       source:{type:"string",description:"One short line: where the numbers come from and any assumption made, e.g. 'KFC SA nutrition info, minus garnish and cheese'"},
@@ -4855,9 +4866,10 @@ function aiSystem(){
 Work it out like this:
 1. Find the exact item. For branded, restaurant or packaged food, search for the brand's own nutrition information for ${aiCountry} (their website, menu or nutrition PDF). If the brand doesn't publish it, use fatsecret.co.za or another listing for ${aiCountry}. Open the page and read the numbers; don't rely on a search snippet. For plain foods (meat, eggs, cheese), use standard values for that food, raw or cooked as the user describes.
 2. If they changed the item (swapped, removed or added something), start from the standard item exactly as sold, in the same size. Take off what was removed and add what replaced it, using realistic weights for those parts. Never start from a different version of the item (a veggie or combo version, another size) unless that is what they ate.
-3. Count only what they said. "A burger" means the burger alone, not a combo with chips and a drink.
-4. Multiply by the quantity, so each item's totals cover everything they ate of it.
-5. Check before answering. kcal should roughly equal 4 × protein + 4 × carbs + 9 × fat. If you changed an item, compare the total with the standard item and make sure the difference makes sense (for example, chicken breast is leaner than a beef patty, so the total should go down). Fix anything that doesn't add up.
+3. Log each dish as one item, named as the dish (for example "Toasted ham & cheese sandwich (Albany white, Eskort ham, Lancewood cheddar, butter)"), and put its parts in "ingredients". Only list separate items for things eaten separately, like a sandwich and a bowl of strawberries.
+4. Count only what they said. "A burger" means the burger alone, not a combo with chips and a drink.
+5. Multiply by the quantity, so each item's totals cover everything they ate of it.
+6. Check before answering. kcal should roughly equal 4 × protein + 4 × carbs + 9 × fat. If you changed an item, compare the total with the standard item and make sure the difference makes sense (for example, chicken breast is leaner than a beef patty, so the total should go down). Fix anything that doesn't add up.
 
 Labels in ${aiCountry} often list energy in kJ only; the kcal fields need kcal (kJ ÷ 4.184). Write "working" in kJ, because that's what the user reads.
 When you have the numbers, call log_meal once. Do not ask follow-up questions; make the most reasonable assumption and name it in "source".`;
@@ -4919,7 +4931,8 @@ async function aiLookup(query,prev,feedback){
       const inp=typeof call.input==="string"?JSON.parse(call.input):call.input;
       const items=(inp.items||[]).filter(i=>i&&i.name&&+i.kcal>=0).map(i=>({
         name:String(i.name).slice(0,80), grams:Math.max(0,Math.round(+i.grams||0)), kcal:Math.round(+i.kcal||0),
-        protein_g:+i.protein_g||0, fat_g:+i.fat_g||0, carbs_g:+i.carbs_g||0, count:Math.max(1,Math.min(50,Math.round(+i.count||1)))}));
+        protein_g:+i.protein_g||0, fat_g:+i.fat_g||0, carbs_g:+i.carbs_g||0, count:Math.max(1,Math.min(50,Math.round(+i.count||1))),
+        parts:(Array.isArray(i.ingredients)?i.ingredients:[]).filter(x=>x&&x.name).slice(0,20).map(x=>({n:String(x.name).slice(0,80),g:Math.max(0,Math.round(+x.grams||0)),k:Math.round(+x.kcal||0),p:r1(+x.protein_g||0),f:r1(+x.fat_g||0),c:r1(+x.carbs_g||0)}))}));
       if(!items.length)throw new Error("Claude didn't find any food in that. Try again with more detail.");
       const working=Array.isArray(inp.working)?inp.working.map(w=>String(w).slice(0,160)).slice(0,10):[];
       const confidence=["official","adjusted","rough"].includes(inp.confidence)?inp.confidence:"rough";
@@ -4962,7 +4975,7 @@ function aiRender(){
     ${aiResult.was!=null?`<div class="aisrc">Was ${kj(aiResult.was)} kJ before your note.</div>`:""}
     ${its.map(i=>`<div class="aiitem"><div><div class="fi-n">${escH(i.name)}</div>
       <div class="fi-m2">${i.count>1?i.count+" × · ":""}${i.grams?i.grams+" g · ":""}${Math.round(i.protein_g)} g protein · ${Math.round(i.fat_g)} g fat · ${Math.round(i.carbs_g)} g carbs</div></div>
-      <div class="aik">${kj(i.kcal)}</div></div>`).join("")}
+      <div class="aik">${kj(i.kcal)}</div></div>${partsHtml(i.parts)}`).join("")}
     ${aiResult.working?.length?`<div class="aiwork">${aiResult.working.map(w=>`<div>${escH(w)}</div>`).join("")}</div>`:""}
     ${aiResult.source?`<div class="aisrc">${escH(aiResult.source)}</div>`:""}
     ${(()=>{const c=AI_CONF[aiResult.confidence]; return c?`<div class="aiconf ${aiResult.confidence}">${c}</div>`:"";})()}
@@ -4974,6 +4987,11 @@ function aiRender(){
   </div>`;
 }
 const AI_CONF={official:"✓ The brand's own numbers",adjusted:"✓ The brand's numbers, adjusted for your changes",rough:"⚠ No official numbers found, so this is a rough estimate"};
+// The ingredients of a dish, kept for reference
+function partsHtml(pr){
+  if(!pr?.length)return "";
+  return `<div class="aiparts">${pr.map(x=>`<div><span>${escH(x.n)}${x.g?` · ${x.g} g`:""}</span><span>${kj(x.k)} kJ</span></div>`).join("")}</div>`;
+}
 function aiPushOpen(){
   const el=document.getElementById("aiPush"); if(!el)return;
   el.innerHTML=`<textarea id="aiWhy" class="calinput aiwhy" rows="3" placeholder="e.g. That's too high. Steers lists the beef King Steer at 2736 kJ, and chicken fillets are leaner than beef patties."></textarea>
@@ -5008,7 +5026,8 @@ function aiAddAll(){
     const ent={kcal:i.kcal,label:i.name,food:i.name,p:r1(i.protein_g),f:r1(i.fat_g),c:r1(i.carbs_g),ai:true,q,
       unit:{kcal:i.kcal/q,p:i.protein_g/q,f:i.fat_g/q,c:i.carbs_g/q}};
     if(i.grams>0){ent.g=i.grams;ent.unit.g=i.grams/q;}
-    if(remember)rememberFood(i.name,{k:i.kcal,g:i.grams,p:i.protein_g,f:i.fat_g},q,null);
+    if(i.parts?.length)ent.parts=i.parts;
+    if(remember)rememberFood(i.name,{k:i.kcal,g:i.grams,p:i.protein_g,f:i.fat_g,parts:i.parts},q,null);
     else if(!findFood(i.name))delete ent.food;
     day.eat.push(ent);
   });
@@ -5235,6 +5254,7 @@ function fcWeighable(f){
   const a=f&&f.each&&nameAmount(f.n); if(!a||!(a.v>0))return f;
   const per=v=>Math.round((+v||0)/a.v*1000)/10;
   const o={n:f.n,c:f.c,k:r2((+f.k||0)/a.v*100),p:per(f.p),f:per(f.f),u:[a.v,"serving"]};
+  if(f.parts){o.parts=f.parts;o.partsQ=f.partsQ;}
   if(a.ml)o.ml=true;
   return o;
 }
@@ -5681,7 +5701,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v63"]};
+ data:["Save & Settings","Backup your data · v64"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
