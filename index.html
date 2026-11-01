@@ -970,7 +970,7 @@
       <div class="fdhead">What did you eat?</div>
       <div class="fcrow">
         <input type="text" id="fcFood" class="calinput" placeholder="e.g. ribeye 250g, 2 castle lite" autocomplete="off" oninput="fcInput()" onfocus="fcInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcEnter();}">
-        <input type="number" inputmode="decimal" id="fcGrams" class="calinput fcg" placeholder="g / ml" oninput="fcGramsTyped()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcAdd();}">
+        <input type="text" inputmode="decimal" id="fcGrams" class="calinput fcg" placeholder="g / ml" oninput="fcGramsTyped()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcAdd();}">
       </div>
       <div id="fcSuggest" class="fcsug"></div>
       <div id="fcAi"></div>
@@ -983,9 +983,9 @@
         <div style="margin-top:8px">Copy the "per 100 g" numbers from the packet. If you only know protein and fat, leave kJ empty and it will be worked out.</div>
         <div class="fcrow"><input type="text" id="mfName" class="calinput" placeholder="Name, e.g. Woolies boerewors"></div>
         <div class="fcrow">
-          <input type="number" inputmode="decimal" id="mfK" class="calinput" placeholder="kJ">
-          <input type="number" inputmode="decimal" id="mfP" class="calinput" placeholder="protein g">
-          <input type="number" inputmode="decimal" id="mfF" class="calinput" placeholder="fat g">
+          <input type="text" inputmode="decimal" id="mfK" class="calinput" placeholder="kJ">
+          <input type="text" inputmode="decimal" id="mfP" class="calinput" placeholder="protein g">
+          <input type="text" inputmode="decimal" id="mfF" class="calinput" placeholder="fat g">
         </div>
         <button class="btn ghost" style="width:100%" onclick="saveMyFood()">Save food</button>
         <div id="mfList" style="margin-top:10px"></div>
@@ -997,12 +997,12 @@
       <input type="text" id="calLabel" class="calinput" style="flex:1" placeholder="What (optional)">
     </div>
     <div class="caladd">
-      <input type="number" inputmode="decimal" id="calAmt" class="calinput" placeholder="g / ml (optional)">
-      <input type="number" inputmode="numeric" id="calInput" class="calinput" placeholder="kJ eaten">
+      <input type="text" inputmode="decimal" id="calAmt" class="calinput" placeholder="g / ml (optional)">
+      <input type="text" inputmode="decimal" id="calInput" class="calinput" placeholder="kJ eaten">
     </div>
     <div class="caladd">
-      <input type="number" inputmode="decimal" id="calProt" class="calinput" placeholder="Protein g">
-      <input type="number" inputmode="decimal" id="calFat" class="calinput" placeholder="Fat g">
+      <input type="text" inputmode="decimal" id="calProt" class="calinput" placeholder="Protein g">
+      <input type="text" inputmode="decimal" id="calFat" class="calinput" placeholder="Fat g">
       <button class="btn primary" style="flex:0 0 70px" onclick="addCal()">Add</button>
     </div>
     <div id="calQuick" class="calquick"></div>
@@ -1014,7 +1014,7 @@
       <div class="fdhead">Optional: add a workout's burn</div>
       <div class="calwtip">Your Apple Watch tends to overestimate — if you add training energy, shave ~20% off what it says. Easiest is to ignore this and just hit your intake target.</div>
       <div class="caladd">
-        <input type="number" inputmode="numeric" id="calBurnInput" class="calinput" placeholder="Burn (kJ)">
+        <input type="text" inputmode="decimal" id="calBurnInput" class="calinput" placeholder="Burn (kJ)">
         <input type="text" id="calBurnLabel" class="calinput callbl" placeholder="e.g. padel, treadmill">
         <button class="btn ghost" style="flex:0 0 70px" onclick="addBurn()">Add</button>
       </div>
@@ -1026,12 +1026,12 @@
       <h3>Your daily target</h3>
       <p>Your desk-job maintenance (no training) is about <b id="calMaint">10293</b> kJ. Set the daily intake target you want to eat to — lower than maintenance to lose fat.</p>
       <div class="caladd">
-        <input type="number" inputmode="numeric" id="calTargetInput" class="calinput" placeholder="Target kJ">
+        <input type="text" inputmode="decimal" id="calTargetInput" class="calinput" placeholder="Target kJ">
         <button class="btn primary" style="flex:0 0 70px" onclick="saveCalTarget()">Save</button>
       </div>
       <div class="caladd">
-        <input type="number" inputmode="numeric" id="calProtTarget" class="calinput" placeholder="Protein g">
-        <input type="number" inputmode="numeric" id="calFatTarget" class="calinput" placeholder="Fat g">
+        <input type="text" inputmode="decimal" id="calProtTarget" class="calinput" placeholder="Protein g">
+        <input type="text" inputmode="decimal" id="calFatTarget" class="calinput" placeholder="Fat g">
         <div style="flex:0 0 70px"></div>
       </div>
       <div class="setnote" id="calMacroNote"></div>
@@ -1081,7 +1081,7 @@
         <div class="wnow" id="weightNow">—</div>
         <div class="wsub" id="weightSub">Log your weight to start tracking</div>
         <div class="wrow">
-          <input type="number" inputmode="decimal" id="weightInput" class="keyinput" placeholder="kg" step="0.1">
+          <input type="text" inputmode="decimal" id="weightInput" class="keyinput" placeholder="kg" step="0.1">
           <button class="btn primary" onclick="logWeight()">Log</button>
         </div>
       </div>
@@ -4440,7 +4440,7 @@ function renderCal(){
   // eaten list
   const eat=calLog[key]?.eat||[];
   document.getElementById("calList").innerHTML = eat.length
-    ? eat.map((x,i)=>i===calEditIdx?calEditHtml(x,i):calItemHtml(x,i)).join("")
+    ? eat.map((x,i)=>i===calEditIdx?calEditHtml(x,i):calItemHtml(x,i)).reverse().join("")   // newest at the top
     : `<div class="addhint">Nothing logged yet. Add what you eat above.</div>`;
 
   // burn list
@@ -4661,13 +4661,13 @@ function calChartSVG(rows){
 }
 function addCal(){
   const vEl=document.getElementById("calInput"), lEl=document.getElementById("calLabel");
-  const kJin=parseInt(vEl.value,10);
+  const kJin=parseFloat(vEl.value);
   if(!kJin||kJin<=0){toast("Enter kJ");return;}
   const v=toKcal(kJin);
   const lbl=(lEl.value||"").trim();
   const pEl=document.getElementById("calProt"), fEl=document.getElementById("calFat");
   const num=el=>{const n=parseFloat(el?.value);return isNaN(n)||n<0?0:n;};
-  const aEl=document.getElementById("calAmt"), g=Math.round(num(aEl)), ml=g>0&&/\bml\b|milk|coffee|tea|juice|drink|shake|soda|beer|wine/i.test(lbl);
+  const aEl=document.getElementById("calAmt"), g=r1(num(aEl)), ml=g>0&&/\bml\b|milk|coffee|tea|juice|drink|shake|soda|beer|wine/i.test(lbl);
   const p=num(pEl), f=num(fEl), mac=(pEl?.value||fEl?.value)?{p:r1(p),f:r1(f)}:{}, amt=g>0?{g,...(ml?{ml:true}:{})}:{};
   if(lbl&&!isBuiltinFood(lbl)){
     const old=myFoods.find(x=>x.n.toLowerCase()===lbl.toLowerCase());
@@ -4680,7 +4680,7 @@ function addCal(){
 function quickCal(n){ calDay(selKey).eat.push({kcal:toKcal(n),label:""}); saveCal(); renderCal(); toast(`+${n} kJ`); }
 function addBurn(){
   const vEl=document.getElementById("calBurnInput"), lEl=document.getElementById("calBurnLabel");
-  const v=parseInt(vEl.value,10);
+  const v=parseFloat(vEl.value);
   if(!v||v<=0){toast("Enter burn");return;}
   calDay(selKey).burn.push({kcal:toKcal(v),label:(lEl.value||"").trim()});
   saveCal(); vEl.value=""; lEl.value=""; renderCal();
@@ -4730,7 +4730,7 @@ function calItemHtml(x,i){
 }
 function calEditHtml(x,i){
   const q=x.q||1, builtin=isBuiltinFood(x.food), name=x.food||x.label||"";
-  const num=(id,lab,val,ph)=>`<label>${lab}<input id="${id}" class="calinput" type="number" inputmode="decimal" value="${val}" placeholder="${ph||""}" oninput="calEditInput('${id}')"></label>`;
+  const num=(id,lab,val,ph)=>`<label>${lab}<input id="${id}" class="calinput" type="text" inputmode="decimal" value="${val}" placeholder="${ph||""}" oninput="calEditInput('${id}')"></label>`;
   return `<div class="fitem ceditor"><div style="flex:1;min-width:0">
     <div class="fdhead" style="margin-top:0">Fix what you logged</div>
     <input id="ceName" class="calinput" style="width:100%" value="${escH(name)}" placeholder="What was it?" ${builtin?"disabled":""}>
@@ -4807,10 +4807,10 @@ function calMacroTargets(key){
   return {p,f};
 }
 function saveCalTarget(){
-  const kJin=parseInt(document.getElementById("calTargetInput").value,10);
+  const kJin=Math.round(parseFloat(document.getElementById("calTargetInput").value));
   if(!kJin||kJin<3350){toast("Enter a realistic target (3350 kJ or more)");return;}
   const v=kJin===kj(calCfg.target)?calCfg.target:toKcal(kJin);
-  const opt=id=>{const n=parseInt(document.getElementById(id)?.value,10);return n>0?n:0;};
+  const opt=id=>{const n=parseFloat(document.getElementById(id)?.value);return n>0?r1(n):0;};
   calCfg.target=v; calCfg.protein=opt("calProtTarget"); calCfg.fat=opt("calFatTarget");
   saveCal(); renderCal(); toast(`Target set: ${kJin} kJ`);
 }
@@ -5587,7 +5587,7 @@ function renderFoodList(){
         </div>
       </div>
       <div class="fc-add">
-        <input type="number" inputmode="numeric" class="fg" placeholder="grams" value="150">
+        <input type="text" inputmode="decimal" class="fg" placeholder="grams" value="150">
         <button class="btn primary" onclick="addFood(this,'${f.n.replace(/'/g,"\\'")}',${f.p},${f.f},${f.k})">Add</button>
       </div>
     </div>`;
@@ -5701,7 +5701,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v64"]};
+ data:["Save & Settings","Backup your data · v66"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -6014,6 +6014,12 @@ document.addEventListener("visibilitychange",()=>{
 });
 // Also when the browser restores the page from its back/forward cache
 window.addEventListener("pageshow",e=>{if(e.persisted)openStartTab();});
+// Number boxes take decimals with either a point or a comma (SA keyboards show a comma)
+document.addEventListener("input",e=>{
+  const el=e.target; if(!(el instanceof HTMLInputElement)||el.inputMode!=="decimal")return;
+  const v=el.value, c=v.replace(/,/g,".").replace(/[^0-9.]/g,"").replace(/(\..*)\./g,"$1");
+  if(c!==v){el.value=c;}
+},true);
 // Tapping into a box that already has something in it puts the cursor at the end, ready to backspace
 function caretToEnd(el){
   const v=el.value; if(!v)return;
