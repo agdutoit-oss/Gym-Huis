@@ -5235,7 +5235,29 @@ const DRINK_SIZES={
  "Mixed drinks":{u:[225,"drink"],s:[[225,"1 drink"],[450,"2 drinks"],[675,"3 drinks"]]},
  "Wine":{u:[150,"glass"],s:[[150,"glass 150 ml"],[250,"large glass 250 ml"],[750,"bottle 750 ml"]]},
 };
-function fcUnitOf(f){if(f.each)return [1,"serving"];return f.u||DRINK_SIZES[f.c]?.u||FOOD_UNITS[f.n]||null;}
+function fcUnitOf(f){if(f.each)return [1,"serving"];if(f.c==="My foods"){const p=fcPortion(f);if(p)return [p.w,p.word];}return f.u||DRINK_SIZES[f.c]?.u||FOOD_UNITS[f.n]||null;}
+// What one portion of a saved food is called, from its name: "(4 of 8 slices)" -> slice
+const FC_UNIT_WORDS="slices?|pieces?|pcs|wings?|nuggets?|strips?|drumsticks?|thighs?|ribs?|chops?|sausages?|patt(?:y|ies)|burgers?|sandwich(?:es)?|wraps?|rolls?|eggs?|rashers?|cookies?|biscuits?|muffins?|tacos?|scoops?|bowls?|plates?|portions?|servings?|bars?|fillets?|skewers?|sosaties?|pies?|samoosas?|meatballs?|cubes?|squares?|wedges?|tots?|cups?|glass(?:es)?|cans?|bottles?";
+function fcSingular(w){w=w.toLowerCase();if(w==="pcs")return "piece";if(w==="patties")return "patty";if(/(ch|sh|ss)es$/.test(w))return w.slice(0,-2);if(w.endsWith("ies")&&w!=="pies"&&w!=="cookies"&&w!=="sosaties")return w.slice(0,-3)+"y";if(w.endsWith("s")&&!w.endsWith("ss"))return w.slice(0,-1);return w;}
+function fcPlural(w){if(w==="each")return w;if(/(ch|sh|ss|x)$/.test(w))return w+"es";if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+"ies";return w+"s";}
+function fcNameCount(n){
+  let m=new RegExp("(\\d+)\\s*(?:of|/|out of)\\s*(\\d+)\\s*("+FC_UNIT_WORDS+")\\b","i").exec(n||"");
+  if(m)return {n:+m[1],of:+m[2],word:fcSingular(m[3])};
+  m=new RegExp("(\\d+)\\s*(?:x\\s*)?("+FC_UNIT_WORDS+")\\b","i").exec(n||"");
+  if(m)return {n:+m[1],word:fcSingular(m[2])};
+  return null;
+}
+// A saved food's portion: its weight, its name (slice, piece, portion) and how many make the whole
+function fcPortion(f){
+  const c=fcNameCount(f.n);
+  if(f.u&&f.u[0]>0){
+    const word=c?c.word:(f.u[1]==="each"?"portion":f.u[1]);
+    return {w:f.u[0],word,of:c?.of||null};
+  }
+  if(c&&c.n>0){const last=fcLastAmount(f.n);if(last)return {w:Math.round(last/c.n*10)/10,word:c.word,of:c.of||null};}
+  return null;
+}
+function fcFrac(n){const w=Math.floor(n),h=n-w>0.01;return h?(w?w+"½":"½"):String(w);}
 function fcSizesOf(f){return f.s||(f.ml!==false?DRINK_SIZES[f.c]?.s:null)||null;}
 function uoM(f){return f&&f.each?"×":f&&f.ml?"ml":"g";}
 // Words that describe the serving, not the food ("2 tots brandy", "large latte")
@@ -5335,8 +5357,10 @@ function fcPick(name){
     fcGramsManual=true;
   }else if(!fcGramsManual||!g.value){
     const u=fcUnitOf(f);
-    const last=fcLastAmount(f.n);
-    g.value = u ? (FOOD_UNITS[f.n]?u[0]*2:u[0]) : (last||"");
+    let last=fcLastAmount(f.n);
+    // last time was about a whole number of portions (215 g ≈ 4 slices of 54 g): use that
+    if(last&&u&&f.c==="My foods"){const c=Math.round(last/u[0]);if(c>=1&&Math.abs(last-c*u[0])<=Math.max(2,last*0.02))last=Math.round(c*u[0]*10)/10;}
+    g.value = FOOD_UNITS[f.n]&&u ? u[0]*2 : last ? last : u ? u[0] : "";
     fcGramsManual=false;
   }
   // "large latte", "2 cans coke", "black label quart": use that serving size
@@ -5374,17 +5398,29 @@ function fcRender(){
   }
   const u=fcUnitOf(fcSel), sz=fcSizesOf(fcSel), uo=uoM(fcSel);
   if(gEl)gEl.placeholder=fcSel.each?"how many":uo;
-  let opts = sz ? sz : u ? [1,2,3,4,6].map(n=>[n*u[0],`${n} ${u[1]}${n>1?"s":""}${!fcSel.each&&u[1]==="serving"?` · ${Math.round(n*u[0])} ${uo}`:""}`]) : [100,150,200,250,300,400].map(n=>[n,`${n} ${uo}`]);
+  let opts;
+  if(sz)opts=sz;
+  else if(u){
+    const mine=fcSel.c==="My foods"||fcSel.each, pt=mine&&fcSel.c==="My foods"?fcPortion(fcSel):null;
+    const whole=pt?.of||fcNameCount(fcSel.n)?.of;
+    const countable=!/^(portion|serving|plate|bowl)$/.test(u[1]);
+    const ns = whole>=2&&whole<=12 ? Array.from({length:whole},(_,i)=>i+1)
+      : !mine ? [1,2,3,4,6]
+      : countable ? [1,2,3,4,5,6,8] : [0.5,1,1.5,2,3];
+    opts=ns.map(n=>[Math.round(n*u[0]*10)/10,`${fcFrac(n)} ${n>1?fcPlural(u[1]):u[1]}${!fcSel.each?` · ${Math.round(n*u[0])} ${uo}`:""}`]);
+  }else opts=[100,150,200,250,300,400].map(n=>[n,`${n} ${uo}`]);
   const last=!fcSel.each&&fcLastAmount(fcSel.n);
-  if(last&&!opts.some(([v])=>v===last))opts=[[last,`last time ${last} ${uo}`],...opts];
-  units.innerHTML=opts.map(([v,l])=>`<button class="chip ${g===v?"on":""}" onclick="fcSetGrams(${v})">${l}</button>`).join("");
+  if(last&&!opts.some(([v])=>Math.abs(v-last)<=Math.max(2,v*0.02)))opts=[[last,`last time ${last} ${uo}`],...opts];
+  units.innerHTML=opts.map(([v,l])=>`<button class="chip ${g&&Math.abs(g-v)<0.05?"on":""}" onclick="fcSetGrams(${v})">${l}</button>`).join("");
   if(!g||g<=0){
     prev.innerHTML=fcSel.each?`<b>${escH(fcSel.n)}</b>: ${kj(fcSel.k)} kJ each. How many?`:`<b>${escH(fcSel.n)}</b>: ${kj(fcSel.k)} kJ per 100 ${uo}. How much did you have?`;
     return;
   }
   const r=fcCalc(fcSel,g);
+  const cn=u&&!sz&&(fcSel.c==="My foods"||fcSel.each)?g/u[0]:0, cnt=cn>0&&Math.abs(cn*2-Math.round(cn*2))<0.02?Math.round(cn*2)/2:0;
+  const how=fcSel.each?`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]}`:`${g} ×`}`:`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]} · `:""}${Math.round(g)} ${uo}`;
   prev.innerHTML=`<div class="fck">${kj(r.k)}<small> kJ</small></div>
-    <b>${Math.round(g)} ${uo} ${escH(fcSel.n)}</b> · ${Math.round(r.p)} g protein · ${Math.round(r.f)} g fat`;
+    <b>${how} ${escH(fcSel.n)}</b> · ${Math.round(r.p)} g protein · ${Math.round(r.f)} g fat`;
 }
 function fcAdd(){
   if(!fcSel){
@@ -5394,7 +5430,7 @@ function fcAdd(){
   const g=parseFloat(document.getElementById("fcGrams").value);
   if(!g||g<=0){toast("Enter an amount");document.getElementById("fcGrams").focus();return;}
   const r=fcCalc(fcSel,g);
-  const u=fcUnitOf(fcSel), cnt=u&&g%u[0]===0?g/u[0]:1, q=cnt>=1&&cnt<=24?cnt:1;
+  const u=fcUnitOf(fcSel), cn=u?g/u[0]:1, cnt=Math.abs(cn-Math.round(cn))<0.02?Math.round(cn):1, q=cnt>=1&&cnt<=24?cnt:1;
   const one=fcCalc(fcSel,g/q);
   const ent={kcal:r.k,label:fcSel.n,food:fcSel.n,p:r1(r.p),f:r1(r.f),q,unit:{kcal:one.k,p:one.p,f:one.f}};
   if(!fcSel.each){ent.g=Math.round(g);ent.unit.g=g/q;ent.unit.kcal=fcSel.k*g/q/100;}
@@ -5701,7 +5737,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v66"]};
+ data:["Save & Settings","Backup your data · v67"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
