@@ -631,6 +631,20 @@
   .calwtip{background:rgba(77,159,255,.08);border:1px solid rgba(77,159,255,.25);border-radius:9px;padding:9px 11px;font-size:11.5px;color:#cfe0f2;margin-bottom:10px;line-height:1.5}
   .calchk{display:flex;align-items:center;gap:8px;font-size:13px;color:#cdd6df;margin:10px 0}
   .calchk input{width:18px;height:18px}
+  .tgtcard .histstats{margin:6px 0 10px}
+  .tgtcard .hstat b{font-size:19px}
+  .tgtline{font-size:12.5px;color:#cdd6df;line-height:1.5;margin:6px 0}
+  .tgtline b{color:var(--txt)}
+  .tgtwhy{font-size:12px;color:var(--dim);line-height:1.5;background:var(--card2);border-radius:10px;padding:9px 11px;margin:8px 0}
+  .tgtmore{margin-top:10px}
+  .tgtmore summary{font-size:13px;font-weight:700;color:var(--accent2);cursor:pointer;padding:6px 0}
+  .tgtgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+  .tgtgrid label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--dim);min-width:0}
+  .tgtgrid label i{font-style:normal;opacity:.8}
+  .tgtgrid label.wide{grid-column:1/-1}
+  .tgtgrid .calinput{width:100%;font-size:15px;padding:10px}
+  .tgtgrid select.calinput{appearance:auto}
+  .mfc{background:#4d9fff}
   .calproj{border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.55;margin-bottom:14px}
   .calproj.good{background:rgba(62,192,122,.1);border:1px solid rgba(62,192,122,.35);color:#bfe6cf}
   .calproj.good b{color:var(--good)}
@@ -1012,10 +1026,11 @@
 
     <div class="fdhead">Logged today <span style="text-transform:none;letter-spacing:0;font-weight:500">· tap one to fix it</span></div>
     <div id="calList"></div>
+    <label class="calchk" id="calPartialRow"><input type="checkbox" id="calPartial" onchange="togglePartial()"> I didn't log everything this day</label>
 
     <div class="caltrain">
-      <div class="fdhead">Optional: add a workout's burn</div>
-      <div class="calwtip">Your Apple Watch tends to overestimate — if you add training energy, shave ~20% off what it says. Easiest is to ignore this and just hit your intake target.</div>
+      <div class="fdhead">Optional: extra activity outside the gym</div>
+      <div class="calwtip">Your gym workouts are already counted in your target. Only add extra things like padel or a long hike; it's added to that day's target. Watches overestimate, so shave about 20% off what yours says.</div>
       <div class="caladd">
         <input type="text" inputmode="decimal" id="calBurnInput" class="calinput" placeholder="Burn (kJ)">
         <input type="text" id="calBurnLabel" class="calinput callbl" placeholder="e.g. padel, treadmill">
@@ -1025,21 +1040,33 @@
     </div>
 
 
-    <div class="setcard" style="margin-top:16px">
+    <div class="setcard tgtcard" style="margin-top:16px">
       <h3>Your daily target</h3>
-      <p>Your desk-job maintenance (no training) is about <b id="calMaint">10293</b> kJ. Set the daily intake target you want to eat to — lower than maintenance to lose fat.</p>
-      <div class="caladd">
-        <input type="text" inputmode="decimal" id="calTargetInput" class="calinput" placeholder="Target kJ">
-        <button class="btn primary" style="flex:0 0 70px" onclick="saveCalTarget()">Save</button>
-      </div>
-      <div class="caladd">
-        <input type="text" inputmode="decimal" id="calProtTarget" class="calinput" placeholder="Protein g">
-        <input type="text" inputmode="decimal" id="calFatTarget" class="calinput" placeholder="Fat g">
-        <div style="flex:0 0 70px"></div>
-      </div>
-      <div class="setnote" id="calMacroNote"></div>
-      <label class="calchk"><input type="checkbox" id="calAddBurnChk" onchange="toggleAddBurn()"> Add workout burn to my target for the day</label>
-      <div class="setnote">A deficit of ~2100 kJ/day ≈ 0.5 kg/week. On a strict carnivore diet, keep protein high to protect muscle while you lose fat. Not medical advice.</div>
+      <div id="tgtSummary"></div>
+      <details class="tgtmore" id="tgtMore"><summary>About you, goal and rate</summary>
+        <div class="tgtgrid">
+          <label>Sex<select id="tgSex" class="calinput"><option value="m">Male</option><option value="f">Female</option></select></label>
+          <label>Height (cm)<input type="text" inputmode="decimal" id="tgCm" class="calinput"></label>
+          <label>Date of birth<input type="date" id="tgDob" class="calinput"></label>
+          <label>Body fat % <i>(optional)</i><input type="text" inputmode="decimal" id="tgBf" class="calinput" placeholder="e.g. 30"></label>
+          <label class="wide">Daily life outside the gym<select id="tgAct" class="calinput"><option value="1.2">Desk job, not many steps</option><option value="1.3">Desk job, walk most days</option><option value="1.45">On my feet a lot</option></select></label>
+          <label class="wide">Goal<select id="tgGoal" class="calinput" onchange="tgtRateOpts()"></select></label>
+          <label class="wide">How fast<select id="tgRate" class="calinput"></select></label>
+        </div>
+        <label class="calchk"><input type="checkbox" id="tgGlp1"> I'm on Mounjaro (or a similar medicine)</label>
+        <label class="calchk"><input type="checkbox" id="tgSplit"> Eat more on training days (same weekly total)</label>
+        <div class="fdhead">Your own numbers <span style="text-transform:none;letter-spacing:0;font-weight:500">· leave empty for automatic</span></div>
+        <div class="caladd">
+          <input type="text" inputmode="decimal" id="calTargetInput" class="calinput" placeholder="kJ">
+          <input type="text" inputmode="decimal" id="calProtTarget" class="calinput" placeholder="Protein g">
+        </div>
+        <div class="caladd">
+          <input type="text" inputmode="decimal" id="calFatTarget" class="calinput" placeholder="Fat g">
+          <input type="text" inputmode="decimal" id="calCarbTarget" class="calinput" placeholder="Carbs g">
+        </div>
+        <button class="btn primary" style="width:100%" onclick="saveTgt()">Save</button>
+      </details>
+      <div class="setnote">The target updates every Monday from what you logged and how your weight trend moved, so weigh in a few times a week and log full days. Not medical advice; your dietician's advice wins.</div>
     </div>
     <div class="disc">Intake is what you control; burn is an estimate. Aim to hit your target most days and let the weekly trend tell the story.</div>
     </div><!-- /calToday -->
@@ -4186,7 +4213,7 @@ const FOOD_KEY="hgt_food_v1", WEIGHT_KEY="hgt_weight_v1", PROFILE_KEY="hgt_profi
 let foodLog={};   // "YYYY-MM-DD" -> [{name,g,p,f,kcal}]
 let weightLog=[]; // [{date, kg}]
 let profile={kg:110, cm:182, born:1988};
-function currentAge(){return new Date().getFullYear() - (profile.born||1988);}
+function currentAge(){return ageAt(new Date());}
 
 // Carnivore food database: per 100g -> protein, fat, kcal
 const FOODS=[
@@ -4384,48 +4411,43 @@ function loadCal(){try{
 }catch(e){}}
 function saveCal(){try{localStorage.setItem(CAL_KEY,JSON.stringify({log:calLog,cfg:calCfg}));}catch(e){}}
 function calMaintenance(){
-  // Mifflin-St Jeor × 1.2 (desk job), recomputed from current profile
-  const w=profile.kg, h=profile.cm, a=currentAge();
-  const bmr=10*w + 6.25*h - 5*a + 5;
-  return Math.round(bmr*1.2);
+  // formula estimate for today: resting burn × daily life + training (see the target engine below)
+  return Math.round(startMaint(todayKey(),wtNow()));
 }
 function calDay(key){ if(!calLog[key])calLog[key]={eat:[],burn:[]}; return calLog[key]; }
 function calEaten(key){return (calLog[key]?.eat||[]).reduce((t,x)=>t+(+x.kcal||0),0);}
 function calBurned(key){return (calLog[key]?.burn||[]).reduce((t,x)=>t+(+x.kcal||0),0);}
-function calTargetFor(key){ return calCfg.target + (calCfg.addBurn?calBurned(key):0); }
+function calTargetFor(key){
+  const e=tgtEntry(key); if(e)return e.target+tgtDayAdj(key,e)+calBurned(key);
+  return (calCfg.legacy!=null?calCfg.legacy:calCfg.target)+(calCfg.addBurn?calBurned(key):0);
+}
 
 function renderCal(){
   const db=document.getElementById("calDateBar"); if(db)db.innerHTML=dateBar();
   const key=selKey;
   renderFoodCalc();
-  calCfg.maint=calMaintenance();
-  const m=document.getElementById("calMaint"); if(m)m.textContent=kj(calCfg.maint);
-  const ti=document.getElementById("calTargetInput"); if(ti&&document.activeElement!==ti)ti.value=kj(calCfg.target);
-  const mtA=calMacroTargets(key);
-  const pti=document.getElementById("calProtTarget"); if(pti&&document.activeElement!==pti)pti.value=calCfg.protein||"";
-  const fti=document.getElementById("calFatTarget"); if(fti&&document.activeElement!==fti)fti.value=calCfg.fat||"";
-  if(pti)pti.placeholder=`Protein g (auto ${mtA.p})`; if(fti)fti.placeholder=`Fat g (auto ${mtA.f})`;
-  const mn=document.getElementById("calMacroNote");
-  if(mn)mn.textContent=`Leave protein and fat empty to use the automatic targets: protein for your weight (${targets().pLo}–${targets().pHi} g), and fat from the energy left after protein.`;
-  const chk=document.getElementById("calAddBurnChk"); if(chk)chk.checked=calCfg.addBurn;
+  tgtUpdate(); fillTgtForm(); renderTgtSummary();
+  calCfg.maint=calMaintFor(key);
+  const pc=document.getElementById("calPartial"); if(pc)pc.checked=!!calLog[key]?.partial;
+  const pr=document.getElementById("calPartialRow"); if(pr)pr.style.display=(calLog[key]?.eat||[]).length?"flex":"none";
 
   const eaten=calEaten(key), burned=calBurned(key);
   const target=calTargetFor(key);
   const remaining=target-eaten;
   const pct=target>0?Math.min(100,(eaten/target)*100):0;
   const over=eaten>target;
-  const deficit=calCfg.maint + (calCfg.addBurn?burned:0) - eaten; // vs maintenance(+burn)
+  const deficit=calMaintDay(key) - eaten; // vs maintenance (+ extra activity)
 
   document.getElementById("calRing").innerHTML=`
     <div class="calcard">
       <div class="calbig ${over?'over':''}">${kj(Math.abs(remaining))}<small>${remaining>=0?'kJ left':'kJ over'}</small></div>
-      <div class="calsub">${kj(eaten)} kJ eaten · ${kj(target)} kJ target${calCfg.addBurn&&burned?` (incl. ${kj(burned)} burn)`:''}</div>
+      <div class="calsub">${kj(eaten)} kJ eaten · ${kj(target)} kJ target${burned&&(tgtEntry(key)||calCfg.addBurn)?` (incl. ${kj(burned)} extra activity)`:''}</div>
       <div class="calbar"><div class="calbarfill ${over?'over':''}" style="width:${pct}%"></div></div>
       <div class="caldef">${deficit>=0?`▼ ${kj(deficit)} kJ under maintenance`:`▲ ${kj(Math.abs(deficit))} kJ over maintenance`}</div>
       ${(()=>{const e=calLog[key]?.eat||[], mt=calMacroTargets(key);
-        const p=e.reduce((t,x)=>t+(+x.p||0),0), f=e.reduce((t,x)=>t+(+x.f||0),0);
+        const p=e.reduce((t,x)=>t+(+x.p||0),0), f=e.reduce((t,x)=>t+(+x.f||0),0), c=e.reduce((t,x)=>t+entryCarbs(x),0);
         const bar=(lab,v,t,cls)=>`<div><div class="ml"><span>${lab}</span><span><b>${Math.round(v)}</b> / ${t} g</span></div><div class="calbar"><div class="calbarfill ${cls}" style="width:${t>0?Math.min(100,v/t*100):0}%"></div></div></div>`;
-        return `<div class="calmacs">${bar("Protein",p,mt.p,"mfp")}${bar("Fat",f,mt.f,"mff")}</div>`;})()}
+        return `<div class="calmacs">${bar("Protein",p,mt.p,"mfp")}${bar("Fat",f,mt.f,"mff")}${mt.c?bar("Carbs",c,mt.c,"mfc"):""}</div>`;})()}
     </div>`;
 
   // warning
@@ -4433,6 +4455,11 @@ function renderCal(){
   const isFuture=dateOf(key)>dateOf(todayKey());
   if(!isFuture){
     if(over)warn=`<div class="fwarn warn"><b>Over target.</b> You're ${kj(-remaining)} kJ above today's goal. One day won't undo progress — just get back on target tomorrow.</div>`;
+    else if(profile.glp1&&key===todayKey()&&new Date().getHours()>=17&&tgtEntry(key)){
+      const pe=(calLog[key]?.eat||[]).reduce((t,x)=>t+(+x.p||0),0), pt=calMacroTargets(key).p;
+      if(eaten>0&&pe<pt*0.6)warn=`<div class="fwarn warn"><b>Protein is behind.</b> You're at ${Math.round(pe)} of ${pt} g. On Mounjaro it's easy to undereat, and protein is what protects your muscle, so have that first.</div>`;
+      else if(eaten>0 && eaten<1200)warn=`<div class="fwarn warn"><b>Very low so far.</b> Eating too little backfires — it costs muscle and tanks energy. Make sure you hit enough protein.</div>`;
+    }
     else if(eaten>0 && eaten<1200)warn=`<div class="fwarn warn"><b>Very low so far.</b> Eating too little backfires — it costs muscle and tanks energy. Make sure you hit enough protein.</div>`;
   }
   document.getElementById("calWarn").innerHTML=warn;
@@ -4489,7 +4516,7 @@ function repPeriod(){
 function repDay(k){
   const e=calLog[k]?.eat||[];
   const sum=f=>e.reduce((t,x)=>t+(+x[f]||0),0);
-  return {k,logged:e.length>0,kcal:sum("kcal"),p:sum("p"),f:sum("f"),c:sum("c"),burn:calBurned(k),target:calTargetFor(k),mt:calMacroTargets(k),eat:e};
+  return {k,logged:e.length>0,kcal:sum("kcal"),p:sum("p"),f:sum("f"),c:e.reduce((t,x)=>t+entryCarbs(x),0),burn:calBurned(k),target:calTargetFor(k),mt:calMacroTargets(k),maint:calMaintDay(k),eat:e};
 }
 function repFoods(ds){
   const m={};
@@ -4544,13 +4571,13 @@ function renderCalHistory(){
   }
   const maint=calMaintenance();
   if(repMode==="day"){
-    const d=ds[0], left=d.target-d.kcal, def=maint+(calCfg.addBurn?d.burn:0)-d.kcal;
+    const d=ds[0], left=d.target-d.kcal, def=d.maint-d.kcal;
     h+=`<div class="histstats">
       <div class="hstat"><b>${kj(d.kcal)}</b><span>kJ of ${kj(d.target)}</span></div>
       <div class="hstat"><b>${Math.round(d.p)}</b><span>g protein</span></div>
       <div class="hstat"><b>${Math.round(d.f)}</b><span>g fat</span></div></div>
       <div class="calproj ${left>=0?"good":"accent"}">${left>=0?`<b>${kj(left)} kJ under</b> your target`:`<b>${kj(-left)} kJ over</b> your target`}, and ${def>=0?`${kj(def)} kJ under`:`${kj(-def)} kJ over`} maintenance.</div>
-      <div class="calmacs" style="margin:12px 0">${repMacroRow("Protein",d.p,d.mt.p,"mfp")}${repMacroRow("Fat",d.f,d.mt.f,"mff")}</div>
+      <div class="calmacs" style="margin:12px 0">${repMacroRow("Protein",d.p,d.mt.p,"mfp")}${repMacroRow("Fat",d.f,d.mt.f,"mff")}${d.mt.c?repMacroRow("Carbs",d.c,d.mt.c,"mfc"):""}</div>
       ${repSplit(d.p,d.f,d.c)}
       <div class="fdhead">What you ate, biggest first</div>${repFoodBars(repFoods([d]),d.kcal,30)}
       <button class="btn ghost" style="width:100%;margin-top:12px" onclick="pickDate('${d.k}');setCalSub('today')">Open this day</button>
@@ -4560,8 +4587,8 @@ function renderCalHistory(){
   const n=logged.length, sum=f=>logged.reduce((t,d)=>t+d[f],0);
   const avg=sum("kcal")/n, avgP=sum("p")/n, avgF=sum("f")/n, avgC=sum("c")/n;
   const onT=logged.filter(d=>d.kcal<=d.target).length;
-  const avgT=logged.reduce((t,d)=>t+d.target,0)/n, mtAvg={p:logged.reduce((t,d)=>t+d.mt.p,0)/n,f:logged.reduce((t,d)=>t+d.mt.f,0)/n};
-  const def=logged.reduce((t,d)=>t+maint+(calCfg.addBurn?d.burn:0)-d.kcal,0);
+  const avgT=logged.reduce((t,d)=>t+d.target,0)/n, mtAvg={p:logged.reduce((t,d)=>t+d.mt.p,0)/n,f:logged.reduce((t,d)=>t+d.mt.f,0)/n,c:logged.reduce((t,d)=>t+(d.mt.c||0),0)/n};
+  const def=logged.reduce((t,d)=>t+d.maint-d.kcal,0);
   const fatKg=def/7700;
   const inP=weightLog.filter(w=>{const k=keyOf(new Date(w.date));return k>=P.days[0]&&k<=P.days[P.days.length-1];}).sort((a,b)=>a.date<b.date?-1:1);
   const wt=inP.length>=2?inP[inP.length-1].kg-inP[0].kg:null;
@@ -4576,7 +4603,7 @@ function renderCalHistory(){
       ${wt!=null?` Your weigh-ins went ${wt<=0?"down":"up"} <b>${Math.abs(wt).toFixed(1)} kg</b>.`:""}
       ${n<P.days.filter(k=>dateOf(k)<=dateOf(todayKey())).length?` Days you didn't log are left out.`:""}</div>
     <div class="fdhead">Average per day</div>
-    <div class="calmacs" style="margin-bottom:6px">${repMacroRow("Protein",avgP,mtAvg.p,"mfp")}${repMacroRow("Fat",avgF,mtAvg.f,"mff")}</div>
+    <div class="calmacs" style="margin-bottom:6px">${repMacroRow("Protein",avgP,mtAvg.p,"mfp")}${repMacroRow("Fat",avgF,mtAvg.f,"mff")}${mtAvg.c?repMacroRow("Carbs",avgC,mtAvg.c,"mfc"):""}</div>
     <div class="cehint">Average target: ${kj(avgT)} kJ a day.</div>
     ${repSplit(avgP,avgF,avgC)}`;
   if(repMode==="month"){
@@ -4600,15 +4627,15 @@ function repExport(){
   const long=k=>{const d=dateOf(k);return `${WD[d.getDay()]} ${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;};
   const g=v=>Math.round(+v||0), maint=calMaintenance(), n=logged.length, sum=f=>logged.reduce((t,d)=>t+d[f],0);
   const avg=f=>sum(f)/n, onT=logged.filter(d=>d.kcal<=d.target).length;
-  const def=logged.reduce((t,d)=>t+maint+(calCfg.addBurn?d.burn:0)-d.kcal,0);
+  const def=logged.reduce((t,d)=>t+d.maint-d.kcal,0);
   const inP=weightLog.filter(w=>{const k=keyOf(new Date(w.date));return k>=P.days[0]&&k<=P.days[P.days.length-1];}).sort((a,b)=>a.date<b.date?-1:1);
   const now=new Date(), title=repMode==="day"?long(P.days[0]):repMode==="week"?`Week of ${P.label} ${P.end.getFullYear()}`:P.label;
   const split=(p,f,c)=>{const t=p*4+f*9+c*4;return t>0?`${Math.round(p*400/t)}% / ${Math.round(f*900/t)}% / ${Math.round(c*400/t)}%`:"–";};
   let h=`<div class="pr-head"><div><h1>Food diary</h1><div class="pr-sub">${escH(title)}</div></div>
-    <div class="pr-meta">${profile.kg} kg · ${profile.cm} cm · age ${currentAge()}<br>Made ${now.getDate()} ${M[now.getMonth()]} ${now.getFullYear()} with Home Gym Trainer</div></div>
+    <div class="pr-meta">${r1(wtNow())} kg (trend) · ${profile.cm} cm · age ${currentAge()}<br>Made ${now.getDate()} ${M[now.getMonth()]} ${now.getFullYear()} with Home Gym Trainer</div></div>
     <table class="pr-kv">
-      <tr><td>Daily energy target</td><td>${kj(calCfg.target)} kJ${calCfg.addBurn?" plus logged exercise":""}</td><td>Estimated maintenance</td><td>${kj(maint)} kJ</td></tr>
-      <tr><td>Protein target</td><td>${g(logged[0].mt.p)} g</td><td>Fat target</td><td>${g(logged[0].mt.f)} g</td></tr>
+      <tr><td>Daily energy target</td><td>${kj(avg("target"))} kJ${n>1?" average":""}${tgtEntry(logged[0].k)?" (updated weekly from intake and weight trend)":""}</td><td>Maintenance</td><td>${kj(logged.reduce((t,d)=>t+calMaintFor(d.k),0)/n)} kJ${(tgtEntryAny(logged[0].k)||{}).src==="learned"?" (learned from logs)":" (estimated)"}</td></tr>
+      <tr><td>Protein target</td><td>${g(logged.reduce((t,d)=>t+d.mt.p,0)/n)} g</td><td>Fat / carbs target</td><td>${g(logged.reduce((t,d)=>t+d.mt.f,0)/n)} g / ${g(logged.reduce((t,d)=>t+(d.mt.c||0),0)/n)} g</td></tr>
     </table>`;
   if(repMode!=="day"){
     h+=`<h2>Summary</h2><table class="pr-kv">
@@ -4625,7 +4652,7 @@ function repExport(){
   }
   h+=`<h2>${repMode==="day"?"What was eaten":"Day by day"}</h2>`+logged.map(d=>{
     const rows=d.eat.map(x=>{const q=x.q||1, uo=x.ml?"ml":"g", amt=x.g?(q>1?`${q} × ${Math.round(x.g/q)} ${uo}`:`${x.g} ${uo}`):(q>1?`${q} ×`:"");
-      return `<tr><td>${escH(x.food||x.label||"Quick add")}${x.ai?' <span class="pr-ai">Claude estimate</span>':""}</td><td>${amt||"–"}</td><td>${kj(x.kcal)}</td><td>${x.p!=null?g(x.p):"–"}</td><td>${x.f!=null?g(x.f):"–"}</td><td>${x.c?g(x.c):"–"}</td></tr>`;}).join("");
+      return `<tr><td>${escH(x.food||x.label||"Quick add")}${x.ai?' <span class="pr-ai">Claude estimate</span>':""}</td><td>${amt||"–"}</td><td>${kj(x.kcal)}</td><td>${x.p!=null?g(x.p):"–"}</td><td>${x.f!=null?g(x.f):"–"}</td><td>${entryCarbs(x)?g(entryCarbs(x)):"–"}</td></tr>`;}).join("");
     const burn=d.burn?`<div class="pr-note">Exercise logged: ${kj(d.burn)} kJ${(calLog[d.k]?.burn||[]).map(b=>b.label).filter(Boolean).length?` (${(calLog[d.k].burn).map(b=>escH(b.label)).filter(Boolean).join(", ")})`:""}</div>`:"";
     return `<div class="pr-day"><h3>${long(d.k)}<span>${kj(d.kcal)} kJ of ${kj(d.target)} kJ · ${d.kcal<=d.target?`${kj(d.target-d.kcal)} under`:`${kj(d.kcal-d.target)} over`}</span></h3>
       <table class="pr-t"><thead><tr><th>Food or drink</th><th>Amount</th><th>kJ</th><th>Protein g</th><th>Fat g</th><th>Carbs g</th></tr></thead><tbody>${rows}
@@ -4828,14 +4855,226 @@ function calEditSave(i){
   calEditIdx=-1; saveCal(); renderCal(); toast("Saved");
 }
 function rmCal(kind,i){ calEditIdx=-1; calDay(selKey)[kind].splice(i,1); saveCal(); renderCal(); }
-// Protein: your own number, else the app's estimate for your weight (2.2 g per kg lean mass).
-// Fat: your own number, else whatever calories are left after protein (strict carnivore, ~0 carbs).
+// Macros come from the week's target (see the engine below). Days before v71 keep the old carnivore split.
 function calMacroTargets(key){
-  const p=calCfg.protein||targets().pMid;
+  const e=tgtEntry(key);
+  if(e){const extra=tgtDayAdj(key,e)+calBurned(key);return {p:e.p,f:e.f,c:Math.max(0,Math.round(e.c+extra/4))};}
+  const p=calCfg.protein||Math.round((+profile.kg||110)*0.7*2.2);
   const f=calCfg.fat||Math.max(0,Math.round((calTargetFor(key)-p*4)/9));
-  return {p,f};
+  return {p,f,c:0};
 }
-function saveCalTarget(){
+/* ---- Daily target (v71): learns your real maintenance from what you log and your weight trend ----
+   Start: Mifflin-St Jeor (or Katch-McArdle with body fat %) × daily life + training from logged workouts.
+   Every Monday: last 21 days of fully logged intake vs the change in the smoothed weight trend
+   (1 kg ≈ 7700 kcal). Moves half way to that, at most 5% a week. Then goal + rate, then protein from
+   lean mass, fat 25% (min 0.5 g/kg), carbs the rest. Stored in kcal like the rest of the app. */
+const KCAL_PER_KG=7700, TGT_VER=1;
+const TGT_GOALS={
+  lose:{n:"Lose fat, build muscle",rates:[0.25,0.5,0.75,1],def:0.5,sign:-1,prot:2.4},
+  maintain:{n:"Stay at this weight",rates:[0],def:0,sign:0,prot:2.0},
+  gain:{n:"Build muscle, slow gain",rates:[0.1,0.15,0.25],def:0.1,sign:1,prot:2.0}};
+function tgtGoal(){return TGT_GOALS[profile.goal]||TGT_GOALS.lose;}
+function tgtRate(){const G=tgtGoal();return G.rates.includes(+profile.rate)?+profile.rate:G.def;}
+function ageAt(d){
+  if(profile.dob){const b=dateOf(profile.dob);let a=d.getFullYear()-b.getFullYear();
+    if(d.getMonth()<b.getMonth()||(d.getMonth()===b.getMonth()&&d.getDate()<b.getDate()))a--;return a;}
+  return d.getFullYear()-(profile.born||1988);
+}
+function mondayOf(d){const a=new Date(d);a.setHours(0,0,0,0);a.setDate(a.getDate()-((a.getDay()+6)%7));return a;}
+function addDays(k,n){const d=dateOf(k);d.setDate(d.getDate()+n);return keyOf(d);}
+// weight: last weigh-in of each day, then a smoothed trend (gaps filled in a straight line, then 10% per day)
+function wtDaily(){const m={};[...weightLog].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(w=>{if(+w.kg>0)m[keyOf(new Date(w.date))]=+w.kg;});return m;}
+function wtTrend(){
+  const m=wtDaily(), keys=Object.keys(m).sort(), out={}; if(!keys.length)return out;
+  let i=0, t=m[keys[0]]; const end=todayKey();
+  for(let k=keys[0];k<=end;k=addDays(k,1)){
+    while(i+1<keys.length&&keys[i+1]<=k)i++;
+    let w=m[keys[i]];
+    if(k!==keys[i]&&i+1<keys.length){const a=dateOf(keys[i]),b=dateOf(keys[i+1]);w+= (m[keys[i+1]]-w)*((dateOf(k)-a)/(b-a));}
+    t+=0.1*(w-t); out[k]=t;
+  }
+  return out;
+}
+function wtNow(tr){tr=tr||wtTrend();const ks=Object.keys(tr);return ks.length?tr[ks[ks.length-1]]:(+profile.kg||110);}
+function wtAt(k,tr){tr=tr||wtTrend();if(tr[k]!=null)return tr[k];const ks=Object.keys(tr).filter(x=>x<=k);return ks.length?tr[ks[ks.length-1]]:wtNow(tr);}
+// lean mass: from body fat % (fixed at the weight it was given at), else the Boer formula
+function lbmKg(kg){
+  if(profile.bf>0)return (profile.bfAt||kg)*(1-profile.bf/100);
+  const h=profile.cm||181;return profile.sex==="f"?0.252*kg+0.473*h-48.3:0.407*kg+0.267*h-19.2;
+}
+function bmrKcal(kg,at){
+  if(profile.bf>0)return 370+21.6*lbmKg(kg);
+  return 10*kg+6.25*(profile.cm||181)-5*ageAt(at||new Date())+(profile.sex==="f"?-161:5);
+}
+// training energy: lifting ≈ 3.5 METs, net 2.5 × kg × hours
+function exMins(n){const e=exByName(n);const t=e?defTarget(e):{sets:3,rest:90};const s=+t.sets||3,r=+t.rest||90;return (s*40+(s-1)*r+60)/60;}
+function trainIndex(){const m={};for(const n in logs)(logs[n]||[]).forEach(en=>{if(!en||!en.date)return;const k=keyOf(new Date(en.date));(m[k]=m[k]||new Set()).add(n);});return m;}
+function trainKcalDay(k,idx,kg){const s=idx[k];if(!s||!s.size)return 0;let mins=10;s.forEach(n=>mins+=exMins(n));return 2.5*kg*mins/60;}
+function planWeek(){let mins=0,days=0;try{asPlan(trainingId(),()=>{for(let d=0;d<7;d++){const m=dayMins(d);if(m){mins+=m;days++;}}});}catch(e){}return {mins,days};}
+function trainAvg(endKey,kg){   // kcal a day, averaged over the 28 days before endKey (plan estimate if none logged)
+  const idx=trainIndex();let tot=0,n=0;
+  for(let i=1;i<=28;i++){const k=addDays(endKey,-i);const v=trainKcalDay(k,idx,kg);if(v){tot+=v;n++;}}
+  if(n)return {kcal:tot/28,from:"logged",days:n};
+  const p=planWeek();return {kcal:2.5*kg*(p.mins/60)/7,from:"plan",days:p.days*4};
+}
+function startMaint(endKey,kg){return bmrKcal(kg,dateOf(endKey))*(+profile.act||1.2)+trainAvg(endKey,kg).kcal;}
+// what the last 21 days say your maintenance really is
+function tgtMeasure(week){
+  const tr=wtTrend(), wd=wtDaily(), end=addDays(week,-1), start=addDays(week,-21), before=addDays(week,-22);
+  let sum=0,n=0,burn=0,weighs=0;
+  for(let k=start;k<=end;k=addDays(k,1)){
+    if(wd[k]!=null)weighs++;
+    const day=calLog[k], e=calEaten(k);
+    if(day&&!day.partial&&e>0&&e>=0.5*calTargetFor(k)){sum+=e;burn+=calBurned(k);n++;}
+  }
+  const t0=tr[before], t1=tr[end];
+  const info={n,weighs};
+  if(n<14||weighs<5||t0==null||t1==null)return Object.assign(info,{ok:false});
+  const avg=sum/n, dKg=t1-t0, tdee=avg-dKg*KCAL_PER_KG/21-burn/n;
+  const bmr=bmrKcal(t1,dateOf(week));
+  if(tdee<bmr*0.9||tdee>bmr*2.6)return Object.assign(info,{ok:false,odd:true});
+  return Object.assign(info,{ok:true,avg,dKg,tdee,trend:t1});
+}
+function tgtBuild(week,maint,meas,src){
+  const tr=wtTrend(), kg=wtAt(addDays(week,-1),tr), G=tgtGoal(), rate=tgtRate();
+  const delta=G.sign*rate/100*kg*KCAL_PER_KG/7;
+  const bmr=bmrKcal(kg,dateOf(week)), floor=Math.max(1500,bmr*0.8);
+  const own=calCfg.own||{};
+  let target=Math.max(floor,maint+delta); const floored=!own.kcal&&maint+delta<floor;
+  if(own.kcal>0)target=own.kcal;
+  const lbm=lbmKg(kg);
+  const p=own.p||Math.round(G.prot*lbm);
+  const f=own.f||Math.round(Math.max(target*0.25/9,0.5*kg));
+  const c=own.c||Math.max(0,Math.round((target-p*4-f*9)/4));
+  return {week,maint:Math.round(maint),src,meas:meas&&meas.ok?{avg:Math.round(meas.avg),dKg:r2(meas.dKg),tdee:Math.round(meas.tdee),n:meas.n,w:meas.weighs}:{n:meas?meas.n:0,w:meas?meas.weighs:0},
+    kg:r1(kg),lbm:r1(lbm),bmr:Math.round(bmr),delta:Math.round(delta),rate,goal:profile.goal||"lose",target:Math.round(target),floored,p,f,c};
+}
+function tgtNextMaint(prev,week){
+  const tr=wtTrend(), kg=wtAt(addDays(week,-1),tr), meas=tgtMeasure(week);
+  if(meas.ok){
+    if(!prev)return {maint:meas.tdee,meas,src:"learned"};
+    const lim=prev.maint*0.05, step=Math.max(-lim,Math.min(lim,(meas.tdee-prev.maint)*0.5));
+    return {maint:prev.maint+step,meas,src:"learned"};
+  }
+  if(prev&&prev.src==="learned")return {maint:prev.maint,meas,src:"learned"};
+  return {maint:startMaint(week,kg),meas,src:"estimate"};
+}
+function tgtFirstKey(){
+  const ks=Object.keys(calLog).filter(k=>(calLog[k].eat||[]).length).sort();
+  const w=Object.keys(wtDaily()).sort();
+  return [ks[0],w[0]].filter(Boolean).sort()[0]||todayKey();
+}
+// bring the weekly targets up to date; force = settings changed, so redo this week's entry
+function tgtUpdate(force){
+  const cur=keyOf(mondayOf(new Date()));
+  let A=calCfg.auto;
+  if(!A||A.ver!==TGT_VER){
+    A=calCfg.auto={ver:TGT_VER,since:cur,hist:[]};
+    if(calCfg.legacy==null)calCfg.legacy=calCfg.target;
+    calCfg.protein=0;calCfg.fat=0;   // old own numbers were set for a no-carb diet
+  }
+  if(profile.bf>0&&!profile.bfAt){profile.bfAt=r1(wtNow());saveFood();}
+  const last=A.hist[A.hist.length-1];
+  if(last&&last.week===cur&&!force)return;
+  if(last&&last.week===cur){
+    A.hist.pop();const prev=A.hist[A.hist.length-1]||null;
+    const nx=tgtNextMaint(prev,cur);A.hist.push(tgtBuild(cur,nx.maint,nx.meas,nx.src));
+  }else{
+    let w=last?addDays(last.week,7):keyOf(mondayOf(dateOf(addDays(tgtFirstKey(),21))));
+    const oldest=addDays(cur,-7*16); if(w<oldest)w=oldest; if(w>cur)w=cur;
+    for(;w<=cur;w=addDays(w,7)){const prev=A.hist[A.hist.length-1]||null;const nx=tgtNextMaint(prev,w);A.hist.push(tgtBuild(w,nx.maint,nx.meas,nx.src));}
+    if(A.hist.length>60)A.hist=A.hist.slice(-60);
+  }
+  saveCal();
+}
+function tgtEntryAny(k){const A=calCfg.auto;if(!A||!A.hist.length)return null;let e=null;for(const h of A.hist){if(h.week<=k)e=h;else break;}return e||A.hist[0];}
+function tgtEntry(k){const A=calCfg.auto;if(!A||!A.hist.length||(A.since&&k<A.since))return null;return tgtEntryAny(k);}
+function tgtCur(){tgtUpdate();return tgtEntry(todayKey());}
+// training-day split: same weekly total, lifting days a bit more
+function isTrainDay(k){
+  if(trainIndex()[k])return true;
+  if(k<todayKey()||planMode.mode==="order")return false;
+  const dow=(dateOf(k).getDay()+6)%7;let has=false;try{asPlan(trainingId(),()=>{has=!!(plans[dow]||[]).length;});}catch(e){}return has;
+}
+function tgtDayAdj(k,e){
+  if(!calCfg.split||!e)return 0;
+  const p=planWeek(); if(!p.days||p.days>=7)return 0;
+  const S=2.5*e.kg*(p.mins/p.days/60);
+  return isTrainDay(k)?S*(7-p.days)/7:-S*p.days/7;
+}
+// carbs in a logged item: Claude gives them; otherwise what's left after protein and fat (alcohol counts here too)
+function entryCarbs(x){
+  if(x.c!=null)return +x.c||0;
+  if(x.p==null&&x.f==null)return 0;
+  const k=+x.kcal||0, c=(k-4*(+x.p||0)-9*(+x.f||0))/4;
+  return c*4>k*0.06?c:0;
+}
+function calMaintFor(k){const e=tgtEntryAny(k);return e?e.maint:calMaintenance();}
+function calMaintDay(k){return calMaintFor(k)+((tgtEntry(k)||calCfg.addBurn)?calBurned(k):0);}
+
+function tgtRateOpts(){
+  const g=document.getElementById("tgGoal"), r=document.getElementById("tgRate"); if(!g||!r)return;
+  const G=TGT_GOALS[g.value]||TGT_GOALS.lose, kg=wtNow(), cur=+r.value;
+  r.innerHTML=G.rates.map(v=>{const kgw=v/100*kg;
+    const lab=v===0?"Keep my weight steady":G.sign<0?`${v}% a week (about ${kgw.toFixed(2)} kg)${v===G.def?" · suggested":""}`:`${v}% a week (about ${(kgw*4.3).toFixed(1)} kg a month)${v===G.def?" · suggested":""}`;
+    return `<option value="${v}">${lab}</option>`;}).join("");
+  r.value=G.rates.includes(cur)?cur:(g.value===(profile.goal||"lose")?tgtRate():G.def);
+}
+function fillTgtForm(){
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&document.activeElement!==el)el.value=v;};
+  const g=document.getElementById("tgGoal");
+  if(g&&!g.options.length)g.innerHTML=Object.keys(TGT_GOALS).map(k=>`<option value="${k}">${TGT_GOALS[k].n}</option>`).join("");
+  set("tgSex",profile.sex||"m");set("tgCm",profile.cm||"");set("tgDob",profile.dob||"");set("tgBf",profile.bf||"");
+  set("tgAct",String(profile.act||1.2));set("tgGoal",profile.goal||"lose");tgtRateOpts();set("tgRate",String(tgtRate()));
+  const c=(id,v)=>{const el=document.getElementById(id);if(el)el.checked=!!v;};c("tgGlp1",profile.glp1);c("tgSplit",calCfg.split);
+  const own=calCfg.own||{};
+  set("calTargetInput",own.kcal?kj(own.kcal):"");set("calProtTarget",own.p||"");set("calFatTarget",own.f||"");set("calCarbTarget",own.c||"");
+}
+function saveTgt(){
+  const num=id=>{const n=parseFloat(document.getElementById(id)?.value);return n>0?n:0;};
+  const cm=num("tgCm"); if(cm&&(cm<120||cm>230)){toast("Check your height in cm");return;}
+  const bf=num("tgBf"); if(bf&&(bf<4||bf>60)){toast("Body fat % looks off");return;}
+  const kJ=num("calTargetInput"); if(kJ&&kJ<3350){toast("Enter a realistic target (3350 kJ or more)");return;}
+  const dob=document.getElementById("tgDob").value;
+  profile.sex=document.getElementById("tgSex").value; if(cm)profile.cm=cm; if(dob)profile.dob=dob;
+  if(bf!==(+profile.bf||0)){profile.bf=bf||0;profile.bfAt=bf?r1(wtNow()):0;}
+  profile.act=+document.getElementById("tgAct").value||1.2;
+  profile.goal=document.getElementById("tgGoal").value; profile.rate=+document.getElementById("tgRate").value;
+  profile.glp1=document.getElementById("tgGlp1").checked; calCfg.split=document.getElementById("tgSplit").checked;
+  const own=calCfg.own||{}, oldK=own.kcal&&kj(own.kcal)===Math.round(kJ)?own.kcal:0;
+  calCfg.own={kcal:kJ?(oldK||toKcal(kJ)):0,p:r1(num("calProtTarget")),f:r1(num("calFatTarget")),c:r1(num("calCarbTarget"))};
+  saveFood(); tgtUpdate(true); renderCal();
+  const e=tgtCur(); toast(`Target: ${kj(e.target)} kJ a day`);
+}
+function togglePartial(){const d=calDay(selKey);d.partial=document.getElementById("calPartial").checked;if(!d.partial)delete d.partial;saveCal();renderCal();}
+function renderTgtSummary(){
+  const el=document.getElementById("tgtSummary"); if(!el)return;
+  const e=tgtCur(); if(!e){el.innerHTML="";return;}
+  const A=calCfg.auto, prev=A.hist[A.hist.length-2], G=TGT_GOALS[e.goal]||TGT_GOALS.lose, own=calCfg.own||{};
+  const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], nx=dateOf(addDays(e.week,7));
+  const learned=e.src==="learned";
+  let why="";
+  if(e.meas&&e.meas.tdee){const d=e.meas.dKg;
+    why=`Over the last 3 weeks you averaged <b>${kj(e.meas.avg)} kJ</b> on ${e.meas.n} fully logged days and your weight trend went ${d<=0?"down":"up"} <b>${Math.abs(d).toFixed(1)} kg</b>, so you really burn about <b>${kj(e.meas.tdee)} kJ</b> a day.`;
+    if(prev){const ch=e.maint-prev.maint;why+=Math.abs(kj(ch))<50?` Your maintenance is the same as last week.`:` The app moved your maintenance ${ch>0?"up":"down"} ${kj(Math.abs(ch))} kJ from last week (it moves at most 5% a week).`;}
+  }else if(learned){
+    why=`Not enough full days or weigh-ins in the last 3 weeks (${e.meas.n} of 14 days, ${e.meas.w} of 5 weigh-ins), so it kept last week's learned maintenance.`;
+  }else{
+    const t=trainAvg(e.week,e.kg);
+    why=`Estimated from your details: resting burn ${kj(e.bmr)} kJ × ${profile.act||1.2} for daily life, plus about <b>${kj(t.kcal)} kJ</b> a day for training (${t.from==="logged"?`${t.days} workouts logged in 4 weeks`:"from your plan"}). After 3 weeks with 14 fully logged days and 5 weigh-ins (now ${e.meas.n} and ${e.meas.w}) it learns your real number.`;
+  }
+  const rateTxt=e.goal==="maintain"?"Staying at this weight":`${G.n} at ${e.rate}% a week`;
+  el.innerHTML=`<div class="histstats">
+      <div class="hstat"><b>${kj(e.target)}</b><span>kJ a day</span></div>
+      <div class="hstat"><b>${kj(e.maint)}</b><span>${learned?"learned":"estimated"} maintenance</span></div>
+      <div class="hstat"><b>${e.kg}</b><span>trend kg</span></div></div>
+    <div class="tgtline">${own.kcal?`You set your own target.`:`${rateTxt}: <b>${kj(Math.abs(e.delta))} kJ</b> a day ${e.delta<0?"under":e.delta>0?"over":"around"} maintenance.`}${e.floored?` Held at the lowest safe target (${kj(Math.max(1500,e.bmr*0.8))} kJ).`:""}</div>
+    <div class="tgtline">Protein <b>${e.p} g</b>${own.p?"":` (${G.prot} g per kg of your ${Math.round(e.lbm)} kg lean mass)`} · Fat <b>${e.f} g</b> · Carbs <b>${e.c} g</b></div>
+    ${calCfg.split?`<div class="tgtline">Training days get more and rest days less, mostly as carbs.</div>`:""}
+    <div class="tgtwhy">${why} Next update: Monday ${nx.getDate()} ${M[nx.getMonth()]}.</div>`;
+}
+function saveCalTarget(){return saveTgt();}
+function saveCalTargetOld(){
   const kJin=Math.round(parseFloat(document.getElementById("calTargetInput").value));
   if(!kJin||kJin<3350){toast("Enter a realistic target (3350 kJ or more)");return;}
   const v=kJin===kj(calCfg.target)?calCfg.target:toKcal(kJin);
@@ -5536,6 +5775,11 @@ function rmMyFood(i){
 
 // --- targets ---
 function targets(){
+  const e=tgtCur();
+  if(e)return {kcal:e.target,floor:Math.round(Math.max(1500,e.bmr*0.8)),pLo:Math.round(e.lbm*2.0),pHi:Math.round(e.lbm*2.6),pMid:e.p,fatG:e.f,tdee:e.maint};
+  return targetsOld();
+}
+function targetsOld(){
   const w=profile.kg, h=profile.cm, a=currentAge();
   const bmr=10*w + 6.25*h - 5*a + 5;
   const tdee=bmr*1.45;                 // 5 sessions/week
@@ -5772,7 +6016,12 @@ function loadFood(){try{
   const f=localStorage.getItem(FOOD_KEY);if(f)foodLog=JSON.parse(f);
   const w=localStorage.getItem(WEIGHT_KEY);if(w)weightLog=JSON.parse(w);
   const p=localStorage.getItem(PROFILE_KEY);if(p)profile=Object.assign(profile,JSON.parse(p));
-}catch(e){}}
+}catch(e){}
+  if(!profile.v71){   // details Arné gave for the daily target (v71)
+    Object.assign(profile,{sex:"m",cm:181,dob:"1988-06-18",bf:30,bfAt:0,act:1.2,goal:"lose",rate:0.5,glp1:true,v71:1});
+    try{localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch(e){}
+  }
+}
 
 /* ---------------- NAV ---------------- */
 const TITLES={plan:["Plan","Your week at a glance"],
@@ -5780,7 +6029,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v70"]};
+ data:["Save & Settings","Backup your data · v71"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
