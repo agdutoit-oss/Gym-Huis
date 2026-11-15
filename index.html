@@ -4982,7 +4982,7 @@ function aiRender(){
     ${(()=>{const c=AI_CONF[aiResult.confidence]; return c?`<div class="aiconf ${aiResult.confidence}">${c}</div>`:"";})()}
     ${(()=>{const bad=its.filter(i=>{const m=4*i.protein_g+4*i.carbs_g+9*i.fat_g;return i.kcal>50&&Math.abs(m-i.kcal)>0.2*i.kcal;});
       return bad.length?`<div class="aiconf rough">⚠ The protein, fat and carbs don't add up to this kJ${bad.length<its.length?` for ${escH(bad[0].name)}`:""}. Tap “Don't agree” below to have it checked.</div>`:"";})()}
-    <label class="calchk"><input type="checkbox" id="aiRemember" checked> Remember ${its.length>1?"these foods":"this food"} so next time it's instant</label>
+    <label class="calchk"><input type="checkbox" id="aiRemember" checked> Remember ${its.length>1?"these foods":"this food"}${its.some(i=>i.parts?.length)?" and each ingredient":""} so next time it's instant</label>
     <div class="aibtns"><button class="btn primary" onclick="aiAddAll()">Add to ${dayLabel(selKey)==="Today"?"today":dayLabel(selKey)}</button><button class="btn ghost" onclick="aiClose()">Cancel</button></div>
     <div id="aiPush">${aiResult.rechecked?`<div class="aisrc">Checked again after your note. Still not right? Add it, then tap it in the list to type your own kJ.</div>`:""}<button class="aino" onclick="aiPushOpen()">${aiResult.rechecked?"Tell Claude again":"Don't agree? Tell Claude why"}</button></div>
   </div>`;
@@ -5018,6 +5018,16 @@ async function aiRecheck(){
   }finally{aiBusy=false;}
 }
 function aiClose(){aiResult=null;const b=document.getElementById("fcAi");if(b)b.innerHTML="";}
+// Each ingredient of a looked-up dish also becomes its own saved food (per 100 g),
+// unless it is a built-in food or already saved (an existing one may have been corrected).
+function rememberParts(i){
+  (i.parts||[]).forEach(x=>{
+    const n=String(x.n||"").trim(); if(!n||!(x.g>0)||n.toLowerCase()===String(i.name).toLowerCase())return;
+    if(isBuiltinFood(n)||allFoods().some(f=>f.n.toLowerCase()===n.toLowerCase()))return;
+    rememberFood(n,{k:x.k||0,g:x.g,p:x.p,f:x.f},1,null);
+    if(myFoods[0]?.n===n&&!myFoods[0].u){myFoods[0].u=[x.g,"serving"];saveMyFoods();}   // the amount that was in the dish
+  });
+}
 function aiAddAll(){
   if(!aiResult)return;
   const remember=document.getElementById("aiRemember")?.checked;
@@ -5028,7 +5038,7 @@ function aiAddAll(){
       unit:{kcal:i.kcal/q,p:i.protein_g/q,f:i.fat_g/q,c:i.carbs_g/q}};
     if(i.grams>0){ent.g=i.grams;ent.unit.g=i.grams/q;if(isDrinkName(i.name))ent.ml=true;}
     if(i.parts?.length)ent.parts=i.parts;
-    if(remember)rememberFood(i.name,{k:i.kcal,g:i.grams,p:i.protein_g,f:i.fat_g,parts:i.parts},q,null);
+    if(remember){rememberParts(i);rememberFood(i.name,{k:i.kcal,g:i.grams,p:i.protein_g,f:i.fat_g,parts:i.parts},q,null);}
     else if(!findFood(i.name))delete ent.food;
     day.eat.push(ent);
   });
@@ -5742,7 +5752,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v68"]};
+ data:["Save & Settings","Backup your data · v69"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
