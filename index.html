@@ -4376,7 +4376,8 @@ function r2(v){return Math.round(v*100)/100;}
 let calCfg={target:2000, maint:2460, addBurn:false};
 function loadCal(){try{
   const c=localStorage.getItem(CAL_KEY);
-  if(c){const d=JSON.parse(c); calLog=d.log||{}; calCfg=Object.assign(calCfg,d.cfg||{});}
+  if(c){const d=JSON.parse(c); calLog=d.log||{}; calCfg=Object.assign(calCfg,d.cfg||{});
+    Object.values(calLog).forEach(day=>(day.eat||[]).forEach(x=>{if(x.g>0&&!x.ml&&isDrinkName(x.food||x.label))x.ml=true;}));}
 }catch(e){}}
 function saveCal(){try{localStorage.setItem(CAL_KEY,JSON.stringify({log:calLog,cfg:calCfg}));}catch(e){}}
 function calMaintenance(){
@@ -4667,7 +4668,7 @@ function addCal(){
   const lbl=(lEl.value||"").trim();
   const pEl=document.getElementById("calProt"), fEl=document.getElementById("calFat");
   const num=el=>{const n=parseFloat(el?.value);return isNaN(n)||n<0?0:n;};
-  const aEl=document.getElementById("calAmt"), g=r1(num(aEl)), ml=g>0&&/\bml\b|milk|coffee|tea|juice|drink|shake|soda|beer|wine/i.test(lbl);
+  const aEl=document.getElementById("calAmt"), g=r1(num(aEl)), ml=g>0&&isDrinkName(lbl);
   const p=num(pEl), f=num(fEl), mac=(pEl?.value||fEl?.value)?{p:r1(p),f:r1(f)}:{}, amt=g>0?{g,...(ml?{ml:true}:{})}:{};
   if(lbl&&!isBuiltinFood(lbl)){
     const old=myFoods.find(x=>x.n.toLowerCase()===lbl.toLowerCase());
@@ -4713,7 +4714,7 @@ function rememberFood(name,tot,q,oldName){
   if(tot.g>0){
     food={n:name,c:"My foods",k:r2(tot.k/tot.g*100),p:r1((tot.p||0)/tot.g*100),f:r1((tot.f||0)/tot.g*100)};
     if(q>1||prev?.u)food.u=[Math.round(tot.g/q),"each"];
-    if(tot.ml)food.ml=true;
+    if(tot.ml||isDrinkName(name))food.ml=true;
   }else{
     food={n:name,c:"My foods",k:r2(tot.k/q),p:r1((tot.p||0)/q),f:r1((tot.f||0)/q),each:true};
   }
@@ -4748,7 +4749,7 @@ function calEditHtml(x,i){
   </div></div>`;
 }
 // Drinks and anything named in ml are measured in ml, everything else in grams
-function calEditUnit(x){return x.ml||/\d\s*ml\b/i.test(x.food||x.label||"")?"ml":"g";}
+function calEditUnit(x){return x.ml||isDrinkName(x.food||x.label)?"ml":"g";}
 // While editing: changing the grams rescales kcal, protein and fat (unless you typed those yourself)
 let calEditOrig=null, calEditTyped={};
 function calEditInput(id){
@@ -5025,7 +5026,7 @@ function aiAddAll(){
     const q=i.count||1;
     const ent={kcal:i.kcal,label:i.name,food:i.name,p:r1(i.protein_g),f:r1(i.fat_g),c:r1(i.carbs_g),ai:true,q,
       unit:{kcal:i.kcal/q,p:i.protein_g/q,f:i.fat_g/q,c:i.carbs_g/q}};
-    if(i.grams>0){ent.g=i.grams;ent.unit.g=i.grams/q;}
+    if(i.grams>0){ent.g=i.grams;ent.unit.g=i.grams/q;if(isDrinkName(i.name))ent.ml=true;}
     if(i.parts?.length)ent.parts=i.parts;
     if(remember)rememberFood(i.name,{k:i.kcal,g:i.grams,p:i.protein_g,f:i.fat_g,parts:i.parts},q,null);
     else if(!findFood(i.name))delete ent.food;
@@ -5267,7 +5268,7 @@ Object.assign(FOOD_BOOST,{"Coca-Cola Original":6,"Castle Lager":5,"Castle Lite":
 /* ---- Food calculator: pick a food, enter grams, it works out kcal + macros ---- */
 const MYFOOD_KEY="hgt_myfoods_v1";
 let myFoods=[];   // [{n,c:"My foods",p,f,k}] per 100 g
-function loadMyFoods(){try{const m=localStorage.getItem(MYFOOD_KEY);if(m)myFoods=(JSON.parse(m)||[]).map(fcWeighable);}catch(e){}}
+function loadMyFoods(){try{const m=localStorage.getItem(MYFOOD_KEY);if(m)myFoods=(JSON.parse(m)||[]).map(fcWeighable).map(f=>{if(!f.each&&f.ml==null&&isDrinkName(f.n))f.ml=true;return f;});}catch(e){}}
 // The weight or volume written in a name, e.g. "Risotto (300g)" or "Milk (1 cup, 250 ml)"
 function nameAmount(n){const m=/(\d+(?:[.,]\d+)?)\s*(g|ml)\b/i.exec(n||"");return m?{v:parseFloat(m[1].replace(",",".")),ml:m[2].toLowerCase()==="ml"}:null;}
 // A per-serving food whose name gives its weight becomes per 100 g with that serving size,
@@ -5280,6 +5281,10 @@ function fcWeighable(f){
   if(a.ml)o.ml=true;
   return o;
 }
+// Is this a drink, so its amount is in ml? (coffee, tea, milk, juice, beer...) Cakes, biscuits and sauces are not.
+function isDrinkName(n){n=String(n||"");if(/\d\s*ml\b/i.test(n))return true;if(/\d\s*g\b/i.test(n))return false;
+  return /\b(coffee|tea|rooibos|latte|cappuccino|americano|espresso|flat white|mocha|chai|milk|juice|smoothie|milkshake|shake|soda|coke|cola|cool ?drink|soft drink|energy drink|beer|lager|cider|wine|whisky|whiskey|brandy|vodka|gin|rum|drink|water|kombucha|lemonade|iced tea|kefir|protein shake)\b/i.test(n)
+    && !/\b(cake|biscuits?|cookies?|tart|chocolate|muffins?|rusks?|bars?|ice ?cream|pudding|sauce|gravy|braised|marinated|powder|cheese|steak|chicken|beef|pork|lamb)\b/i.test(n);}
 function saveMyFoods(){try{localStorage.setItem(MYFOOD_KEY,JSON.stringify(myFoods));}catch(e){}}
 function escH(t){return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function allFoods(){return myFoods.concat(FOODS,DRINKS);}
@@ -5408,7 +5413,7 @@ function fcRender(){
       : !mine ? [1,2,3,4,6]
       : countable ? [1,2,3,4,5,6,8] : [0.5,1,1.5,2,3];
     opts=ns.map(n=>[Math.round(n*u[0]*10)/10,`${fcFrac(n)} ${n>1?fcPlural(u[1]):u[1]}${!fcSel.each?` · ${Math.round(n*u[0])} ${uo}`:""}`]);
-  }else opts=[100,150,200,250,300,400].map(n=>[n,`${n} ${uo}`]);
+  }else opts=(uo==="ml"?[125,250,330,350,500,750]:[100,150,200,250,300,400]).map(n=>[n,`${n} ${uo}`]);
   const last=!fcSel.each&&fcLastAmount(fcSel.n);
   if(last&&!opts.some(([v])=>Math.abs(v-last)<=Math.max(2,v*0.02)))opts=[[last,`last time ${last} ${uo}`],...opts];
   units.innerHTML=opts.map(([v,l])=>`<button class="chip ${g&&Math.abs(g-v)<0.05?"on":""}" onclick="fcSetGrams(${v})">${l}</button>`).join("");
@@ -5737,7 +5742,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v67"]};
+ data:["Save & Settings","Backup your data · v68"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
