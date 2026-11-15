@@ -642,7 +642,14 @@
   .tgtgrid label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--dim);min-width:0}
   .tgtgrid label i{font-style:normal;opacity:.8}
   .tgtgrid label.wide{grid-column:1/-1}
-  .tgtgrid .calinput{width:100%;font-size:15px;padding:10px}
+  .tgtgrid .calinput{width:100%;font-size:15px;padding:10px;box-sizing:border-box;height:46px;margin:0}
+  .tgtgrid input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left}
+  .tgtgrid input[type=date]::-webkit-date-and-time-value{text-align:left}
+  .tgtcard .hstat{display:flex;flex-direction:column;justify-content:center;padding:12px 4px}
+  .tgtcard .hstat span{white-space:nowrap}
+  .tgtweigh{display:flex;gap:8px;margin:4px 0 4px}
+  .tgtweigh .btn{flex:0 0 auto;padding-left:14px;padding-right:14px}
+  .tgtlast{font-size:11.5px;color:var(--dim);margin-bottom:6px}
   .tgtgrid select.calinput{appearance:auto}
   .mfc{background:#4d9fff}
   .calproj{border-radius:11px;padding:12px 14px;font-size:12.5px;line-height:1.55;margin-bottom:14px}
@@ -1042,13 +1049,18 @@
 
     <div class="setcard tgtcard" style="margin-top:16px">
       <h3>Your daily target</h3>
+      <div class="tgtweigh">
+        <input type="text" inputmode="decimal" id="tgWeight" class="calinput" placeholder="Today's weight (kg)">
+        <button class="btn primary" onclick="tgtLogWeight()">Log weight</button>
+      </div>
+      <div class="tgtlast" id="tgtLast"></div>
       <div id="tgtSummary"></div>
       <details class="tgtmore" id="tgtMore"><summary>About you, goal and rate</summary>
         <div class="tgtgrid">
           <label>Sex<select id="tgSex" class="calinput"><option value="m">Male</option><option value="f">Female</option></select></label>
           <label>Height (cm)<input type="text" inputmode="decimal" id="tgCm" class="calinput"></label>
           <label>Date of birth<input type="date" id="tgDob" class="calinput"></label>
-          <label>Body fat % <i>(optional)</i><input type="text" inputmode="decimal" id="tgBf" class="calinput" placeholder="e.g. 30"></label>
+          <label>Body fat %<input type="text" inputmode="decimal" id="tgBf" class="calinput" placeholder="optional"></label>
           <label class="wide">Daily life outside the gym<select id="tgAct" class="calinput"><option value="1.2">Desk job, not many steps</option><option value="1.3">Desk job, walk most days</option><option value="1.45">On my feet a lot</option></select></label>
           <label class="wide">Goal<select id="tgGoal" class="calinput" onchange="tgtRateOpts()"></select></label>
           <label class="wide">How fast<select id="tgRate" class="calinput"></select></label>
@@ -5046,9 +5058,26 @@ function saveTgt(){
   saveFood(); tgtUpdate(true); renderCal();
   const e=tgtCur(); toast(`Target: ${kj(e.target)} kJ a day`);
 }
+function tgtLogWeight(){
+  const src=document.getElementById("tgWeight"), w=document.getElementById("weightInput");
+  if(!src||!w)return; const keep=selKey;
+  w.value=src.value; logWeight();
+  if(w.value)return;            // not logged (logWeight keeps the value on a bad number)
+  src.value=""; selKey=keep;
+  const e=tgtEntry(todayKey()); if(e&&e.src!=="learned")tgtUpdate(true);   // still estimating: use the new weight now
+  renderCal();
+}
+function tgtLastHtml(){
+  const ws=[...weightLog].sort((a,b)=>new Date(a.date)-new Date(b.date)), n=ws.length;
+  if(!n)return "No weigh-ins yet. Weigh in a few mornings a week; the app smooths out the day-to-day jumps.";
+  const l=ws[n-1], M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], d=new Date(l.date);
+  return `Last weigh-in: <b>${l.kg} kg</b> ${keyOf(d)===todayKey()?"today":`on ${d.getDate()} ${M[d.getMonth()]}`}.`;
+}
 function togglePartial(){const d=calDay(selKey);d.partial=document.getElementById("calPartial").checked;if(!d.partial)delete d.partial;saveCal();renderCal();}
 function renderTgtSummary(){
   const el=document.getElementById("tgtSummary"); if(!el)return;
+  const tl=document.getElementById("tgtLast"); if(tl)tl.innerHTML=tgtLastHtml();
+  const tw=document.getElementById("tgWeight"); if(tw)tw.placeholder=selKey===todayKey()?"Today's weight (kg)":`Weight on ${dayLabel(selKey)} (kg)`;
   const e=tgtCur(); if(!e){el.innerHTML="";return;}
   const A=calCfg.auto, prev=A.hist[A.hist.length-2], G=TGT_GOALS[e.goal]||TGT_GOALS.lose, own=calCfg.own||{};
   const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], nx=dateOf(addDays(e.week,7));
@@ -5061,12 +5090,12 @@ function renderTgtSummary(){
     why=`Not enough full days or weigh-ins in the last 3 weeks (${e.meas.n} of 14 days, ${e.meas.w} of 5 weigh-ins), so it kept last week's learned maintenance.`;
   }else{
     const t=trainAvg(e.week,e.kg);
-    why=`Estimated from your details: resting burn ${kj(e.bmr)} kJ × ${profile.act||1.2} for daily life, plus about <b>${kj(t.kcal)} kJ</b> a day for training (${t.from==="logged"?`${t.days} workouts logged in 4 weeks`:"from your plan"}). After 3 weeks with 14 fully logged days and 5 weigh-ins (now ${e.meas.n} and ${e.meas.w}) it learns your real number.`;
+    why=`Maintenance is estimated from your details for now: resting burn ${kj(e.bmr)} kJ × ${profile.act||1.2} for daily life, plus about <b>${kj(t.kcal)} kJ</b> a day for training (${t.from==="logged"?`${t.days} workouts logged in 4 weeks`:"from your plan"}). After 3 weeks with 14 fully logged days and 5 weigh-ins (now ${e.meas.n} and ${e.meas.w}) it learns your real number.`;
   }
   const rateTxt=e.goal==="maintain"?"Staying at this weight":`${G.n} at ${e.rate}% a week`;
   el.innerHTML=`<div class="histstats">
       <div class="hstat"><b>${kj(e.target)}</b><span>kJ a day</span></div>
-      <div class="hstat"><b>${kj(e.maint)}</b><span>${learned?"learned":"estimated"} maintenance</span></div>
+      <div class="hstat"><b>${kj(e.maint)}</b><span>maintenance</span></div>
       <div class="hstat"><b>${e.kg}</b><span>trend kg</span></div></div>
     <div class="tgtline">${own.kcal?`You set your own target.`:`${rateTxt}: <b>${kj(Math.abs(e.delta))} kJ</b> a day ${e.delta<0?"under":e.delta>0?"over":"around"} maintenance.`}${e.floored?` Held at the lowest safe target (${kj(Math.max(1500,e.bmr*0.8))} kJ).`:""}</div>
     <div class="tgtline">Protein <b>${e.p} g</b>${own.p?"":` (${G.prot} g per kg of your ${Math.round(e.lbm)} kg lean mass)`} · Fat <b>${e.f} g</b> · Carbs <b>${e.c} g</b></div>
@@ -6029,7 +6058,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v71"]};
+ data:["Save & Settings","Backup your data · v72"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
