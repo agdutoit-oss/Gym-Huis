@@ -4880,7 +4880,7 @@ function calMacroTargets(key){
    Every Monday: last 21 days of fully logged intake vs the change in the smoothed weight trend
    (1 kg ≈ 7700 kcal). Moves half way to that, at most 5% a week. Then goal + rate, then protein from
    lean mass, fat 25% (min 0.5 g/kg), carbs the rest. Stored in kcal like the rest of the app. */
-const KCAL_PER_KG=7700, TGT_VER=1;
+const KCAL_PER_KG=7700, TGT_VER=1, TGT_REV=2;
 const TGT_GOALS={
   lose:{n:"Lose fat, build muscle",rates:[0.25,0.5,0.75,1],def:0.5,sign:-1,prot:2.4},
   maintain:{n:"Stay at this weight",rates:[0],def:0,sign:0,prot:2.0},
@@ -4929,7 +4929,8 @@ function trainAvg(endKey,kg){   // kcal a day, averaged over the 28 days before 
   if(n)return {kcal:tot/28,from:"logged",days:n};
   const p=planWeek();return {kcal:2.5*kg*(p.mins/60)/7,from:"plan",days:p.days*4};
 }
-function startMaint(endKey,kg){return bmrKcal(kg,dateOf(endKey))*(+profile.act||1.2)+trainAvg(endKey,kg).kcal;}
+// Until 3 weeks of data: resting burn × daily life only, no training guess (Arné's call, v73).
+function startMaint(endKey,kg){return bmrKcal(kg,dateOf(endKey))*(+profile.act||1.2);}
 // what the last 21 days say your maintenance really is
 function tgtMeasure(week){
   const tr=wtTrend(), wd=wtDaily(), end=addDays(week,-1), start=addDays(week,-21), before=addDays(week,-22);
@@ -4964,7 +4965,7 @@ function tgtBuild(week,maint,meas,src){
 function tgtNextMaint(prev,week){
   const tr=wtTrend(), kg=wtAt(addDays(week,-1),tr), meas=tgtMeasure(week);
   if(meas.ok){
-    if(!prev)return {maint:meas.tdee,meas,src:"learned"};
+    if(!prev||prev.src!=="learned")return {maint:meas.tdee,meas,src:"learned"};   // first learned week: use the real number as is
     const lim=prev.maint*0.05, step=Math.max(-lim,Math.min(lim,(meas.tdee-prev.maint)*0.5));
     return {maint:prev.maint+step,meas,src:"learned"};
   }
@@ -4986,6 +4987,10 @@ function tgtUpdate(force){
     calCfg.protein=0;calCfg.fat=0;   // old own numbers were set for a no-carb diet
   }
   if(profile.bf>0&&!profile.bfAt){profile.bfAt=r1(wtNow());saveFood();}
+  if(A.rev!==TGT_REV){A.rev=TGT_REV;
+    if(!A.hist.some(h=>h.src==="learned"))A.hist=[];                       // all estimates: rebuild without training
+    else A.hist.forEach(h=>{if(h.src!=="learned")h.maint=Math.round(startMaint(h.week,h.kg));});
+    force=A.hist.length>0;}
   const last=A.hist[A.hist.length-1];
   if(last&&last.week===cur&&!force)return;
   if(last&&last.week===cur){
@@ -5089,8 +5094,7 @@ function renderTgtSummary(){
   }else if(learned){
     why=`Not enough full days or weigh-ins in the last 3 weeks (${e.meas.n} of 14 days, ${e.meas.w} of 5 weigh-ins), so it kept last week's learned maintenance.`;
   }else{
-    const t=trainAvg(e.week,e.kg);
-    why=`Maintenance is estimated from your details for now: resting burn ${kj(e.bmr)} kJ × ${profile.act||1.2} for daily life, plus about <b>${kj(t.kcal)} kJ</b> a day for training (${t.from==="logged"?`${t.days} workouts logged in 4 weeks`:"from your plan"}). After 3 weeks with 14 fully logged days and 5 weigh-ins (now ${e.meas.n} and ${e.meas.w}) it learns your real number.`;
+    why=`For now maintenance is just your resting burn ${kj(e.bmr)} kJ × ${profile.act||1.2} for daily life, with no training added. Once the last 3 weeks have 14 fully logged days and 5 weigh-ins (now ${e.meas.n} and ${e.meas.w}), it switches to your real number from your logs, which includes your training.`;
   }
   const rateTxt=e.goal==="maintain"?"Staying at this weight":`${G.n} at ${e.rate}% a week`;
   el.innerHTML=`<div class="histstats">
@@ -6058,7 +6062,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v72"]};
+ data:["Save & Settings","Backup your data · v73"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
