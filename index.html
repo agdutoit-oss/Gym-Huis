@@ -4880,7 +4880,7 @@ function calMacroTargets(key){
    Every Monday: last 21 days of fully logged intake vs the change in the smoothed weight trend
    (1 kg ≈ 7700 kcal). Moves half way to that, at most 5% a week. Then goal + rate, then protein from
    lean mass, fat 25% (min 0.5 g/kg), carbs the rest. Stored in kcal like the rest of the app. */
-const KCAL_PER_KG=7700, TGT_VER=1, TGT_REV=2;
+const KCAL_PER_KG=7700, TGT_VER=1, TGT_REV=3;
 const TGT_GOALS={
   lose:{n:"Lose fat, build muscle",rates:[0.25,0.5,0.75,1],def:0.5,sign:-1,prot:2.4},
   maintain:{n:"Stay at this weight",rates:[0],def:0,sign:0,prot:2.0},
@@ -4950,7 +4950,9 @@ function tgtMeasure(week){
 }
 function tgtBuild(week,maint,meas,src){
   const tr=wtTrend(), kg=wtAt(addDays(week,-1),tr), G=tgtGoal(), rate=tgtRate();
-  const delta=G.sign*rate/100*kg*KCAL_PER_KG/7;
+  const want=G.sign*rate/100*kg*KCAL_PER_KG/7;
+  // never more than 25% under maintenance: bigger deficits cost muscle, more so on Mounjaro (v74)
+  const capped=want<-0.25*maint, delta=capped?-0.25*maint:want;
   const bmr=bmrKcal(kg,dateOf(week)), floor=Math.max(1500,bmr*0.8);
   const own=calCfg.own||{};
   let target=Math.max(floor,maint+delta); const floored=!own.kcal&&maint+delta<floor;
@@ -4960,7 +4962,7 @@ function tgtBuild(week,maint,meas,src){
   const f=own.f||Math.round(Math.max(target*0.25/9,0.5*kg));
   const c=own.c||Math.max(0,Math.round((target-p*4-f*9)/4));
   return {week,maint:Math.round(maint),src,meas:meas&&meas.ok?{avg:Math.round(meas.avg),dKg:r2(meas.dKg),tdee:Math.round(meas.tdee),n:meas.n,w:meas.weighs}:{n:meas?meas.n:0,w:meas?meas.weighs:0},
-    kg:r1(kg),lbm:r1(lbm),bmr:Math.round(bmr),delta:Math.round(delta),rate,goal:profile.goal||"lose",target:Math.round(target),floored,p,f,c};
+    kg:r1(kg),lbm:r1(lbm),bmr:Math.round(bmr),delta:Math.round(delta),want:Math.round(want),capped,rate,goal:profile.goal||"lose",target:Math.round(target),floored,p,f,c};
 }
 function tgtNextMaint(prev,week){
   const tr=wtTrend(), kg=wtAt(addDays(week,-1),tr), meas=tgtMeasure(week);
@@ -5101,7 +5103,9 @@ function renderTgtSummary(){
       <div class="hstat"><b>${kj(e.target)}</b><span>kJ a day</span></div>
       <div class="hstat"><b>${kj(e.maint)}</b><span>maintenance</span></div>
       <div class="hstat"><b>${e.kg}</b><span>trend kg</span></div></div>
-    <div class="tgtline">${own.kcal?`You set your own target.`:`${rateTxt}: <b>${kj(Math.abs(e.delta))} kJ</b> a day ${e.delta<0?"under":e.delta>0?"over":"around"} maintenance.`}${e.floored?` Held at the lowest safe target (${kj(Math.max(1500,e.bmr*0.8))} kJ).`:""}</div>
+    <div class="tgtline">${own.kcal?`You set your own target.`:e.capped
+      ?`${rateTxt} would need ${kj(-e.want)} kJ a day under maintenance. That's more than 25%, which costs muscle, so it's held at <b>${kj(-e.delta)} kJ</b> under (about ${(-e.delta*7/KCAL_PER_KG).toFixed(2)} kg a week for now).`
+      :`${rateTxt}: <b>${kj(Math.abs(e.delta))} kJ</b> a day ${e.delta<0?"under":e.delta>0?"over":"around"} maintenance.`}${e.floored?` Held at the lowest safe target (${kj(Math.max(1500,e.bmr*0.8))} kJ).`:""}</div>
     <div class="tgtline">Protein <b>${e.p} g</b>${own.p?"":` (${G.prot} g per kg of your ${Math.round(e.lbm)} kg lean mass)`} · Fat <b>${e.f} g</b> · Carbs <b>${e.c} g</b></div>
     ${calCfg.split?`<div class="tgtline">Training days get more and rest days less, mostly as carbs.</div>`:""}
     <div class="tgtwhy">${why} Next update: Monday ${nx.getDate()} ${M[nx.getMonth()]}.</div>`;
@@ -6062,7 +6066,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v73"]};
+ data:["Save & Settings","Backup your data · v74"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
