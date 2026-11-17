@@ -5872,10 +5872,10 @@ async function lblRead(b64){
     output_config:{effort:"medium"},
     ...(aiNoFallback?{}:{fallbacks:"default"}),
     system:`You read nutrition information tables on food packaging for a food diary app. The user lives in ${aiCountry}, where labels list energy in kJ, usually per 100 g (or 100 ml) and per serving. Read the per 100 g / 100 ml column exactly as printed. If only a per-serving column is visible, work out per 100 from the serving size and say so in "note". If energy is only in kcal, multiply by 4.184 for kJ. Use total fat and total (glycaemic) carbohydrate. Copy numbers; don't estimate from memory. Then call save_label once.`,
-    tools:[LBL_TOOL], tool_choice:{type:"tool",name:"save_label"},
+    tools:[LBL_TOOL], tool_choice:{type:"auto"},   // this model only takes "auto"
     messages:[{role:"user",content:[
       {type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}},
-      {type:"text",text:typed?`This is the label of "${typed}".`:"Read this label."}
+      {type:"text",text:(typed?`This is the label of "${typed}". `:"")+"Read the nutrition table and call save_label."}
     ]}]
   };
   let res;
@@ -5888,7 +5888,7 @@ async function lblRead(b64){
   if(!res)throw new Error("Claude couldn't read it. Try again.");
   if(res.stop_reason==="refusal")throw new Error("Claude couldn't help with that photo.");
   const call=(res.content||[]).find(b=>b.type==="tool_use"&&b.name==="save_label");
-  if(!call)throw new Error("Claude didn't return any numbers. Try another photo.");
+  if(!call){const txt=(res.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ").trim();throw new Error(txt?"Claude says: "+txt.slice(0,300):"Claude didn't return any numbers. Try another photo.");}
   const x=typeof call.input==="string"?JSON.parse(call.input):call.input, n=v=>Math.max(0,r1(+v||0));
   return {name:String(x.name||"").slice(0,80), typed, ml:!!x.liquid, kj:Math.round(+x.kj_per_100||0), p:n(x.protein_per_100), f:n(x.fat_per_100), c:n(x.carbs_per_100),
     srv:Math.max(0,r1(+x.serving_size||0)), word:String(x.serving_word||"serving").toLowerCase().trim().slice(0,20)||"serving", note:String(x.note||"").slice(0,200), readable:x.readable!==false};
@@ -6197,7 +6197,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v75"]};
+ data:["Save & Settings","Backup your data · v77"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -6531,6 +6531,10 @@ document.addEventListener("focusin",e=>{
 });
 // iOS can place the cursor where you tapped once the tap ends, so fix it again on that first tap
 document.addEventListener("click",e=>{const el=e.target;if(el._caretAt&&Date.now()-el._caretAt<600&&document.activeElement===el){el._caretAt=0;caretToEnd(el);}},true);
+// Offline: register the service worker (sw.js next to this page on the web host). Does nothing when opened as a file or when sw.js isn't there.
+if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
+}
 </script>
 </body>
 </html>
