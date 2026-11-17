@@ -2175,7 +2175,9 @@ async function mwGetVideo(name){
  Real start/finish photos from free-exercise-db (public domain, github.com/yuhonas/free-exercise-db),
  cross-faded in a loop so you see the movement without leaving the app. No key needed.
 ------------------------------------------------------ */
-const DEMO_BASE="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
+const DEMO_WEB="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
+// On the web host the photos are copies in the demos/ folder next to this page (so sw.js can keep them all offline); opened as a file they come from free-exercise-db
+const DEMO_BASE=/^https?:$/.test(location.protocol)?"demos/":DEMO_WEB;
 const DEMO_IMG={"Bodyweight Squat":"Bodyweight_Squat","Goblet Squat":"Goblet_Squat","Reverse Lunge":"Dumbbell_Rear_Lunge","Bulgarian Split Squat":"Split_Squat_with_Dumbbells","Step-Up":"Dumbbell_Step_Ups","Calf Raise":"Standing_Calf_Raises","Glute Bridge":"Butt_Lift_Bridge","Single-Leg Glute Bridge":"Single_Leg_Glute_Bridge","Romanian Deadlift":"Romanian_Deadlift","Kettlebell Swing":"One-Arm_Kettlebell_Swings","Push-Up":"Pushups","Dumbbell Chest Press":"Dumbbell_Bench_Press","Bench Press":"Barbell_Bench_Press_-_Medium_Grip","Incline Press":"Incline_Dumbbell_Press","Chest Fly":"Dumbbell_Flyes","Dip":"Dips_-_Chest_Version","Lat Pulldown":"Wide-Grip_Lat_Pulldown","Seated Cable Row":"Seated_Cable_Rows","One-Arm Dumbbell Row":"One-Arm_Dumbbell_Row","Assisted Pull-Up":"Band_Assisted_Pull-Up","Pull-Up":"Pullups","Dumbbell Shoulder Press":"Dumbbell_Shoulder_Press","Lateral Raise":"Side_Lateral_Raise","Band Pull-Apart":"Band_Pull_Apart","Face Pull":"Face_Pull","Pike Push-Up":"Handstand_Push-Ups","Bicep Curl":"Dumbbell_Bicep_Curl","Hammer Curl":"Hammer_Curls","Overhead Tricep Extension":"Standing_Dumbbell_Triceps_Extension","Tricep Dip (Bench)":"Bench_Dips","Band Tricep Pushdown":"Triceps_Pushdown","Plank":"Plank","Side Plank":"Side_Bridge","Dead Bug":"Dead_Bug","Hanging Knee Raise":"Hanging_Leg_Raise","Hanging Leg Raise":"Hanging_Leg_Raise","Russian Twist":"Russian_Twist","Bike Intervals":"Bicycling_Stationary","Treadmill Incline Walk":"Walking_Treadmill","Jump Rope":"Rope_Jumping","Barbell Back Squat":"Barbell_Squat","Barbell Front Squat":"Front_Squat_Clean_Grip","Barbell Deadlift":"Barbell_Deadlift","Overhead Press":"Standing_Military_Press","Bent-Over Row":"Bent_Over_Barbell_Row","Barbell Hip Thrust":"Barbell_Hip_Thrust","Close-Grip Bench Press":"Close-Grip_Barbell_Bench_Press","Ab Wheel Rollout":"Ab_Roller","Leg Extension":"Leg_Extensions","Leg Curl":"Seated_Leg_Curl","Barbell Lunge":"Barbell_Lunge","Walking Lunge":"Bodyweight_Walking_Lunge","Split Squat":"Split_Squats","Cable Kickback":"One-Legged_Cable_Kickback","Good Morning":"Good_Morning","Decline Push-Up":"Decline_Push-Up","Barbell Floor Press":"Floor_Press","Chin-Up":"Chin-Up","Straight-Arm Pulldown":"Straight-Arm_Pulldown","Barbell Shrug":"Barbell_Shrug","Inverted Row":"Inverted_Row","Arnold Press":"Arnold_Dumbbell_Press","Front Raise":"Front_Dumbbell_Raise","Rear Delt Fly":"Seated_Bent-Over_Rear_Delt_Raise","Upright Row":"Upright_Barbell_Row","Barbell Curl":"Barbell_Curl","Incline Dumbbell Curl":"Incline_Dumbbell_Curl","Concentration Curl":"Concentration_Curls","Skull Crusher":"EZ-Bar_Skullcrusher","Tricep Kickback":"Tricep_Dumbbell_Kickback","Wrist Curl":"Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench","Sit-Up":"Sit-Up","Crunch":"Crunches","Bicycle Crunch":"Air_Bike","Cable Woodchop":"Standing_Cable_Wood_Chop","Mountain Climbers":"Mountain_Climbers","Farmer's Carry":"Farmers_Walk","Suitcase Carry":"Farmers_Walk","Smith Machine Squat":"Smith_Machine_Squat","Cable Pull-Through":"Pull_Through","Nordic Curl":"Natural_Glute_Ham_Raise","Cable Crossover":"Cable_Crossover","Low Cable Fly":"Low_Cable_Crossover","Single-Arm Cable Row":"Seated_One-arm_Cable_Pulley_Rows","Wide-Grip Lat Pulldown":"Wide-Grip_Lat_Pulldown","Close-Grip Pulldown":"Close-Grip_Front_Lat_Pulldown","Cable Rope Pushdown":"Triceps_Pushdown_-_Rope_Attachment","Cable Pallof Press":"Pallof_Press","Resistance Band Row":"Seated_Cable_Rows"};
 function hasPhotoDemo(name){return !!DEMO_IMG[name];}
 function photoDemo(name){
@@ -2186,7 +2188,9 @@ function photoDemo(name){
       <img class="pd1" src="${u}1.jpg" alt="${name}: finish position" loading="lazy" onerror="pdFail(this)">
     </div>`;
 }
-function pdFail(img){const d=img.closest(".pdemo");if(!d)return;const h=d.nextElementSibling;
+function pdFail(img){
+  if(!img.dataset.web&&DEMO_BASE!==DEMO_WEB){img.dataset.web=1;const m=img.getAttribute("src").match(/^demos\/(.*)$/);if(m){img.src=DEMO_WEB+m[1];return;}}   // copy missing: try free-exercise-db
+  const d=img.closest(".pdemo");if(!d)return;const h=d.nextElementSibling;
   d.outerHTML=`<div class="viderr">Demo photos need an internet connection.</div>`;if(h&&h.classList.contains("pdhint"))h.remove();}
 // Library: animated demo with a toggle to the muscle map
 // musclesFirst: the Plan tab puts "Muscles worked" first and opens on it; everywhere else "How to" comes first
@@ -6197,7 +6201,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v77"]};
+ data:["Save & Settings","Backup your data · v78"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -6533,7 +6537,16 @@ document.addEventListener("focusin",e=>{
 document.addEventListener("click",e=>{const el=e.target;if(el._caretAt&&Date.now()-el._caretAt<600&&document.activeElement===el){el._caretAt=0;caretToEnd(el);}},true);
 // Offline: register the service worker (sw.js next to this page on the web host). Does nothing when opened as a file or when sw.js isn't there.
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
-  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+    // Save every demo photo for offline use (sw.js skips the ones it already has)
+    const saveDemos=()=>navigator.serviceWorker.ready.then(r=>{
+      const urls=[];for(const id of new Set(Object.values(DEMO_IMG)))for(const n of [0,1])urls.push(new URL(DEMO_BASE+encodeURIComponent(id)+"/"+n+".jpg",location.href).href);
+      if(r.active)r.active.postMessage({type:"saveDemos",urls});
+    }).catch(()=>{});
+    saveDemos();
+    navigator.serviceWorker.addEventListener("controllerchange",saveDemos);   // an updated sw.js took over: ask it too
+  });
 }
 </script>
 </body>
