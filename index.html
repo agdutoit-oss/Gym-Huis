@@ -619,6 +619,12 @@
   .fcmine summary{cursor:pointer;color:var(--accent2);font-weight:600}
   .fcmine .fcrow{margin-top:8px}
   .fcmine .calinput{font-size:14px;padding:10px}
+  .lblimg{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:0 0 auto}
+  .lblgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .lblgrid label{font-size:12px;color:var(--mut,#9aa);display:flex;flex-direction:column;gap:4px}
+  .lblgrid .calinput{width:100%;min-width:0;box-sizing:border-box}
+  .lblgrid label{min-width:0}
+  .lblnote{font-size:12px;line-height:1.45;margin-top:6px;opacity:.85}
   .fi-m2{font-size:11px;color:var(--dim);margin-top:2px}
   .calmacs{display:flex;gap:10px;margin-top:12px;text-align:left}
   .calmacs>div{flex:1;min-width:0}
@@ -1003,9 +1009,12 @@
       <button class="btn primary" id="fcAddBtn" style="width:100%" onclick="fcAdd()">Add</button>
       <div id="fcRecent" class="fcrecent"></div>
       <details class="fcmine" id="fcMine">
-        <summary>Food not in the list? Add your own</summary>
-        <div style="margin-top:8px">Copy the "per 100 g" numbers from the packet. If you only know protein and fat, leave kJ empty and it will be worked out.</div>
+        <summary>Food not in the list? Add your own or scan its label</summary>
         <div class="fcrow"><input type="text" id="mfName" class="calinput" placeholder="Name, e.g. Woolies boerewors"></div>
+        <button class="btn primary" style="width:100%;margin-top:8px" onclick="lblStart()">📷 Photo of the nutrition label</button>
+        <input type="file" id="lblFile" accept="image/*" style="display:none" onchange="lblPicked(this)">
+        <div id="lblBox" style="margin-top:8px"></div>
+        <div style="margin-top:8px">Or copy the "per 100 g" numbers from the packet yourself. If you only know protein and fat, leave kJ empty and it will be worked out.</div>
         <div class="fcrow">
           <input type="text" inputmode="decimal" id="mfK" class="calinput" placeholder="kJ">
           <input type="text" inputmode="decimal" id="mfP" class="calinput" placeholder="protein g">
@@ -5805,6 +5814,128 @@ function saveMyFood(){
   fcSel=null;fcNum=null;fcPick(food.n);
   renderFoodCalc();
 }
+/* ---- Read a nutrition label from a photo with Claude, check it, save it as one of "My foods" ---- */
+let lblRes=null, lblImg="", lblBusy=false;
+const LBL_TOOL={
+  name:"save_label",
+  description:"Record the nutrition information read from the label in the photo. Call this once.",
+  strict:true,
+  input_schema:{type:"object",properties:{
+    name:{type:"string",description:"Product name with brand as printed, e.g. 'Woolworths Free Range Beef Boerewors'. Empty if not visible."},
+    liquid:{type:"boolean",description:"true when the label gives values per 100 ml (a drink), false for per 100 g"},
+    kj_per_100:{type:"number",description:"Energy in kJ per 100 g or 100 ml, exactly as printed"},
+    protein_per_100:{type:"number"},
+    fat_per_100:{type:"number",description:"Total fat, not saturated"},
+    carbs_per_100:{type:"number",description:"Total carbohydrate (glycaemic carbohydrate on SA labels)"},
+    serving_size:{type:"number",description:"One serving in g or ml as printed, e.g. 30. 0 if the label gives none."},
+    serving_word:{type:"string",description:"What one serving is called on the pack, e.g. 'slice', 'biscuit', 'portion', 'can'. 'serving' if not said."},
+    note:{type:"string",description:"One short line on anything unclear or worked out (e.g. 'Only per-serving column visible; per 100 g worked out from the 30 g serving'). Empty if it was all clear."},
+    readable:{type:"boolean",description:"false if no nutrition table can be read in the photo"}
+  },required:["name","liquid","kj_per_100","protein_per_100","fat_per_100","carbs_per_100","serving_size","serving_word","note","readable"],additionalProperties:false}
+};
+function lblStart(){
+  if(lblBusy)return;
+  if(!aiKey){document.getElementById("lblBox").innerHTML=`<div class="aibox"><div class="aierr" style="color:var(--txt)">Reading labels uses your Claude API key. Add it once in Settings; it's stored only on this phone.</div>
+    <div class="aibtns"><button class="btn primary" onclick="document.getElementById('lblBox').innerHTML='';toggleSettings()">Open Settings</button></div></div>`;return;}
+  const f=document.getElementById("lblFile"); f.value=""; f.click();
+}
+// Shrink the photo so it uploads quickly (labels stay readable at ~1600 px)
+function lblShrink(file){
+  return new Promise((ok,bad)=>{
+    const url=URL.createObjectURL(file), im=new Image();
+    im.onload=()=>{const m=1600, sc=Math.min(1,m/Math.max(im.width,im.height));
+      const c=document.createElement("canvas"); c.width=Math.round(im.width*sc); c.height=Math.round(im.height*sc);
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url); ok(c.toDataURL("image/jpeg",0.85));};
+    im.onerror=()=>{URL.revokeObjectURL(url);bad(new Error("That photo couldn't be opened. Try another one."));};
+    im.src=url;
+  });
+}
+async function lblPicked(inp){
+  const file=inp.files&&inp.files[0]; if(!file)return;
+  const box=document.getElementById("lblBox");
+  lblBusy=true; lblRes=null;
+  box.innerHTML=`<div class="aibox"><div class="aierr" style="color:var(--txt)">✨ Claude is reading the label…</div></div>`;
+  try{
+    lblImg=await lblShrink(file);
+    lblRes=await lblRead(lblImg.split(",")[1]);
+    if(!lblRes.readable)throw new Error("Claude couldn't find a nutrition table in that photo. Try again closer, flat and in good light.");
+    lblRender();
+  }catch(e){
+    box.innerHTML=`<div class="aibox"><div class="aierr">${escH(e.message||"Something went wrong.")}</div>
+      <div class="aibtns"><button class="btn primary" onclick="lblStart()">Try another photo</button><button class="btn ghost" onclick="lblClose()">Cancel</button></div></div>`;
+  }finally{lblBusy=false;}
+}
+async function lblRead(b64){
+  const typed=(document.getElementById("mfName").value||"").trim();
+  const body={
+    model:AI_MODEL, max_tokens:4000,
+    output_config:{effort:"medium"},
+    ...(aiNoFallback?{}:{fallbacks:"default"}),
+    system:`You read nutrition information tables on food packaging for a food diary app. The user lives in ${aiCountry}, where labels list energy in kJ, usually per 100 g (or 100 ml) and per serving. Read the per 100 g / 100 ml column exactly as printed. If only a per-serving column is visible, work out per 100 from the serving size and say so in "note". If energy is only in kcal, multiply by 4.184 for kJ. Use total fat and total (glycaemic) carbohydrate. Copy numbers; don't estimate from memory. Then call save_label once.`,
+    tools:[LBL_TOOL], tool_choice:{type:"tool",name:"save_label"},
+    messages:[{role:"user",content:[
+      {type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}},
+      {type:"text",text:typed?`This is the label of "${typed}".`:"Read this label."}
+    ]}]
+  };
+  let res;
+  for(let t=0;t<2;t++){
+    try{res=await aiCall(body);break;}
+    catch(e){if(e.status===400&&/fallback/i.test(e.raw)&&body.fallbacks){delete body.fallbacks;aiNoFallback=true;continue;}
+      if(e.status===400&&/effort|output_config/i.test(e.raw)&&body.output_config){delete body.output_config;continue;}
+      throw e;}
+  }
+  if(!res)throw new Error("Claude couldn't read it. Try again.");
+  if(res.stop_reason==="refusal")throw new Error("Claude couldn't help with that photo.");
+  const call=(res.content||[]).find(b=>b.type==="tool_use"&&b.name==="save_label");
+  if(!call)throw new Error("Claude didn't return any numbers. Try another photo.");
+  const x=typeof call.input==="string"?JSON.parse(call.input):call.input, n=v=>Math.max(0,r1(+v||0));
+  return {name:String(x.name||"").slice(0,80), typed, ml:!!x.liquid, kj:Math.round(+x.kj_per_100||0), p:n(x.protein_per_100), f:n(x.fat_per_100), c:n(x.carbs_per_100),
+    srv:Math.max(0,r1(+x.serving_size||0)), word:String(x.serving_word||"serving").toLowerCase().trim().slice(0,20)||"serving", note:String(x.note||"").slice(0,200), readable:x.readable!==false};
+}
+function lblRender(){
+  const r=lblRes, box=document.getElementById("lblBox"); if(!r||!box)return;
+  const u=r.ml?"ml":"g", nm=r.typed||r.name;
+  const m=4*r.p+4*r.c+9*r.f, kc=r.kj/KJ, off=kc>40&&Math.abs(m-kc)>0.2*kc;
+  box.innerHTML=`<div class="aibox">
+    <div style="display:flex;gap:10px;align-items:center">${lblImg?`<img class="lblimg" src="${lblImg}" alt="">`:""}
+      <div style="font-weight:700">Check these against the label, then save</div></div>
+    <div class="fcrow" style="margin-top:8px"><input type="text" id="lblN" class="calinput" placeholder="Name" value="${escH(nm)}"></div>
+    ${r.typed&&r.name&&r.name.toLowerCase()!==r.typed.toLowerCase()?`<div class="lblnote">Pack says: ${escH(r.name)}</div>`:""}
+    <div class="lblgrid">
+      <label>kJ per 100 ${u}<input type="text" inputmode="decimal" id="lblK" class="calinput" value="${r.kj}"></label>
+      <label>Protein g per 100 ${u}<input type="text" inputmode="decimal" id="lblP" class="calinput" value="${r.p}"></label>
+      <label>Fat g per 100 ${u}<input type="text" inputmode="decimal" id="lblF" class="calinput" value="${r.f}"></label>
+      <label>Carbs g per 100 ${u}<input type="text" inputmode="decimal" id="lblC" class="calinput" value="${r.c}"></label>
+      <label>One ${escH(r.word)} (${u})<input type="text" inputmode="decimal" id="lblS" class="calinput" placeholder="none" value="${r.srv||""}"></label>
+      <label>Measured in<select id="lblU" class="calinput" onchange="lblRes.ml=this.value==='ml';lblKeep();lblRender()"><option value="g"${r.ml?"":" selected"}>grams (food)</option><option value="ml"${r.ml?" selected":""}>ml (drink)</option></select></label>
+    </div>
+    ${r.note?`<div class="lblnote">ℹ ${escH(r.note)}</div>`:""}
+    ${off?`<div class="aiconf rough">⚠ Protein, fat and carbs don't add up to this kJ. Check the numbers on the label.</div>`:""}
+    <div class="aibtns"><button class="btn primary" onclick="lblSave()">Save food</button><button class="btn ghost" onclick="lblStart()">New photo</button><button class="btn ghost" onclick="lblClose()">Cancel</button></div>
+  </div>`;
+}
+// keep what was typed in the boxes when the card is redrawn
+function lblKeep(){const v=id=>parseFloat(document.getElementById(id)?.value);const r=lblRes;
+  r.typed=(document.getElementById("lblN")?.value||"").trim();["K:kj","P:p","F:f","C:c","S:srv"].forEach(x=>{const[i,k]=x.split(":");const n=v("lbl"+i);if(!isNaN(n))r[k]=n;});}
+function lblClose(){lblRes=null;lblImg="";document.getElementById("lblBox").innerHTML="";}
+function lblSave(){
+  if(!lblRes)return;
+  const name=(document.getElementById("lblN").value||"").trim();
+  const num=id=>{const v=parseFloat(document.getElementById(id).value);return isNaN(v)||v<0?null:v;};
+  const kJin=num("lblK"), p=num("lblP")||0, f=num("lblF")||0, c=num("lblC")||0, srv=num("lblS");
+  if(!name){toast("Give it a name");document.getElementById("lblN").focus();return;}
+  if(kJin===null){toast("Enter the kJ per 100");return;}
+  const food={n:name,c:"My foods",k:toKcal(kJin),p:r1(p),f:r1(f)};
+  if(srv>0)food.u=[r1(srv),lblRes.word||"serving"];
+  if(lblRes.ml)food.ml=true;
+  const i=myFoods.findIndex(x=>x.n.toLowerCase()===name.toLowerCase());
+  if(i>=0)myFoods[i]=food; else myFoods.unshift(food);
+  saveMyFoods(); lblClose(); document.getElementById("mfName").value="";
+  toast(`Saved ${name}`);
+  fcSel=null;fcNum=null;fcPick(food.n);
+  renderFoodCalc();
+}
 function rmMyFood(i){
   if(!confirm(`Remove ${myFoods[i].n} from your foods?`))return;
   myFoods.splice(i,1);saveMyFoods();renderFoodCalc();
@@ -6066,7 +6197,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v74"]};
+ data:["Save & Settings","Backup your data · v75"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
