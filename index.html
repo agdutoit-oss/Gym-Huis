@@ -4212,9 +4212,38 @@ function shuffleCurrent(){
   if(shared.length)pool=shared;
   const pick=pool[Math.floor(Math.random()*pool.length)];
   train.list[i]={...cur, n:pick.n, sw:[...history, pick.n]};
+  if(train.list[i].reps&&!!pick.timed!==/s$/.test(train.list[i].reps))delete train.list[i].reps;
+  const wasDone=train.done[i];
   delete train.done[i];   // different exercise now
   renderTrain();
-  toast(`Swapped in ${pick.n}`);
+  // v79: a swap during a planned workout sticks: it also changes that day in the plan
+  const undoPlan=keepSwapInPlan(i,cur.n,train.list[i]);
+  if(!undoPlan){toast(`Swapped in ${pick.n}`);return;}
+  const prevItem=cur;
+  undoToast(`Swapped in ${pick.n} · saved to ${DAYNAMES[train.day].slice(0,3)}`,()=>{
+    undoPlan();
+    if(train.list[i]&&train.list[i].n===pick.n){train.list[i]=prevItem;if(wasDone)train.done[i]=wasDone;}
+    document.getElementById("utoast").classList.remove("show");
+    renderTrain();planRefresh();
+  });
+}
+// Write a workout-player swap into the plan day it came from. Returns an undo function, or null if not from a plan day.
+function keepSwapInPlan(i,oldName,item){
+  if(train.day==null)return null;
+  let undo=null;
+  asPlan(train.planId,()=>{
+    const arr=plans[train.day];if(!arr)return;
+    let k=arr[i]&&arr[i].n===oldName?i:arr.findIndex(x=>x.n===oldName);
+    if(k<0)return;
+    const old=JSON.parse(JSON.stringify(arr[k]));
+    const nx={...old,n:item.n};delete nx.sw;
+    if(nx.reps&&!item.reps)delete nx.reps;
+    arr[k]=nx;
+    const day=train.day,pid=train.planId;
+    undo=()=>{asPlan(pid,()=>{const a=plans[day];if(!a)return;const j=a[k]&&a[k].n===item.n?k:a.findIndex(x=>x.n===item.n);if(j>=0)a[j]=old;},true);persistOpenPlan();};
+  },true);
+  persistOpenPlan();planRefresh();
+  return undo;
 }
 function endTraining(finished){
   autoLogCurrent();   // capture the exercise currently on screen, so it's never missed
@@ -6201,7 +6230,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v78"]};
+ data:["Save & Settings","Backup your data · v79"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
