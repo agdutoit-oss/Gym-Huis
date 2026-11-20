@@ -4358,6 +4358,10 @@ const FOODS=[
  {n:"Sour Cream",c:"Dairy",p:2,f:19,k:193},
  {n:"Greek Yogurt (full fat)",c:"Dairy",p:9,f:5,k:97},
  {n:"Full-cream Milk",c:"Dairy",p:3.3,f:3.3,k:64},
+ // SUPPLEMENTS (from the packet label, per 100 g of powder)
+ {n:"NiHPRO Protein Isolate, Vanilla Custard (Nutritech)",c:"Supplements",p:81.6,f:6.1,k:384.8,ml:false,
+  a:"nihpro nutritech protein powder shake whey isolate vanilla custard scoop scoops",
+  s:[[32,"1 serving · 2 scoops 32 g"],[16,"1 scoop 16 g"],[48,"3 scoops 48 g"],[64,"2 servings 64 g"]],u:[32,"serving"]},
 ];
 // Extra words people type for a food, so "steak" or "mince" finds it
 const FOOD_ALIASES={
@@ -5666,7 +5670,7 @@ function fcParse(raw){
 }
 function fcFold(t){return String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
 let fcSize=null;   // a serving word typed, e.g. "large", "quart", "can"
-const FC_SIZE_RE=/\b(small|regular|large|double|single|quart|dumpie|can|bottle|glass|mug|cup|bomb|tot|shot)s?\b/i;
+const FC_SIZE_RE=/\b(small|regular|large|double|single|quart|dumpie|can|bottle|glass|mug|cup|bomb|tot|shot|scoop)s?\b/i;
 function fcScore(f,words){
   const name=fcFold(f.n), hay=name+" "+fcFold(FOOD_ALIASES[f.n]||f.a||"")+" "+fcFold(f.c);
   let score=0;
@@ -5727,7 +5731,7 @@ function fcPick(name){
   // "large latte", "2 cans coke", "black label quart": use that serving size
   const szs=fcSizesOf(f);
   if(szs&&fcSize&&!(fcNum&&fcNum.g)){
-    const hit=szs.find(([v,l])=>l.toLowerCase().includes(fcSize));
+    const hit=szs.find(([v,l])=>l.toLowerCase().startsWith("1 "+fcSize))||szs.find(([v,l])=>l.toLowerCase().includes(fcSize));
     if(hit){ g.value=hit[0]*(fcNum&&fcNum.n<=24?fcNum.n:1); fcGramsManual=true; }
   }
   fcNum=null; fcSize=null;
@@ -6230,7 +6234,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v79"]};
+ data:["Save & Settings","Backup your data · v80"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
