@@ -607,6 +607,11 @@
   .fcs small{color:var(--dim);font-size:11.5px;white-space:nowrap}
   .fcs:active{border-color:var(--accent)}
   .fcunits{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .fcwt{display:flex;align-items:center;gap:6px;margin-bottom:8px}.fcwt:empty{display:none}
+  .fcwt span{font-size:12.5px;color:var(--dim);margin-right:2px}
+  .fcwt button{padding:7px 16px;border-radius:18px;background:var(--card2);color:var(--dim);font-size:12.5px;font-weight:600;border:none;cursor:pointer}
+  .fcwt button.on{background:var(--accent);color:#fff}
+  .fcconv{font-size:12px;color:var(--dim);margin-top:3px}
   .fcunits:empty{display:none}
   .fcunits .chip.on{background:var(--accent);color:#fff}
   .fcprev{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:10px;font-size:13px;color:var(--dim);line-height:1.5}
@@ -1004,6 +1009,7 @@
       </div>
       <div id="fcSuggest" class="fcsug"></div>
       <div id="fcAi"></div>
+      <div id="fcWt" class="fcwt"></div>
       <div id="fcUnits" class="fcunits"></div>
       <div id="fcPreview" class="fcprev"></div>
       <button class="btn primary" id="fcAddBtn" style="width:100%" onclick="fcAdd()">Add</button>
@@ -4709,7 +4715,7 @@ function repExport(){
     </tbody></table>`;
   }
   h+=`<h2>${repMode==="day"?"What was eaten":"Day by day"}</h2>`+logged.map(d=>{
-    const rows=d.eat.map(x=>{const q=x.q||1, uo=x.ml?"ml":"g", amt=x.g?(q>1?`${q} × ${Math.round(x.g/q)} ${uo}`:`${x.g} ${uo}`):(q>1?`${q} ×`:"");
+    const rows=d.eat.map(x=>{const q=x.q||1, uo=x.ml?"ml":"g", amt=x.g?(q>1?`${q} × ${Math.round(x.g/q)} ${uo}`:`${x.g} ${uo}`)+(x.wt?" "+x.wt:""):(q>1?`${q} ×`:"");
       return `<tr><td>${escH(x.food||x.label||"Quick add")}${x.ai?' <span class="pr-ai">Claude estimate</span>':""}</td><td>${amt||"–"}</td><td>${kj(x.kcal)}</td><td>${x.p!=null?g(x.p):"–"}</td><td>${x.f!=null?g(x.f):"–"}</td><td>${entryCarbs(x)?g(entryCarbs(x)):"–"}</td></tr>`;}).join("");
     const burn=d.burn?`<div class="pr-note">Exercise logged: ${kj(d.burn)} kJ${(calLog[d.k]?.burn||[]).map(b=>b.label).filter(Boolean).length?` (${(calLog[d.k].burn).map(b=>escH(b.label)).filter(Boolean).join(", ")})`:""}</div>`:"";
     return `<div class="pr-day"><h3>${long(d.k)}<span>${kj(d.kcal)} kJ of ${kj(d.target)} kJ · ${d.kcal<=d.target?`${kj(d.target-d.kcal)} under`:`${kj(d.kcal-d.target)} over`}</span></h3>
@@ -4813,7 +4819,7 @@ function rememberFood(name,tot,q,oldName){
 function calItemHtml(x,i){
   const q=x.q||1, uo=x.ml?"ml":"g";
   const sub = x.g
-    ? `<div class="fi-m2">${q>1&&x.unit?.g?`${q} × ${Math.round(x.unit.g)} ${uo} = `:""}${x.g} ${uo} · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`
+    ? `<div class="fi-m2">${q>1&&x.unit?.g?`${q} × ${Math.round(x.unit.g)} ${uo} = `:""}${x.g} ${uo}${x.wt?" weighed "+x.wt:""} · ${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat</div>`
     : (q>1&&x.unit||x.p!=null)?`<div class="fi-m2">${q>1&&x.unit?`${q} × ${kj(x.unit.kcal)} kJ`:""}${q>1&&x.unit&&x.p!=null?" · ":""}${x.p!=null?`${Math.round(x.p||0)} g protein · ${Math.round(x.f||0)} g fat`:""}</div>`:"";
   return `<div class="fitem"><div class="fi-info" onclick="calEdit(${i})" style="cursor:pointer"><div class="fi-n">${escH(x.food||x.label||"Food")}</div>${sub}</div><div class="qty"><button onclick="calStep(${i},-1)" ${q<=1?"disabled":""} aria-label="One less">−</button><span>${q}</span><button onclick="calStep(${i},1)" aria-label="One more">+</button></div><div class="qtyk">${kj(x.kcal)}</div><button class="rm" onclick="rmCal('eat',${i})">×</button></div>`;
 }
@@ -5651,6 +5657,27 @@ function allFoods(){return myFoods.concat(FOODS,DRINKS);}
 // Built-in foods renamed in v47 (raw/cooked added); older log entries still use the old names
 const FOOD_RENAMED={"Ribeye Steak": "Ribeye Steak (cooked)", "Beef Mince (20% fat)": "Beef Mince 20% (raw)", "Beef Mince (10% fat)": "Beef Mince 10% (raw)", "Sirloin Steak": "Sirloin Steak (cooked)", "Rump Steak": "Rump Steak (cooked)", "Chuck / Stewing Beef": "Chuck / Stewing Beef (braised)", "Brisket": "Brisket (cooked)", "Short Rib": "Short Rib (braised)", "Beef Liver": "Beef Liver (pan-fried)", "Oxtail": "Oxtail (braised)", "Lamb Chop": "Lamb Chop (grilled)", "Lamb Leg": "Lamb Leg (roasted)", "Lamb Mince": "Lamb Mince (raw)", "Pork Belly": "Pork Belly (roasted)", "Pork Chop": "Pork Chop (cooked)", "Bacon (streaky)": "Bacon (streaky, cooked)", "Pork Sausage (100% meat)": "Pork Sausage (cooked)", "Chicken Thigh (skin on)": "Chicken Thigh, skin on (roasted)", "Chicken Breast (skinless)": "Chicken Breast, skinless (roasted)", "Chicken Wings (skin on)": "Chicken Wings (roasted)", "Chicken Liver": "Chicken Liver (cooked)", "Duck (skin on)": "Duck, skin on (roasted)", "Salmon (fatty)": "Salmon, farmed (cooked)", "Mackerel": "Mackerel (cooked)", "Sardines (in oil)": "Sardines (in oil, drained)", "Tinned Tuna (in oil)": "Tinned Tuna (in oil, drained)", "Hake / White Fish": "Hake / White Fish (cooked)", "Prawns": "Prawns (cooked)", "Snoek": "Snoek (smoked/braaied)", "Whole Egg (1 large ~50g)": "Whole Egg (boiled, ~50g)", "Egg Yolk": "Egg Yolk (raw)", "Kidney": "Beef Kidney (cooked)", "Heart (beef)": "Beef Heart (cooked)", "Tripe": "Tripe (beef, cooked)", "Fillet Steak": "Fillet Steak (cooked)", "T-Bone Steak": "T-Bone Steak (cooked)", "Boerewors": "Boerewors (cooked)", "Roast Beef (sliced)": "Roast Beef (sliced, cooked)", "Beef Tongue": "Beef Tongue (cooked)", "Lamb Liver": "Lamb Liver (cooked)", "Lamb Ribs": "Lamb Ribs (roasted)", "Lamb Shoulder": "Lamb Shoulder (roasted)", "Pork Ribs": "Pork Ribs (roasted)", "Pork Loin": "Pork Loin (roasted)", "Gammon / Ham": "Gammon / Ham (cooked)", "Chicken Drumstick (skin on)": "Chicken Drumstick, skin on (roasted)", "Turkey Breast": "Turkey Breast (roasted)", "Trout": "Trout (cooked)", "Cod": "Cod (cooked)", "Tuna Steak": "Tuna Steak (cooked)", "Tinned Tuna (in water)": "Tinned Tuna (in water, drained)", "Oysters": "Oysters (raw)", "Mussels": "Mussels (cooked)", "Calamari": "Calamari (raw)", "Crab": "Crab (cooked)", "Egg White": "Egg White (raw)", "Duck Egg": "Duck Egg (raw)", "Parmesan": "Parmesan (grated)"};
 function findFood(name){name=FOOD_RENAMED[name]||name;return allFoods().find(f=>f.n===name);}
+/* v81: raw or cooked weight. Cooked weight ÷ raw weight for each meat/fish (typical yields, USDA retention
+   tables and McCance & Widdowson). A food's numbers are for the state in its name: "(raw" = raw, else cooked. */
+const FC_YIELD={"Ribeye Steak (cooked)":.75,"Sirloin Steak (cooked)":.75,"Rump Steak (cooked)":.75,"Fillet Steak (cooked)":.75,"T-Bone Steak (cooked)":.75,
+ "Beef Mince 20% (raw)":.7,"Beef Mince 10% (raw)":.75,"Chuck / Stewing Beef (braised)":.65,"Brisket (cooked)":.65,"Short Rib (braised)":.65,"Oxtail (braised)":.65,
+ "Roast Beef (sliced, cooked)":.7,"Boerewors (cooked)":.8,"Beef Liver (pan-fried)":.75,"Beef Kidney (cooked)":.7,"Beef Heart (cooked)":.65,"Beef Tongue (cooked)":.7,"Tripe (beef, cooked)":.8,
+ "Lamb Chop (grilled)":.75,"Lamb Leg (roasted)":.7,"Lamb Shoulder (roasted)":.7,"Lamb Ribs (roasted)":.7,"Lamb Mince (raw)":.72,"Lamb Liver (cooked)":.75,
+ "Pork Belly (roasted)":.65,"Pork Chop (cooked)":.75,"Pork Loin (roasted)":.75,"Pork Ribs (roasted)":.7,"Bacon (streaky, cooked)":.35,"Pork Sausage (cooked)":.8,"Gammon / Ham (cooked)":.75,
+ "Chicken Thigh, skin on (roasted)":.72,"Chicken Breast, skinless (roasted)":.75,"Chicken Wings (roasted)":.7,"Chicken Drumstick, skin on (roasted)":.72,"Roast Chicken (meat + skin)":.72,
+ "Chicken Liver (cooked)":.8,"Duck, skin on (roasted)":.6,"Turkey Breast (roasted)":.75,
+ "Salmon, farmed (cooked)":.8,"Mackerel (cooked)":.8,"Hake / White Fish (cooked)":.8,"Trout (cooked)":.8,"Cod (cooked)":.8,"Tuna Steak (cooked)":.8,"Prawns (cooked)":.8,"Calamari (raw)":.75};
+function fcYield(f){return f&&!f.each&&FC_YIELD[f.n]||0;}
+function fcNative(f){return /\(raw/i.test(f?.n||"")?"raw":"cooked";}
+// grams of the food as its numbers are given, from grams weighed raw or cooked
+function fcAsListed(f,g,wt){const y=fcYield(f);if(!y||!wt||wt===fcNative(f))return g;return wt==="raw"?g*y:g/y;}
+// raw or cooked you weighed it last time, else the food's own state
+function fcLastWt(name){
+  for(const k of Object.keys(calLog).sort().reverse()){const e=calLog[k].eat||[];for(let i=e.length-1;i>=0;i--){const x=e[i];if(x.g>0&&findFood(x.food)?.n===name)return x.wt||null;}}
+  return null;
+}
+let fcWt=null;   // "raw" or "cooked" for foods with a yield
+function fcSetWt(w){fcWt=w;fcRender();}
 
 let fcSel=null;      // the chosen food
 let fcNum=null;      // a number typed in the food box: {n, g:true if followed by "g"}
@@ -5712,7 +5739,7 @@ function fcEnter(){
 }
 function fcPick(name){
   const f=findFood(name); if(!f)return;
-  fcSel=f;
+  fcSel=f; fcWt=fcYield(f)?(fcLastWt(f.n)||fcNative(f)):null;
   const el=document.getElementById("fcFood"); el.value=f.n;
   document.getElementById("fcSuggest").innerHTML="";
   const g=document.getElementById("fcGrams");
@@ -5748,13 +5775,15 @@ function fcLastAmount(name){
 }
 function fcGramsTyped(){fcGramsManual=true;fcRender();}
 function fcSetGrams(v){document.getElementById("fcGrams").value=v;fcGramsManual=true;fcRender();}
-function fcCalc(f,g){if(f.each)return {k:r2(f.k*g),p:f.p*g,f:f.f*g};return {k:r2(f.k*g/100),p:f.p*g/100,f:f.f*g/100};}
+function fcCalc(f,g,wt){if(!f.each)g=fcAsListed(f,g,wt);if(f.each)return {k:r2(f.k*g),p:f.p*g,f:f.f*g};return {k:r2(f.k*g/100),p:f.p*g/100,f:f.f*g/100};}
 function fcRender(){
   const gEl=document.getElementById("fcGrams");
   const g=parseFloat(gEl?.value);
   const prev=document.getElementById("fcPreview"), units=document.getElementById("fcUnits");
   const btn=document.getElementById("fcAddBtn");
   if(btn)btn.textContent=`Add to ${dayLabel(selKey).toLowerCase()==="today"?"today":dayLabel(selKey)}`;
+  const wtEl=document.getElementById("fcWt");
+  if(wtEl)wtEl.innerHTML=fcSel&&fcYield(fcSel)?`<span>Weighed</span>${["cooked","raw"].map(w=>`<button class="${fcWt===w?"on":""}" onclick="fcSetWt('${w}')">${w==="raw"?"Raw":"Cooked"}</button>`).join("")}`:"";
   if(!fcSel){
     if(gEl)gEl.placeholder="g / ml";
     units.innerHTML="";
@@ -5781,11 +5810,12 @@ function fcRender(){
     prev.innerHTML=fcSel.each?`<b>${escH(fcSel.n)}</b>: ${kj(fcSel.k)} kJ each. How many?`:`<b>${escH(fcSel.n)}</b>: ${kj(fcSel.k)} kJ per 100 ${uo}. How much did you have?`;
     return;
   }
-  const r=fcCalc(fcSel,g);
+  const r=fcCalc(fcSel,g,fcWt), wtS=fcYield(fcSel)?` weighed ${fcWt},`:"";
   const cn=u&&!sz&&(fcSel.c==="My foods"||fcSel.each)?g/u[0]:0, cnt=cn>0&&Math.abs(cn*2-Math.round(cn*2))<0.02?Math.round(cn*2)/2:0;
-  const how=fcSel.each?`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]}`:`${g} ×`}`:`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]} · `:""}${Math.round(g)} ${uo}`;
+  const how=fcSel.each?`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]}`:`${g} ×`}`:`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]} · `:""}${Math.round(g)} ${uo}${wtS}`;
+  const conv=wtS&&fcWt!==fcNative(fcSel)?`<div class="fcconv">${Math.round(g)} g ${fcWt} ≈ ${Math.round(fcAsListed(fcSel,g,fcWt))} g ${fcNative(fcSel)}</div>`:"";
   prev.innerHTML=`<div class="fck">${kj(r.k)}<small> kJ</small></div>
-    <b>${how} ${escH(fcSel.n)}</b> · ${Math.round(r.p)} g protein · ${Math.round(r.f)} g fat`;
+    <b>${how} ${escH(fcSel.n)}</b> · ${Math.round(r.p)} g protein · ${Math.round(r.f)} g fat${conv}`;
 }
 function fcAdd(){
   if(!fcSel){
@@ -5794,16 +5824,17 @@ function fcAdd(){
   }
   const g=parseFloat(document.getElementById("fcGrams").value);
   if(!g||g<=0){toast("Enter an amount");document.getElementById("fcGrams").focus();return;}
-  const r=fcCalc(fcSel,g);
+  const wt=fcYield(fcSel)?fcWt:null, r=fcCalc(fcSel,g,wt);
   const u=fcUnitOf(fcSel), cn=u?g/u[0]:1, cnt=Math.abs(cn-Math.round(cn))<0.02?Math.round(cn):1, q=cnt>=1&&cnt<=24?cnt:1;
-  const one=fcCalc(fcSel,g/q);
+  const one=fcCalc(fcSel,g/q,wt);
   const ent={kcal:r.k,label:fcSel.n,food:fcSel.n,p:r1(r.p),f:r1(r.f),q,unit:{kcal:one.k,p:one.p,f:one.f}};
-  if(!fcSel.each){ent.g=Math.round(g);ent.unit.g=g/q;ent.unit.kcal=fcSel.k*g/q/100;}
+  if(!fcSel.each){ent.g=Math.round(g);ent.unit.g=g/q;ent.unit.kcal=fcSel.k*fcAsListed(fcSel,g,wt)/q/100;}
+  if(wt)ent.wt=wt;
   if(fcSel.ml)ent.ml=true;
   calDay(selKey).eat.push(ent);
   saveCal();
   toast(`+${kj(r.k)} kJ · ${fcSel.n}`);
-  fcSel=null;fcNum=null;fcGramsManual=false;
+  fcSel=null;fcWt=null;fcNum=null;fcGramsManual=false;
   document.getElementById("fcFood").value="";
   document.getElementById("fcGrams").value="";
   document.getElementById("fcSuggest").innerHTML="";
@@ -5829,7 +5860,7 @@ function renderFoodCalc(){
     const rec=fcRecents();
     fcRecentList=rec;
     r.innerHTML=rec.map((x,n)=>{const fd=findFood(x.food), one=fd.each?1:Math.round(x.unit?.g||x.g);
-      return `<button class="chip" onclick="fcRefillIdx(${n})">${escH(x.food)} · ${fd.each?`${kj(fd.k)} kJ`:`${one} ${x.ml?"ml":"g"}`}</button>`;}).join("");
+      return `<button class="chip" onclick="fcRefillIdx(${n})">${escH(x.food)} · ${fd.each?`${kj(fd.k)} kJ`:`${one} ${x.ml?"ml":"g"}${x.wt?" "+x.wt:""}`}</button>`;}).join("");
   }
   const ml=document.getElementById("mfList");
   if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${escH(f.n)}</div><div class="fi-m2">${f.each?`each · ${kj(f.k)} kJ`:`per 100 ${f.ml?"ml":"g"} · ${kj(f.k)} kJ${f.u?` · 1 = ${f.u[0]} ${f.ml?"ml":"g"}`:""}`} · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
@@ -6234,7 +6265,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v80"]};
+ data:["Save & Settings","Backup your data · v81"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
