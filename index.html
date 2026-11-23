@@ -600,7 +600,14 @@
   .aispin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(169,123,255,.3);border-top-color:#a97bff;animation:aispin .8s linear infinite;flex:0 0 auto}
   @keyframes aispin{to{transform:rotate(360deg)}}
   .fcrow{display:flex;gap:8px;margin-bottom:8px}
-  .fcrow .fcg{flex:0 0 92px;text-align:center}
+  .fcrow .fcg{flex:0 0 84px;text-align:center}
+  .fcplus{flex:0 0 46px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--accent2);font-size:26px;font-weight:600;line-height:1;cursor:pointer;padding:0}
+  .fcplus.on{border-color:var(--accent2)}
+  .fcplusmenu{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .fcplusmenu .btn{width:100%}
+  .fcplushd{font-size:13px;color:var(--dim)}
+  .fcplustype{background:none;border:0;color:var(--accent2);font-size:13px;font-weight:600;padding:4px;cursor:pointer}
+  #lblBox:not(:empty){margin-bottom:10px}
   .fcsug{margin:-2px 0 8px}
   .fcsug:empty{display:none}
   .fcs{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:5px;color:var(--txt);font-size:14px;cursor:pointer}
@@ -1024,7 +1031,17 @@
       <div class="fcrow">
         <input type="text" id="fcFood" class="calinput" placeholder="e.g. ribeye 250g, 2 castle lite" autocomplete="off" oninput="fcInput()" onfocus="fcInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcEnter();}">
         <input type="text" inputmode="decimal" id="fcGrams" class="calinput fcg" placeholder="g / ml" oninput="fcGramsTyped()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcAdd();}">
+        <button class="fcplus" id="fcPlusBtn" aria-label="Add a food from its label" onclick="fcPlusToggle()">+</button>
       </div>
+      <div id="fcPlusMenu" class="fcplusmenu" style="display:none">
+        <div class="fcplushd">Add a food from its nutrition label</div>
+        <button class="btn primary" onclick="lblStart(true)">📷 Take photo</button>
+        <button class="btn ghost" onclick="lblStart(false)">🖼 Upload photo</button>
+        <button class="fcplustype" onclick="lblManual()">No photo? Type the label numbers</button>
+      </div>
+      <input type="file" id="lblCam" accept="image/*" capture="environment" style="display:none" onchange="lblPicked(this)">
+      <input type="file" id="lblFile" accept="image/*" style="display:none" onchange="lblPicked(this)">
+      <div id="lblBox"></div>
       <div id="fcSuggest" class="fcsug"></div>
       <div id="fcAi"></div>
       <div id="fcWt" class="fcwt"></div>
@@ -1036,36 +1053,11 @@
       <div id="fcMeals" class="fcrecent"></div>
       <button class="btn ghost" id="mbStartBtn" style="width:100%;margin-top:10px" onclick="mbStart()">🥪 Make a meal from ingredients</button>
       <details class="fcmine" id="fcMine">
-        <summary>Food not in the list? Add your own or scan its label</summary>
-        <div class="fcrow"><input type="text" id="mfName" class="calinput" placeholder="Name, e.g. Woolies boerewors"></div>
-        <button class="btn primary" style="width:100%;margin-top:8px" onclick="lblStart()">📷 Photo of the nutrition label</button>
-        <input type="file" id="lblFile" accept="image/*" style="display:none" onchange="lblPicked(this)">
-        <div id="lblBox" style="margin-top:8px"></div>
-        <div style="margin-top:8px">Or copy the "per 100 g" numbers from the packet yourself. If you only know protein and fat, leave kJ empty and it will be worked out.</div>
-        <div class="fcrow">
-          <input type="text" inputmode="decimal" id="mfK" class="calinput" placeholder="kJ">
-          <input type="text" inputmode="decimal" id="mfP" class="calinput" placeholder="protein g">
-          <input type="text" inputmode="decimal" id="mfF" class="calinput" placeholder="fat g">
-        </div>
-        <button class="btn ghost" style="width:100%" onclick="saveMyFood()">Save food</button>
+        <summary>My foods</summary>
         <div id="mfList" style="margin-top:10px"></div>
       </details>
     </div>
 
-    <div class="fdhead">Or type kJ directly</div>
-    <div class="caladd">
-      <input type="text" id="calLabel" class="calinput" style="flex:1" placeholder="What (optional)">
-    </div>
-    <div class="caladd">
-      <input type="text" inputmode="decimal" id="calAmt" class="calinput" placeholder="g / ml (optional)">
-      <input type="text" inputmode="decimal" id="calInput" class="calinput" placeholder="kJ eaten">
-    </div>
-    <div class="caladd">
-      <input type="text" inputmode="decimal" id="calProt" class="calinput" placeholder="Protein g">
-      <input type="text" inputmode="decimal" id="calFat" class="calinput" placeholder="Fat g">
-      <button class="btn primary" style="flex:0 0 70px" onclick="addCal()">Add</button>
-    </div>
-    <div id="calQuick" class="calquick"></div>
 
     <div class="fdhead">Logged today <span style="text-transform:none;letter-spacing:0;font-weight:500">· tap one to fix it</span></div>
     <div id="calList"></div>
@@ -4550,7 +4542,7 @@ function renderCal(){
   document.getElementById("calWarn").innerHTML=warn;
 
   // quick-add buttons (common round numbers)
-  document.getElementById("calQuick").innerHTML=[500,1000,1500,2000].map(n=>
+  const cq=document.getElementById("calQuick"); if(cq)cq.innerHTML=[500,1000,1500,2000].map(n=>
     `<button class="calqbtn" onclick="quickCal(${n})">+${n} kJ</button>`).join("");
 
   // eaten list
@@ -5919,6 +5911,8 @@ function renderFoodCalc(){
     mr.innerHTML=ms.length&&!mb?`<span class="mbtag">Your meals</span>`+ms.map(([f,i])=>`<button class="chip" onclick="fcPickMeal(${i})">🥪 ${escH(f.n)} · ${kj(f.each?f.k:f.k*(f.u?.[0]||100)/100)} kJ</button>`).join(""):"";}
   const sb=document.getElementById("mbStartBtn"); if(sb)sb.style.display=mb?"none":"";
   mbRender();
+  const mn=document.querySelector("#fcMine summary"); if(mn)mn.textContent=`My foods (${myFoods.length})`;
+  const mine=document.getElementById("fcMine"); if(mine)mine.style.display=myFoods.length?"":"none";
   const ml=document.getElementById("mfList");
   if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"${f.meal?` onclick="mbStart(${i})" style="cursor:pointer"`:""}><div class="fi-n">${f.meal?"🥪 ":""}${escH(f.n)}${f.meal?` <span style="color:var(--accent2);font-weight:600;font-size:12px">✎ edit</span>`:""}</div><div class="fi-m2">${f.meal?`${f.parts.length} ingredient${f.parts.length>1?"s":""} · `:""}${f.each?`each · ${kj(f.k)} kJ`:`per 100 ${f.ml?"ml":"g"} · ${kj(f.k)} kJ${f.u?` · 1 = ${f.u[0]} ${f.ml?"ml":"g"}`:""}`} · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
   fcRender();
@@ -6129,11 +6123,24 @@ const LBL_TOOL={
     readable:{type:"boolean",description:"false if no nutrition table can be read in the photo"}
   },required:["name","liquid","kj_per_100","protein_per_100","fat_per_100","carbs_per_100","serving_size","serving_word","note","readable"],additionalProperties:false}
 };
-function lblStart(){
+function fcPlusToggle(show){
+  const m=document.getElementById("fcPlusMenu"), b=document.getElementById("fcPlusBtn"); if(!m)return;
+  const on=show!=null?show:m.style.display==="none";
+  m.style.display=on?"":"none"; if(b){b.classList.toggle("on",on);b.textContent=on?"×":"+";}
+}
+// the name typed in the food box (without an amount) names the scanned food
+function lblTyped(){return (document.getElementById("fcFood")?.value||"").replace(/\b\d+([.,]\d+)?\s*(g|gram|grams|ml|x)?\b/gi," ").replace(/\s+/g," ").trim();}
+function lblManual(){
+  fcPlusToggle(false); lblImg="";
+  lblRes={name:"",typed:lblTyped(),ml:false,kj:"",p:"",f:"",c:"",srv:0,word:"serving",note:"",readable:true,manual:true};
+  lblRender(); document.getElementById("lblN")?.focus();
+}
+function lblStart(cam){
   if(lblBusy)return;
+  fcPlusToggle(false);
   if(!aiKey){document.getElementById("lblBox").innerHTML=`<div class="aibox"><div class="aierr" style="color:var(--txt)">Reading labels uses your Claude API key. Add it once in Settings; it's stored only on this phone.</div>
     <div class="aibtns"><button class="btn primary" onclick="document.getElementById('lblBox').innerHTML='';toggleSettings()">Open Settings</button></div></div>`;return;}
-  const f=document.getElementById("lblFile"); f.value=""; f.click();
+  const f=document.getElementById(cam?"lblCam":"lblFile"); f.value=""; f.click();
 }
 // Shrink the photo so it uploads quickly (labels stay readable at ~1600 px)
 function lblShrink(file){
@@ -6158,11 +6165,11 @@ async function lblPicked(inp){
     lblRender();
   }catch(e){
     box.innerHTML=`<div class="aibox"><div class="aierr">${escH(e.message||"Something went wrong.")}</div>
-      <div class="aibtns"><button class="btn primary" onclick="lblStart()">Try another photo</button><button class="btn ghost" onclick="lblClose()">Cancel</button></div></div>`;
+      <div class="aibtns"><button class="btn primary" onclick="lblClose();fcPlusToggle(true)">Try another photo</button><button class="btn ghost" onclick="lblClose()">Cancel</button></div></div>`;
   }finally{lblBusy=false;}
 }
 async function lblRead(b64){
-  const typed=(document.getElementById("mfName").value||"").trim();
+  const typed=lblTyped();
   const body={
     model:AI_MODEL, max_tokens:4000,
     output_config:{effort:"medium"},
@@ -6195,7 +6202,7 @@ function lblRender(){
   const m=4*r.p+4*r.c+9*r.f, kc=r.kj/KJ, off=kc>40&&Math.abs(m-kc)>0.2*kc;
   box.innerHTML=`<div class="aibox">
     <div style="display:flex;gap:10px;align-items:center">${lblImg?`<img class="lblimg" src="${lblImg}" alt="">`:""}
-      <div style="font-weight:700">Check these against the label, then save</div></div>
+      <div style="font-weight:700">${r.manual?"Copy the per 100 g numbers from the label":"Check these against the label, then save"}</div></div>
     <div class="fcrow" style="margin-top:8px"><input type="text" id="lblN" class="calinput" placeholder="Name" value="${escH(nm)}"></div>
     ${r.typed&&r.name&&r.name.toLowerCase()!==r.typed.toLowerCase()?`<div class="lblnote">Pack says: ${escH(r.name)}</div>`:""}
     <div class="lblgrid">
@@ -6208,7 +6215,7 @@ function lblRender(){
     </div>
     ${r.note?`<div class="lblnote">ℹ ${escH(r.note)}</div>`:""}
     ${off?`<div class="aiconf rough">⚠ Protein, fat and carbs don't add up to this kJ. Check the numbers on the label.</div>`:""}
-    <div class="aibtns"><button class="btn primary" onclick="lblSave()">Save food</button><button class="btn ghost" onclick="lblStart()">New photo</button><button class="btn ghost" onclick="lblClose()">Cancel</button></div>
+    <div class="aibtns"><button class="btn primary" onclick="lblSave()">Save food</button>${r.manual?"":`<button class="btn ghost" onclick="fcPlusToggle(true)">New photo</button>`}<button class="btn ghost" onclick="lblClose()">Cancel</button></div>
   </div>`;
 }
 // keep what was typed in the boxes when the card is redrawn
@@ -6227,7 +6234,7 @@ function lblSave(){
   if(lblRes.ml)food.ml=true;
   const i=myFoods.findIndex(x=>x.n.toLowerCase()===name.toLowerCase());
   if(i>=0)myFoods[i]=food; else myFoods.unshift(food);
-  saveMyFoods(); lblClose(); document.getElementById("mfName").value="";
+  saveMyFoods(); lblClose();
   toast(`Saved ${name}`);
   fcSel=null;fcNum=null;fcPick(food.n);
   renderFoodCalc();
@@ -6493,7 +6500,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v82"]};
+ data:["Save & Settings","Backup your data · v83"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
