@@ -5695,8 +5695,18 @@ const FC_YIELD={"Ribeye Steak (cooked)":.75,"Sirloin Steak (cooked)":.75,"Rump S
  "Chicken Thigh, skin on (roasted)":.72,"Chicken Breast, skinless (roasted)":.75,"Chicken Wings (roasted)":.7,"Chicken Drumstick, skin on (roasted)":.72,"Roast Chicken (meat + skin)":.72,
  "Chicken Liver (cooked)":.8,"Duck, skin on (roasted)":.6,"Turkey Breast (roasted)":.75,
  "Salmon, farmed (cooked)":.8,"Mackerel (cooked)":.8,"Hake / White Fish (cooked)":.8,"Trout (cooked)":.8,"Cod (cooked)":.8,"Tuna Steak (cooked)":.8,"Prawns (cooked)":.8,"Calamari (raw)":.75};
-function fcYield(f){return f&&!f.each&&FC_YIELD[f.n]||0;}
-function fcNative(f){return /\(raw/i.test(f?.n||"")?"raw":"cooked";}
+// v85: saved foods (your own, label scans, Claude lookups) get a yield from their name too:
+// meat and fish lose water when cooked (under 1), rice, pasta and grains soak it up (over 1)
+const FC_YIELD_WORDS=[
+ [/\bbrown rice\b/,2.5],[/\b(rice|basmati|jasmine)\b/,2.8],[/\b(pasta|spaghetti|macaroni|penne|fusilli|linguine|fettuccine|tagliatelle|lasagne sheets?|noodles?)\b/,2.25],
+ [/\bcouscous\b/,2.4],[/\bquinoa\b/,2.7],[/\b(bulgur|bulgar)\b/,2.8],[/\bbarley\b/,3],[/\blentils?\b/,2.5],[/\b(chickpeas?|kidney beans?|black beans?|butter beans?|sugar beans?|haricot beans?|dried beans?)\b/,2.4],
+ [/\b(pap|mealie ?meal|maize ?meal|polenta|samp)\b/,3],
+ [/\bbacon\b/,.35],[/\b(boerewors|wors|sausages?)\b/,.8],[/\bmince\b/,.72],[/\b(fish|salmon|hake|kingklip|snoek|trout|cod|tuna steak|yellowtail|prawns?)\b/,.8],
+ [/\b(steak|ribeye|sirloin|rump|fillet|t-bone|brisket|chuck|beef|lamb|mutton|pork|chops?|chicken|turkey|duck|liver)\b/,.75]];
+const FC_YIELD_NOT=/\b(tinned|canned|tin|can|instant|cakes?|crackers?|milk|sauce|soup|sandwich|burger|wrap|pie|pizza|curry|stew|roll|nuggets?|biltong|dro[eë]wors|polony|salami|viennas?|deli|cold ?meat|smoked|pat[eé]|kfc|nando'?s|steers|spur|wimpy|mcdonald'?s|debonairs|chicken licken|fried rice|stock|broth|powder|protein)\b/;
+function fcYieldByName(n){n=fcFold(n);if(FC_YIELD_NOT.test(n))return 0;const h=FC_YIELD_WORDS.find(([re])=>re.test(n));return h?h[1]:0;}
+function fcYield(f){if(!f||f.each||f.parts?.length)return 0;return FC_YIELD[f.n]||(f.c==="My foods"?fcYieldByName(f.n):0);}
+function fcNative(f){return /\(raw|\b(raw|uncooked|dried|dry(?!-aged))\b/i.test(f?.n||"")?"raw":"cooked";}
 // grams of the food as its numbers are given, from grams weighed raw or cooked
 function fcAsListed(f,g,wt){const y=fcYield(f);if(!y||!wt||wt===fcNative(f))return g;return wt==="raw"?g*y:g/y;}
 // raw or cooked you weighed it last time, else the food's own state
@@ -6501,7 +6511,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v84"]};
+ data:["Save & Settings","Backup your data · v85"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
