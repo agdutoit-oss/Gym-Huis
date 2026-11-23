@@ -620,6 +620,23 @@
   .fcprev .fck small{font-size:12px;color:var(--dim);font-weight:600}
   .fcrecent{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px}
   .fcrecent:empty{display:none}
+  .mbtag{flex:0 0 auto;align-self:center;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+  .mbbox{background:var(--bg);border:1px solid var(--accent);border-radius:12px;padding:12px;margin-bottom:12px}
+  .mbbox .fdhead{margin-top:0}
+  .mbparts{margin-left:0}
+  .mbparts>div{flex-wrap:wrap;row-gap:2px;padding:3px 0;border-bottom:1px solid var(--line)}
+  .mbparts>div:last-child{border-bottom:none}
+  .mbparts>div>span:first-child{flex:1 1 140px;min-width:0;color:var(--txt)}
+  .mbparts>div>span:last-child{display:flex;align-items:center;gap:5px;margin-left:auto}
+  .mbparts>div.off>span:first-child{text-decoration:line-through;opacity:.6}
+  .mbparts .rm{width:26px;height:26px;font-size:15px;border-radius:8px}
+  .wtb{padding:4px 9px;border-radius:14px;border:none;background:var(--card2);color:var(--dim);font-size:11.5px;font-weight:600;cursor:pointer}
+  .wtb.raw{background:var(--accent);color:#fff}
+  .mbtot{font-size:13px;color:var(--dim);margin:8px 0 2px}
+  .mbtot b{color:var(--txt)}
+  .fcparts{margin-bottom:8px}.fcparts:empty{display:none}
+  .fcparts .cehint{margin:0 0 4px}
+  .mblink{background:none;border:none;color:var(--accent2);font-size:12.5px;font-weight:600;padding:4px 0;cursor:pointer}
   .fcmine{margin-top:12px;font-size:13px;color:var(--dim)}
   .fcmine summary{cursor:pointer;color:var(--accent2);font-weight:600}
   .fcmine .fcrow{margin-top:8px}
@@ -1002,7 +1019,8 @@
     <div id="calWarn"></div>
 
     <div class="fcalc">
-      <div class="fdhead">What did you eat?</div>
+      <div id="mbBox"></div>
+      <div class="fdhead" id="fcHead">What did you eat?</div>
       <div class="fcrow">
         <input type="text" id="fcFood" class="calinput" placeholder="e.g. ribeye 250g, 2 castle lite" autocomplete="off" oninput="fcInput()" onfocus="fcInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcEnter();}">
         <input type="text" inputmode="decimal" id="fcGrams" class="calinput fcg" placeholder="g / ml" oninput="fcGramsTyped()" onkeydown="if(event.key==='Enter'){event.preventDefault();fcAdd();}">
@@ -1011,9 +1029,12 @@
       <div id="fcAi"></div>
       <div id="fcWt" class="fcwt"></div>
       <div id="fcUnits" class="fcunits"></div>
+      <div id="fcParts" class="fcparts"></div>
       <div id="fcPreview" class="fcprev"></div>
       <button class="btn primary" id="fcAddBtn" style="width:100%" onclick="fcAdd()">Add</button>
       <div id="fcRecent" class="fcrecent"></div>
+      <div id="fcMeals" class="fcrecent"></div>
+      <button class="btn ghost" id="mbStartBtn" style="width:100%;margin-top:10px" onclick="mbStart()">🥪 Make a meal from ingredients</button>
       <details class="fcmine" id="fcMine">
         <summary>Food not in the list? Add your own or scan its label</summary>
         <div class="fcrow"><input type="text" id="mfName" class="calinput" placeholder="Name, e.g. Woolies boerewors"></div>
@@ -4787,6 +4808,7 @@ function calStep(i,d){
   if(!x.unit)x.unit={kcal:+x.kcal||0,g:x.g,p:x.p,f:x.f,c:x.c};
   const q=(x.q||1)+d; if(q<1)return;
   const u=x.unit, r1=v=>Math.round(v*10)/10;
+  if(x.parts?.length){const m=q/(x.q||1);x.parts=x.parts.map(o=>({...o,g:o.each?r1(o.g*m):Math.round(o.g*m),k:r2(o.k*m),p:r1((o.p||0)*m),f:r1((o.f||0)*m),...(o.c!=null?{c:r1(o.c*m)}:{})}));}
   x.q=q; x.kcal=r2(u.kcal*q);
   if(u.g!=null)x.g=Math.round(u.g*q);
   if(u.p!=null)x.p=r1(u.p*q);
@@ -4844,7 +4866,7 @@ function calEditHtml(x,i){
 }
 // Ingredients of a logged dish, each with its own amount box
 function cePartsHtml(pr){
-  return `<div class="aiparts ceparts">${pr.map((x,j)=>`<div><span>${escH(x.n)}</span>${x.g>0?`<span><input id="cePart${j}" class="calinput" type="text" inputmode="decimal" value="${x.g}" oninput="calEditPart()"> ${isDrinkName(x.n)?"ml":"g"} · <b id="cePartK${j}">${kj(x.k)}</b> kJ</span>`:`<span>${kj(x.k)} kJ</span>`}</div>`).join("")}</div>`;
+  return `<div class="aiparts ceparts">${pr.map((x,j)=>`<div><span>${escH(x.n)}</span>${x.g>0?`<span><input id="cePart${j}" class="calinput" type="text" inputmode="decimal" value="${x.g}" oninput="calEditPart()"> ${partUnit(x)}${x.wt?" "+x.wt:""} · <b id="cePartK${j}">${kj(x.k)}</b> kJ</span>`:`<span>${kj(x.k)} kJ</span>`}</div>`).join("")}</div>`;
 }
 // The ingredients as now typed, each scaled from what was logged
 function ceParts(){
@@ -4852,7 +4874,7 @@ function ceParts(){
   return x.parts.map((o,j)=>{
     const el=document.getElementById("cePart"+j), g=el?parseFloat(el.value):NaN;
     if(!(o.g>0)||isNaN(g)||g<0||g===o.g)return o;
-    const m=g/o.g; return {...o,g:Math.round(g),k:r2(o.k*m),p:r1(o.p*m),f:r1(o.f*m),c:r1((o.c||0)*m)};
+    const m=g/o.g; return {...o,g:o.each?r1(g):Math.round(g),k:r2(o.k*m),p:r1(o.p*m),f:r1(o.f*m),c:r1((o.c||0)*m)};
   });
 }
 // Changing an ingredient sets the dish's amount, kJ, protein and fat to what was logged plus the change
@@ -4861,7 +4883,7 @@ function calEditPart(){
   const d=key=>np.reduce((t,o,j)=>t+(+o[key]||0)-(+x.parts[j][key]||0),0);
   np.forEach((o,j)=>{const b=document.getElementById("cePartK"+j);if(b)b.textContent=kj(o.k);});
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
-  if(x.g>0||d("g"))set("ceG",Math.max(0,Math.round((+x.g||0)+d("g"))));
+  if(x.g>0||(d("g")&&!findFood(x.food)?.each))set("ceG",Math.max(0,Math.round((+x.g||0)+d("g"))));
   set("ceK",kj(Math.max(0,(+x.kcal||0)+d("k")))); set("ceP",r1(Math.max(0,(+x.p||0)+d("p")))); set("ceF",r1(Math.max(0,(+x.f||0)+d("f"))));
   calEditTyped={}; calEditHint();
 }
@@ -5339,7 +5361,7 @@ function aiRender(){
     ${(()=>{const bad=its.filter(i=>{const m=4*i.protein_g+4*i.carbs_g+9*i.fat_g;return i.kcal>50&&Math.abs(m-i.kcal)>0.2*i.kcal;});
       return bad.length?`<div class="aiconf rough">⚠ The protein, fat and carbs don't add up to this kJ${bad.length<its.length?` for ${escH(bad[0].name)}`:""}. Tap “Don't agree” below to have it checked.</div>`:"";})()}
     <label class="calchk"><input type="checkbox" id="aiRemember" checked> Remember ${its.length>1?"these foods":"this food"}${its.some(i=>i.parts?.length)?" and each ingredient":""} so next time it's instant</label>
-    <div class="aibtns"><button class="btn primary" onclick="aiAddAll()">Add to ${dayLabel(selKey)==="Today"?"today":dayLabel(selKey)}</button><button class="btn ghost" onclick="aiClose()">Cancel</button></div>
+    <div class="aibtns"><button class="btn primary" onclick="aiAddAll()">${mb?"Add to the meal":`Add to ${dayLabel(selKey)==="Today"?"today":dayLabel(selKey)}`}</button><button class="btn ghost" onclick="aiClose()">Cancel</button></div>
     <div id="aiPush">${aiResult.rechecked?`<div class="aisrc">Checked again after your note. Still not right? Add it, then tap it in the list to type your own kJ.</div>`:""}<button class="aino" onclick="aiPushOpen()">${aiResult.rechecked?"Tell Claude again":"Don't agree? Tell Claude why"}</button></div>
   </div>`;
 }
@@ -5387,6 +5409,19 @@ function rememberParts(i){
 function aiAddAll(){
   if(!aiResult)return;
   const remember=document.getElementById("aiRemember")?.checked;
+  if(mb){
+    aiResult.items.forEach(i=>{
+      if(remember){rememberParts(i);rememberFood(i.name,{k:i.kcal,g:i.grams,p:i.protein_g,f:i.fat_g,parts:i.parts},i.count||1,null);}
+      const b={n:i.name,g:i.grams>0?Math.round(i.grams):(i.count||1),k:r2(i.kcal),p:r1(i.protein_g),f:r1(i.fat_g),c:r1(i.carbs_g)};
+      if(!(i.grams>0))b.each=true; else if(isDrinkName(i.name))b.ml=true;
+      mb.rows.push({b,g:b.g,wt:null});
+    });
+    toast(aiResult.items.length>1?"Added to the meal":`Added ${aiResult.items[0].name} to the meal`);
+    aiResult=null; fcSel=null; fcNum=null; fcGramsManual=false;
+    document.getElementById("fcFood").value=""; document.getElementById("fcGrams").value="";
+    document.getElementById("fcSuggest").innerHTML="";
+    aiClose(); renderCal(); return;
+  }
   const day=calDay(selKey);
   aiResult.items.forEach(i=>{
     const q=i.count||1;
@@ -5644,6 +5679,7 @@ function fcWeighable(f){
   const per=v=>Math.round((+v||0)/a.v*1000)/10;
   const o={n:f.n,c:f.c,k:r2((+f.k||0)/a.v*100),p:per(f.p),f:per(f.f),u:[a.v,"serving"]};
   if(f.parts){o.parts=f.parts;o.partsQ=f.partsQ;}
+  if(f.meal)o.meal=true;
   if(a.ml)o.ml=true;
   return o;
 }
@@ -5724,7 +5760,7 @@ function fcInput(){
   const {q,num,sw}=fcParse(el.value);
   fcNum=num; fcSize=sw;
   if(fcSel&&el.value===fcSel.n){document.getElementById("fcSuggest").innerHTML="";return;}
-  fcSel=null;
+  fcSel=null; if(fpRows){fpRows=null;fpRender();}
   const list=fcMatches(q);
   document.getElementById("fcSuggest").innerHTML = q
     ? (list.map(f=>`<button class="fcs" onclick="fcPick('${escH(f.n).replace(/\\/g,"\\\\").replace(/&#39;/g,"\\'")}')"><span>${escH(f.n)}</span><small>${f.each?`${kj(f.k)} kJ each`:`${kj(f.k)} kJ / 100 ${uoM(f)}`}</small></button>`).join("")
@@ -5739,7 +5775,7 @@ function fcEnter(){
 }
 function fcPick(name){
   const f=findFood(name); if(!f)return;
-  fcSel=f; fcWt=fcYield(f)?(fcLastWt(f.n)||fcNative(f)):null;
+  fcSel=f; fcWt=fcYield(f)?(fcLastWt(f.n)||fcNative(f)):null; fpInit(f);
   const el=document.getElementById("fcFood"); el.value=f.n;
   document.getElementById("fcSuggest").innerHTML="";
   const g=document.getElementById("fcGrams");
@@ -5749,7 +5785,7 @@ function fcPick(name){
     fcGramsManual=true;
   }else if(!fcGramsManual||!g.value){
     const u=fcUnitOf(f);
-    let last=fcLastAmount(f.n);
+    let last=f.each?null:fcLastAmount(f.n);
     // last time was about a whole number of portions (215 g ≈ 4 slices of 54 g): use that
     if(last&&u&&f.c==="My foods"){const c=Math.round(last/u[0]);if(c>=1&&Math.abs(last-c*u[0])<=Math.max(2,last*0.02))last=Math.round(c*u[0]*10)/10;}
     g.value = FOOD_UNITS[f.n]&&u ? u[0]*2 : last ? last : u ? u[0] : "";
@@ -5762,7 +5798,7 @@ function fcPick(name){
     if(hit){ g.value=hit[0]*(fcNum&&fcNum.n<=24?fcNum.n:1); fcGramsManual=true; }
   }
   fcNum=null; fcSize=null;
-  fcRender();
+  fcRender(); fpRender();
   if(!g.value)g.focus();
 }
 // The amount (g or ml) you logged last time for this food, newest day first
@@ -5773,21 +5809,23 @@ function fcLastAmount(name){
   }
   return null;
 }
-function fcGramsTyped(){fcGramsManual=true;fcRender();}
-function fcSetGrams(v){document.getElementById("fcGrams").value=v;fcGramsManual=true;fcRender();}
+function fcGramsTyped(){fcGramsManual=true;fcRender();fpRender();}
+function fcSetGrams(v){document.getElementById("fcGrams").value=v;fcGramsManual=true;fcRender();fpRender();}
 function fcCalc(f,g,wt){if(!f.each)g=fcAsListed(f,g,wt);if(f.each)return {k:r2(f.k*g),p:f.p*g,f:f.f*g};return {k:r2(f.k*g/100),p:f.p*g/100,f:f.f*g/100};}
 function fcRender(){
   const gEl=document.getElementById("fcGrams");
   const g=parseFloat(gEl?.value);
   const prev=document.getElementById("fcPreview"), units=document.getElementById("fcUnits");
   const btn=document.getElementById("fcAddBtn");
-  if(btn)btn.textContent=`Add to ${dayLabel(selKey).toLowerCase()==="today"?"today":dayLabel(selKey)}`;
+  if(btn)btn.textContent=mb?"Add to the meal":`Add to ${dayLabel(selKey).toLowerCase()==="today"?"today":dayLabel(selKey)}`;
+  const hd=document.getElementById("fcHead"); if(hd)hd.textContent=mb?"Add an ingredient":"What did you eat?";
+  const fe=document.getElementById("fcFood"); if(fe)fe.placeholder=mb?"e.g. white bread 70g, ham, cheddar":"e.g. ribeye 250g, 2 castle lite";
   const wtEl=document.getElementById("fcWt");
   if(wtEl)wtEl.innerHTML=fcSel&&fcYield(fcSel)?`<span>Weighed</span>${["cooked","raw"].map(w=>`<button class="${fcWt===w?"on":""}" onclick="fcSetWt('${w}')">${w==="raw"?"Raw":"Cooked"}</button>`).join("")}`:"";
   if(!fcSel){
     if(gEl)gEl.placeholder="g / ml";
     units.innerHTML="";
-    prev.innerHTML=`Type what you ate. Pick a food from the list and enter the grams, or tap ✨ Ask Claude for anything else, like a takeaway meal.`;
+    prev.innerHTML=mb?`Type an ingredient, pick it from the list and enter the amount, then tap Add to the meal. Do that for each one.`:`Type what you ate. Pick a food from the list and enter the grams, or tap ✨ Ask Claude for anything else, like a takeaway meal.`;
     return;
   }
   const u=fcUnitOf(fcSel), sz=fcSizesOf(fcSel), uo=uoM(fcSel);
@@ -5810,9 +5848,9 @@ function fcRender(){
     prev.innerHTML=fcSel.each?`<b>${escH(fcSel.n)}</b>: ${kj(fcSel.k)} kJ each. How many?`:`<b>${escH(fcSel.n)}</b>: ${kj(fcSel.k)} kJ per 100 ${uo}. How much did you have?`;
     return;
   }
-  const r=fcCalc(fcSel,g,fcWt), wtS=fcYield(fcSel)?` weighed ${fcWt},`:"";
+  const r=fcTotal(g), wtS=fcYield(fcSel)?` weighed ${fcWt},`:"";
   const cn=u&&!sz&&(fcSel.c==="My foods"||fcSel.each)?g/u[0]:0, cnt=cn>0&&Math.abs(cn*2-Math.round(cn*2))<0.02?Math.round(cn*2)/2:0;
-  const how=fcSel.each?`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]}`:`${g} ×`}`:`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]} · `:""}${Math.round(g)} ${uo}${wtS}`;
+  const how=fcSel.each?`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]}`:`${g} ×`}`:`${cnt?`${fcFrac(cnt)} ${cnt>1?fcPlural(u[1]):u[1]} · `:""}${Math.round(r.g)} ${uo}${wtS}`;
   const conv=wtS&&fcWt!==fcNative(fcSel)?`<div class="fcconv">${Math.round(g)} g ${fcWt} ≈ ${Math.round(fcAsListed(fcSel,g,fcWt))} g ${fcNative(fcSel)}</div>`:"";
   prev.innerHTML=`<div class="fck">${kj(r.k)}<small> kJ</small></div>
     <b>${how} ${escH(fcSel.n)}</b> · ${Math.round(r.p)} g protein · ${Math.round(r.f)} g fat${conv}`;
@@ -5824,17 +5862,31 @@ function fcAdd(){
   }
   const g=parseFloat(document.getElementById("fcGrams").value);
   if(!g||g<=0){toast("Enter an amount");document.getElementById("fcGrams").focus();return;}
-  const wt=fcYield(fcSel)?fcWt:null, r=fcCalc(fcSel,g,wt);
+  const wt=fcYield(fcSel)?fcWt:null;
+  if(mb){
+    const r=fcCalc(fcSel,g,wt), b={n:fcSel.n,g:fcSel.each?g:Math.round(g),k:r2(r.k),p:r1(r.p),f:r1(r.f)};
+    if(wt)b.wt=wt; if(fcSel.ml)b.ml=true; if(fcSel.each)b.each=true;
+    mb.rows.push({b,g:b.g,wt:b.wt||null});
+    toast(`Added ${fcSel.n} to the meal`);
+  }else{
+  const r=fcTotal(g);
   const u=fcUnitOf(fcSel), cn=u?g/u[0]:1, cnt=Math.abs(cn-Math.round(cn))<0.02?Math.round(cn):1, q=cnt>=1&&cnt<=24?cnt:1;
   const one=fcCalc(fcSel,g/q,wt);
   const ent={kcal:r.k,label:fcSel.n,food:fcSel.n,p:r1(r.p),f:r1(r.f),q,unit:{kcal:one.k,p:one.p,f:one.f}};
-  if(!fcSel.each){ent.g=Math.round(g);ent.unit.g=g/q;ent.unit.kcal=fcSel.k*fcAsListed(fcSel,g,wt)/q/100;}
+  if(!fcSel.each){ent.g=Math.round(r.g);ent.unit.g=r.g/q;ent.unit.kcal=fcSel.k*fcAsListed(fcSel,g,wt)/q/100;}
   if(wt)ent.wt=wt;
   if(fcSel.ml)ent.ml=true;
+  if(fpRows){
+    ent.parts=fpPartsNow(fpScale(g));
+    ent.unit={kcal:r.k/q,p:r.p/q,f:r.f/q,...(ent.g?{g:ent.g/q}:{})};
+    if(r.c!=null){ent.c=r1(r.c);ent.unit.c=r.c/q;}
+    if(fpChanged()&&document.getElementById("fpSave")?.checked)fpSaveToFood(g,r);
+  }
   calDay(selKey).eat.push(ent);
   saveCal();
   toast(`+${kj(r.k)} kJ · ${fcSel.n}`);
-  fcSel=null;fcWt=null;fcNum=null;fcGramsManual=false;
+  }
+  fcSel=null;fcWt=null;fcNum=null;fcGramsManual=false;fpRows=null;
   document.getElementById("fcFood").value="";
   document.getElementById("fcGrams").value="";
   document.getElementById("fcSuggest").innerHTML="";
@@ -5862,8 +5914,13 @@ function renderFoodCalc(){
     r.innerHTML=rec.map((x,n)=>{const fd=findFood(x.food), one=fd.each?1:Math.round(x.unit?.g||x.g);
       return `<button class="chip" onclick="fcRefillIdx(${n})">${escH(x.food)} · ${fd.each?`${kj(fd.k)} kJ`:`${one} ${x.ml?"ml":"g"}${x.wt?" "+x.wt:""}`}</button>`;}).join("");
   }
+  const mr=document.getElementById("fcMeals");
+  if(mr){const ms=myFoods.map((f,i)=>[f,i]).filter(([f])=>f.meal);
+    mr.innerHTML=ms.length&&!mb?`<span class="mbtag">Your meals</span>`+ms.map(([f,i])=>`<button class="chip" onclick="fcPickMeal(${i})">🥪 ${escH(f.n)} · ${kj(f.each?f.k:f.k*(f.u?.[0]||100)/100)} kJ</button>`).join(""):"";}
+  const sb=document.getElementById("mbStartBtn"); if(sb)sb.style.display=mb?"none":"";
+  mbRender();
   const ml=document.getElementById("mfList");
-  if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"><div class="fi-n">${escH(f.n)}</div><div class="fi-m2">${f.each?`each · ${kj(f.k)} kJ`:`per 100 ${f.ml?"ml":"g"} · ${kj(f.k)} kJ${f.u?` · 1 = ${f.u[0]} ${f.ml?"ml":"g"}`:""}`} · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
+  if(ml)ml.innerHTML=myFoods.map((f,i)=>`<div class="fitem"><div class="fi-info"${f.meal?` onclick="mbStart(${i})" style="cursor:pointer"`:""}><div class="fi-n">${f.meal?"🥪 ":""}${escH(f.n)}${f.meal?` <span style="color:var(--accent2);font-weight:600;font-size:12px">✎ edit</span>`:""}</div><div class="fi-m2">${f.meal?`${f.parts.length} ingredient${f.parts.length>1?"s":""} · `:""}${f.each?`each · ${kj(f.k)} kJ`:`per 100 ${f.ml?"ml":"g"} · ${kj(f.k)} kJ${f.u?` · 1 = ${f.u[0]} ${f.ml?"ml":"g"}`:""}`} · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("");
   fcRender();
 }
 function saveMyFood(){
@@ -5881,6 +5938,177 @@ function saveMyFood(){
   toast(`Saved ${name}`);
   fcSel=null;fcNum=null;fcPick(food.n);
   renderFoodCalc();
+}
+
+/* ---- v82: meals made of ingredients (a sandwich: bread, ham, cheese, butter) ----
+   A meal is a saved food {n, c:"My foods", each:true, meal:true, k,p,f for one, parts, partsQ:1}.
+   Each part: {n:food name, g (count when each), k,p,f[,c], wt:"raw"/"cooked", ml, each}.
+   Picking any saved food with ingredients (a meal or a Claude dish) shows them under the food box,
+   each with its own amount (and raw/cooked for meat), so this time can differ; ticking
+   "Also change the saved meal" keeps the change. */
+let mb=null;        // the meal being made: {name, rows:[{b,g,wt}], edit:old name or null}
+let fpRows=null;    // ingredients of the picked food, for one serving: [{b,g,wt}]
+function partUnit(o){return o.each?"×":(o.ml||isDrinkName(o.n))?"ml":"g";}
+function partYield(o){const f=findFood(o.n);return f&&!f.each&&fcYield(f)?f:null;}
+// A part at amount g, weighed wt, scaled from its base b
+function partAt(b,g,wt){
+  let m=b.g>0?g/b.g:1;
+  const yf=wt&&b.wt&&wt!==b.wt?partYield(b):null;
+  if(yf)m*=fcAsListed(yf,100,wt)/fcAsListed(yf,100,b.wt);
+  const o={n:b.n,g:b.each?r1(g):Math.round(g),k:r2(b.k*m),p:r1((b.p||0)*m),f:r1((b.f||0)*m)};
+  if(b.c!=null)o.c=r1(b.c*m);
+  if(wt||b.wt)o.wt=wt||b.wt; if(b.ml)o.ml=true; if(b.each)o.each=true;
+  return o;
+}
+function partScale(o,s){return s===1?o:{...o,g:o.each?r1(o.g*s):Math.round(o.g*s),k:r2(o.k*s),p:r1(o.p*s),f:r1(o.f*s),...(o.c!=null?{c:r1(o.c*s)}:{})};}
+function rowsOf(parts,q){
+  q=q||1;
+  return parts.map(o=>{
+    const b={...o,g:o.each?o.g/q:o.g/q,k:(+o.k||0)/q,p:(+o.p||0)/q,f:(+o.f||0)/q};
+    if(o.c!=null)b.c=o.c/q;
+    if(!b.wt){const yf=partYield(b);if(yf)b.wt=fcNative(yf);}
+    return {b,g:b.g,wt:b.wt||null};
+  });
+}
+function sumParts(ps){
+  const t={k:0,p:0,f:0,c:0,g:0,allC:true};
+  ps.forEach(o=>{t.k+=+o.k||0;t.p+=+o.p||0;t.f+=+o.f||0;if(o.c!=null)t.c+=+o.c;else t.allC=false;if(!o.each&&o.g>0)t.g+=o.g;});
+  return t;
+}
+// One ingredient row (ns "fp" while logging, "mb" while making a meal); s scales one serving to what is shown
+function partRowHtml(ns,r,j,s){
+  const o=partScale(partAt(r.b,r.g,r.wt),s), on=r.g>0||!(r.b.g>0);
+  const amt=r.b.g>0?`<input id="${ns}P${j}" class="calinput" type="text" inputmode="decimal" value="${o.g}" oninput="partIn('${ns}',${j})"> ${partUnit(r.b)}`:"";
+  const wtB=r.wt&&partYield(r.b)?`<button class="wtb ${r.wt==="raw"?"raw":""}" onclick="partWt('${ns}',${j})" aria-label="Weighed raw or cooked">${r.wt}</button>`:"";
+  return `<div class="${on?"":"off"}"><span>${escH(r.b.n)}</span><span>${amt}${wtB}<b id="${ns}K${j}">${kj(o.k)}</b> kJ<button class="rm" onclick="partRm('${ns}',${j})" aria-label="${ns==="mb"?"Remove":"Leave out this time"}">×</button></span></div>`;
+}
+function partRows(ns){return ns==="mb"?mb?.rows:fpRows;}
+function partS(ns){return ns==="mb"?1:fpScale(parseFloat(document.getElementById("fcGrams")?.value));}
+function partIn(ns,j){
+  const rows=partRows(ns), r=rows?.[j], el=document.getElementById(ns+"P"+j); if(!r||!el)return;
+  const v=parseFloat(el.value), s=partS(ns); if(isNaN(v)||v<0||!(s>0))return;
+  r.g=v/s;
+  const k=document.getElementById(ns+"K"+j); if(k)k.textContent=kj(partAt(r.b,r.g,r.wt).k*s);
+  el.closest("div").className=r.g>0?"":"off";
+  if(ns==="mb")mbTotals(); else{fpSaveVis();fcRender();}
+}
+function partWt(ns,j){const r=partRows(ns)?.[j]; if(!r)return; r.wt=r.wt==="raw"?"cooked":"raw"; ns==="mb"?mbRender():(fpRender(),fcRender());}
+function partRm(ns,j){
+  const rows=partRows(ns); if(!rows?.[j])return;
+  if(ns==="mb"){rows.splice(j,1);mbRender();return;}
+  rows[j].g=rows[j].g>0?0:rows[j].b.g; fpRender(); fcRender();
+}
+
+/* While logging a food that has ingredients */
+function fpInit(f){fpRows=!mb&&f?.parts?.length&&f.parts.some(o=>o.g>0)?rowsOf(f.parts,f.partsQ):null;}
+// How many servings the amount box means: a count for meals, or grams over the ingredients' grams
+function fpScale(g){
+  if(!fpRows||!fcSel||!(g>0))return 0;
+  if(fcSel.each)return g;
+  const bg=sumParts(fpRows.map(r=>r.b)).g; return bg>0?g/bg:0;
+}
+function fpPartsNow(s){return fpRows.filter(r=>r.g>0||!(r.b.g>0)).map(r=>partScale(partAt(r.b,r.g,r.wt),s));}
+function fpChanged(){return !!fpRows&&fpRows.some(r=>Math.abs(r.g-r.b.g)>0.01||(r.wt||null)!==(r.b.wt||null));}
+// Totals for amount g of the picked food, with this time's ingredient changes
+function fcTotal(g){
+  const wt=fcYield(fcSel)?fcWt:null, r={...fcCalc(fcSel,g,wt),g};
+  if(!fpRows)return r;
+  const s=fpScale(g); if(!(s>0))return r;
+  const now=sumParts(fpRows.map(x=>partAt(x.b,x.g,x.wt))), was=sumParts(fpRows.map(x=>x.b));
+  r.k=Math.max(0,r.k+(now.k-was.k)*s); r.p=Math.max(0,r.p+(now.p-was.p)*s); r.f=Math.max(0,r.f+(now.f-was.f)*s);
+  if(!fcSel.each)r.g=Math.max(0,g+(now.g-was.g)*s);
+  if(now.allC&&fpRows.length)r.c=now.c*s;
+  return r;
+}
+function fpSaveVis(){const el=document.getElementById("fpSaveRow");if(el)el.style.display=fpChanged()?"flex":"none";}
+function fpRender(){
+  const box=document.getElementById("fcParts"); if(!box)return;
+  if(!fpRows||!fcSel){box.innerHTML="";return;}
+  const s=fpScale(parseFloat(document.getElementById("fcGrams")?.value));
+  if(!(s>0)){box.innerHTML=`<div class="cehint">Made of ${fpRows.length} ingredient${fpRows.length>1?"s":""}. Enter the amount to see and change them.</div>`;return;}
+  const kept=document.getElementById("fpSave")?.checked, i=myFoods.indexOf(fcSel);
+  box.innerHTML=`<div class="cehint">Made of (change any amount for this time, × leaves one out):</div>
+    <div class="aiparts ceparts mbparts">${fpRows.map((r,j)=>partRowHtml("fp",r,j,s)).join("")}</div>
+    <label class="calchk" id="fpSaveRow" style="display:none;margin:4px 0"><input type="checkbox" id="fpSave" ${kept?"checked":""}> Also change the saved ${fcSel.meal?"meal":"food"}</label>
+    ${fcSel.meal&&i>=0?`<button class="mblink" onclick="mbStart(${i})">✎ Edit this meal (add or swap ingredients)</button>`:""}`;
+  fpSaveVis();
+}
+// Keep this time's ingredients as the saved food's recipe (for one serving)
+function fpSaveToFood(g,r){
+  const f=myFoods.find(x=>x.n===fcSel.n); if(!f)return;
+  const parts=fpRows.filter(x=>x.g>0||!(x.b.g>0)).map(x=>partAt(x.b,x.g,x.wt));
+  const now=sumParts(parts);
+  if(f.each){
+    const was=sumParts(fpRows.map(x=>x.b));
+    f.k=r2(Math.max(0,f.k+now.k-was.k)); f.p=r1(Math.max(0,f.p+now.p-was.p)); f.f=r1(Math.max(0,f.f+now.f-was.f));
+  }else if(r.g>0){
+    f.k=r2(r.k/r.g*100); f.p=r1(r.p/r.g*100); f.f=r1(r.f/r.g*100);
+  }
+  f.parts=parts; f.partsQ=1; saveMyFoods();
+}
+function fcPickMeal(i){const f=myFoods[i]; if(!f)return; fcSel=null; fcNum=null; fcGramsManual=false; document.getElementById("fcGrams").value=""; fcPick(f.n);}
+
+/* Making (or editing) a meal: the food box adds ingredients to it */
+function mbStart(i){
+  const f=i!=null?myFoods[i]:null;
+  mb={name:f?f.n:"",rows:f?.parts?rowsOf(f.parts,f.partsQ):[],edit:f?f.n:null};
+  fcSel=null; fpRows=null; fcNum=null; fcGramsManual=false; aiClose();
+  ["fcFood","fcGrams"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  document.getElementById("fcSuggest").innerHTML=""; fpRender();
+  const d=document.getElementById("fcMine"); if(d&&f)d.open=false;
+  renderFoodCalc();
+  const box=document.getElementById("mbBox"); if(box)box.scrollIntoView({block:"start",behavior:"smooth"});
+  if(!f)setTimeout(()=>document.getElementById("mbName")?.focus(),50);
+}
+function mbCancel(){mb=null;fcSel=null;fpRows=null;document.getElementById("fcFood").value="";document.getElementById("fcGrams").value="";document.getElementById("fcSuggest").innerHTML="";aiClose();renderFoodCalc();}
+function mbTotals(){
+  const el=document.getElementById("mbTot"); if(!el||!mb)return;
+  const t=sumParts(mb.rows.map(r=>partAt(r.b,r.g,r.wt)));
+  el.innerHTML=mb.rows.length?`Whole meal: <b>${kj(t.k)} kJ</b> · ${Math.round(t.p)} g protein · ${Math.round(t.f)} g fat${t.g?` · ${Math.round(t.g)} g`:""}`:"";
+}
+function mbRender(){
+  const box=document.getElementById("mbBox"); if(!box)return;
+  if(!mb){box.innerHTML="";return;}
+  const day=dayLabel(selKey)==="Today"?"today":dayLabel(selKey);
+  box.innerHTML=`<div class="mbbox">
+    <div class="fdhead">${mb.edit?"Edit meal":"Make a meal"}</div>
+    <input id="mbName" class="calinput" style="width:100%" value="${escH(mb.name)}" placeholder="Name it, e.g. Ham & cheese sandwich" oninput="mb.name=this.value">
+    ${mb.rows.length?`<div class="aiparts ceparts mbparts" style="margin-top:8px">${mb.rows.map((r,j)=>partRowHtml("mb",r,j,1)).join("")}</div>`
+      :`<div class="cehint">No ingredients yet. Add each one with the food box below.</div>`}
+    <div class="mbtot" id="mbTot"></div>
+    <div class="aibtns"><button class="btn primary" onclick="mbSave(true)">Save &amp; add to ${day}</button><button class="btn ghost" onclick="mbSave(false)">Save</button></div>
+    <div class="aibtns">${mb.edit?`<button class="btn ghost" onclick="mbDelete()">Delete meal</button>`:""}<button class="btn ghost" onclick="mbCancel()">Cancel</button></div>
+  </div>`;
+  mbTotals();
+}
+function mbSave(log){
+  if(!mb)return;
+  const name=(document.getElementById("mbName")?.value||mb.name||"").trim();
+  if(!name){toast("Give the meal a name");document.getElementById("mbName")?.focus();return;}
+  if(isBuiltinFood(name)){toast("That's a built-in food's name. Pick another name");return;}
+  const parts=mb.rows.filter(r=>r.g>0||!(r.b.g>0)).map(r=>partAt(r.b,r.g,r.wt));
+  if(!parts.length){toast("Add at least one ingredient");return;}
+  const t=sumParts(parts);
+  const food={n:name,c:"My foods",each:true,meal:true,k:r2(t.k),p:r1(t.p),f:r1(t.f),parts,partsQ:1};
+  const lo=name.toLowerCase(), old=mb.edit?.toLowerCase();
+  myFoods=myFoods.filter(x=>{const n=x.n.toLowerCase();return n!==lo&&n!==old;});
+  const saved=fcWeighable(food); myFoods.unshift(saved); saveMyFoods();
+  if(log){
+    const r=saved.each?{k:saved.k,p:saved.p,f:saved.f,g:0}:{k:t.k,p:t.p,f:t.f,g:t.g};
+    const ent={kcal:r2(r.k),label:name,food:name,p:r1(r.p),f:r1(r.f),q:1,unit:{kcal:r.k,p:r.p,f:r.f},parts};
+    if(!saved.each){ent.g=Math.round(r.g);ent.unit.g=r.g;}
+    if(t.allC){ent.c=r1(t.c);ent.unit.c=t.c;}
+    calDay(selKey).eat.push(ent); saveCal();
+  }
+  mb=null; fcSel=null; fpRows=null;
+  document.getElementById("fcFood").value=""; document.getElementById("fcGrams").value=""; document.getElementById("fcSuggest").innerHTML="";
+  toast(log?`+${kj(t.k)} kJ · ${name} (saved)`:`Saved ${name}. Type its name next time to log it`);
+  renderCal();
+}
+function mbDelete(){
+  if(!mb?.edit)return;
+  if(!confirm(`Delete the meal ${mb.edit}? What you already logged stays.`))return;
+  const n=mb.edit.toLowerCase(); myFoods=myFoods.filter(x=>x.n.toLowerCase()!==n); saveMyFoods(); mbCancel(); toast("Meal deleted");
 }
 /* ---- Read a nutrition label from a photo with Claude, check it, save it as one of "My foods" ---- */
 let lblRes=null, lblImg="", lblBusy=false;
@@ -6265,7 +6493,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v81"]};
+ data:["Save & Settings","Backup your data · v82"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
