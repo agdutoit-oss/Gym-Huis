@@ -643,6 +643,12 @@
   .mbtot b{color:var(--txt)}
   .fcparts{margin-bottom:8px}.fcparts:empty{display:none}
   .fcparts .cehint{margin:0 0 4px}
+  .mbpend{border-bottom:1px solid var(--line);padding:6px 0}
+  .mbpend1{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:13px;color:var(--txt)}
+  .mbpend1 small{color:var(--dim)}
+  .mbpend1>span:last-child{display:flex;align-items:center;gap:5px;color:var(--dim)}
+  .mbpend1 .rm{width:26px;height:26px;font-size:15px}
+  .mbpend2{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
   .mblink{background:none;border:none;color:var(--accent2);font-size:12.5px;font-weight:600;padding:4px 0;cursor:pointer}
   .fcmine{margin-top:12px;font-size:13px;color:var(--dim)}
   .fcmine summary{cursor:pointer;color:var(--accent2);font-weight:600}
@@ -5822,7 +5828,7 @@ function fcRender(){
   const prev=document.getElementById("fcPreview"), units=document.getElementById("fcUnits");
   const btn=document.getElementById("fcAddBtn");
   if(btn)btn.textContent=mb?"Add to the meal":`Add to ${dayLabel(selKey).toLowerCase()==="today"?"today":dayLabel(selKey)}`;
-  const hd=document.getElementById("fcHead"); if(hd)hd.textContent=mb?"Add an ingredient":"What did you eat?";
+  const hd=document.getElementById("fcHead"); if(hd)hd.textContent=mb?"Or add one ingredient":"What did you eat?";
   const fe=document.getElementById("fcFood"); if(fe)fe.placeholder=mb?"e.g. white bread 70g, ham, cheddar":"e.g. ribeye 250g, 2 castle lite";
   const wtEl=document.getElementById("fcWt");
   if(wtEl)wtEl.innerHTML=fcSel&&fcYield(fcSel)?`<span>Weighed</span>${["cooked","raw"].map(w=>`<button class="${fcWt===w?"on":""}" onclick="fcSetWt('${w}')">${w==="raw"?"Raw":"Cooked"}</button>`).join("")}`:"";
@@ -6046,7 +6052,8 @@ function partRowHtml(ns,r,j,s){
   const o=partScale(partAt(r.b,r.g,r.wt),s), on=r.g>0||!(r.b.g>0);
   const amt=r.b.g>0?`<input id="${ns}P${j}" class="calinput" type="text" inputmode="decimal" value="${o.g}" oninput="partIn('${ns}',${j})"> ${partUnit(r.b)}`:"";
   const wtB=r.wt&&partYield(r.b)?`<button class="wtb ${r.wt==="raw"?"raw":""}" onclick="partWt('${ns}',${j})" aria-label="Weighed raw or cooked">${r.wt}</button>`:"";
-  return `<div class="${on?"":"off"}"><span>${escH(r.b.n)}</span><span>${amt}${wtB}<b id="${ns}K${j}">${kj(o.k)}</b> kJ<button class="rm" onclick="partRm('${ns}',${j})" aria-label="${ns==="mb"?"Remove":"Leave out this time"}">×</button></span></div>`;
+  const nm=ns==="mb"&&r.b.g>0&&!r.b.each?`<span onclick="mbRowEdit(${j})" style="cursor:pointer">${escH(r.b.n)} <span style="color:var(--accent2)">✎</span></span>`:`<span>${escH(r.b.n)}</span>`;
+  return `<div class="${on?"":"off"}">${nm}<span>${amt}${wtB}<b id="${ns}K${j}">${kj(o.k)}</b> kJ<button class="rm" onclick="partRm('${ns}',${j})" aria-label="${ns==="mb"?"Remove":"Leave out this time"}">×</button></span></div>`;
 }
 function partRows(ns){return ns==="mb"?mb?.rows:fpRows;}
 function partS(ns){return ns==="mb"||fcSel?.dw?1:fpScale(parseFloat(document.getElementById("fcGrams")?.value));}
@@ -6103,7 +6110,7 @@ function fpRender(){
     <div class="cerow" style="margin:6px 0"><label>Whole dish, cooked (g)<input id="fpDw" class="calinput" type="text" inputmode="decimal" value="${fpDw||""}" oninput="fpDwIn()"></label></div>
     <div class="cehint" id="fpShare"></div>
     <label class="calchk" id="fpSaveRow" style="display:none;margin:4px 0"><input type="checkbox" id="fpSave" ${kept?"checked":""}> Keep this for the rest of this dish (next portions)</label>
-    ${i>=0?`<button class="mblink" onclick="mbStart(${i})">✎ Edit this dish (add or swap ingredients)</button>`:""}`;
+    ${i>=0?`<button class="mblink" onclick="mbStart(${i})">🍲 Cook it again (new amounts or pot weight)</button>`:""}`;
     fpSaveVis(); fpShare(); return;
   }
   if(!(s>0)){box.innerHTML=`<div class="cehint">Made of ${fpRows.length} ingredient${fpRows.length>1?"s":""}. Enter the amount to see and change them.</div>`;return;}
@@ -6134,7 +6141,7 @@ function fcPickMeal(i){const f=myFoods[i]; if(!f)return; fcSel=null; fcNum=null;
 function mbStart(i){
   fcPlusToggle(false);
   const f=i!=null?myFoods[i]:null;
-  mb={name:f?f.n:"",rows:f?.parts?rowsOf(f.parts,f.partsQ):[],edit:f?f.n:null,dw:+f?.dw||0,por:0};
+  mb={name:f?f.n:"",rows:f?.parts?rowsOf(f.parts,f.partsQ):[],edit:f?f.n:null,dw:+f?.dw||0,por:0,pend:[],paste:"",busy:"",err:""};
   fcSel=null; fpRows=null; fcNum=null; fcGramsManual=false; aiClose();
   ["fcFood","fcGrams"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
   document.getElementById("fcSuggest").innerHTML=""; fpRender();
@@ -6154,25 +6161,203 @@ function mbTotals(){
 function mbRender(){
   const box=document.getElementById("mbBox"); if(!box)return;
   if(!mb){box.innerHTML="";return;}
-  const day=dayLabel(selKey)==="Today"?"today":dayLabel(selKey);
+  mb.pend=mb.pend||[];
+  const day=dayLabel(selKey)==="Today"?"today":dayLabel(selKey), np=mb.pend.length;
   box.innerHTML=`<div class="mbbox">
-    <div class="fdhead">${mb.edit?"Edit meal":"Make a meal"}</div>
-    <input id="mbName" class="calinput" style="width:100%" value="${escH(mb.name)}" placeholder="Name it, e.g. Ham & cheese sandwich" oninput="mb.name=this.value">
-    ${mb.rows.length?`<div class="aiparts ceparts mbparts" style="margin-top:8px">${mb.rows.map((r,j)=>partRowHtml("mb",r,j,1)).join("")}</div>`
-      :`<div class="cehint">No ingredients yet. Add each one with the food box below.</div>`}
+    <div class="fdhead">${mb.edit?(mb.dw?"Cook it again":"Edit meal"):"Make a meal"}</div>
+    <input id="mbName" class="calinput" style="width:100%" value="${escH(mb.name)}" placeholder="Name it, e.g. Thai curry mince and rice" oninput="mb.name=this.value">
+    <textarea id="mbPaste" class="calinput aiwhy" rows="3" style="margin-top:8px" placeholder="Paste a recipe or type the ingredients, e.g.
+500 g beef mince raw, 250 g brown rice dry, 1 tin coconut milk, 2 tbsp curry paste, pot 1400 g" oninput="mb.paste=this.value">${escH(mb.paste||"")}</textarea>
+    <div class="aibtns" style="margin-top:6px"><button class="btn primary" onclick="mbReadList()">Read the list</button><button class="btn ghost" onclick="mbPhoto()">📷 Photo</button></div>
+    <input type="file" id="mbFile" accept="image/*" style="display:none" onchange="mbPhotoPicked(this)">
+    ${mb.busy?`<div class="aiwait" style="margin-top:8px"><span class="aispin"></span>${escH(mb.busy)}</div>`:""}
+    ${mb.err?`<div class="aierr" style="margin-top:8px">${escH(mb.err)}</div>`:""}
+    ${mb.rows.length?`<div class="aiparts ceparts mbparts" style="margin-top:8px">${mb.rows.map((r,j)=>partRowHtml("mb",r,j,1)).join("")}</div>
+      <div class="cehint" style="margin-top:0">Tap an ingredient's name to type its own kJ.</div>`:""}
+    ${np?`<div class="fdhead" style="margin:12px 0 4px">Needs numbers (${np})</div>
+      <div class="cehint" style="margin-top:0">Type the kJ, protein and fat per 100 g from the packet, or let Claude look them up.</div>
+      ${mb.pend.map((q,j)=>mbPendHtml(q,j)).join("")}
+      <button class="btn ghost" style="width:100%;margin-top:6px" onclick="mbLookup()">✨ Look up ${np>1?`all ${np}`:"it"} with Claude</button>`:""}
+    ${!mb.rows.length&&!np?`<div class="cehint">Or add them one at a time with the food box below.</div>`:""}
     <div class="cerow" style="margin-top:10px"><label>Whole dish, cooked (g)<input id="mbDw" class="calinput" type="text" inputmode="decimal" value="${mb.dw||""}" placeholder="optional" oninput="mb.dw=parseFloat(this.value)||0;mbTotals()"></label><label>Your portion (g)<input id="mbPor" class="calinput" type="text" inputmode="decimal" value="${mb.por||""}" placeholder="optional" oninput="mb.por=parseFloat(this.value)||0;mbTotals()"></label></div>
-    <div class="cehint">Cooking a pot of food? Weigh the whole dish once it's cooked, then the portion you dish up, and only your portion is logged. Leave these empty for something like a sandwich, which you log by servings.</div>
+    <div class="cehint">For a pot of food, weigh the whole cooked dish and your portion, and only your portion is logged. Leave these empty for something like a sandwich.</div>
     <div class="mbtot" id="mbTot"></div>
     <div class="aibtns"><button class="btn primary" onclick="mbSave(true)">Save &amp; add to ${day}</button><button class="btn ghost" onclick="mbSave(false)">Save</button></div>
     <div class="aibtns">${mb.edit?`<button class="btn ghost" onclick="mbDelete()">Delete meal</button>`:""}<button class="btn ghost" onclick="mbCancel()">Cancel</button></div>
   </div>`;
   mbTotals();
 }
+/* ---- v88: read a whole ingredient list (pasted, typed, dictated or from a photo) ---- */
+const MB_UNITS={g:1,gr:1,gram:1,grams:1,kg:1000,ml:1,l:1000,litre:1000,litres:1000,liter:1000,liters:1000,tbsp:15,tablespoon:15,tablespoons:15,tbs:15,tsp:5,teaspoon:5,teaspoons:5,cup:240,cups:240,tin:400,tins:400,can:400,cans:400,clove:5,cloves:5,pinch:0.5,handful:30,handfuls:30};
+const MB_FILLER=new Set(["fresh","chopped","diced","sliced","finely","roughly","large","small","medium","of","the","a","an","some","about","approx","approximately","whole","peeled","to","taste","for","frying","packet","pack","tbsp","tsp","cup","cups","tin","tins","can","cans","clove","cloves","x"]);
+const MB_PREP=new Set(["chopped","diced","sliced","minced","crushed","grated","peeled","cubed","halved","optional","shredded","drained","rinsed","melted","softened","beaten","to","taste","garnish","serve","finely","roughly","thinly"]);
+function mbNum(t){t=String(t).replace(",",".");if(t==="½")return .5;if(t==="¼")return .25;if(t==="¾")return .75;if(/^\d+\/\d+$/.test(t)){const [a,b]=t.split("/");return +a/+b;}return parseFloat(t);}
+function mbSplit(t){
+  return String(t||"").split(/\n|;|,(?!\d)|\s+\band\b\s+|\s+\bplus\b\s+/i)
+    .map(x=>x.replace(/^\s*(?:\d+[.)]\s+|[-•*·–]\s*)/,"").trim()).filter(x=>x&&/[a-z]/i.test(x))
+    .filter(x=>/\d/.test(x)||fcFold(x).split(/[^a-z]+/).some(w=>w&&!MB_FILLER.has(w)&&!MB_PREP.has(w)));   // "2 onions, chopped": drop "chopped"
+}
+function mbParseLine(line){
+  const lo=line.toLowerCase();
+  const amt=/(\d+(?:[.,]\d+)?(?:\/\d+)?|½|¼|¾)\s*(kg|gr|grams?|g|ml|litres?|liters?|l|tbsp|tbs|tablespoons?|tsp|teaspoons?|cups?|tins?|cans?|cloves?|pinch|handfuls?)?(?![a-z])/i.exec(line);
+  let g=null, unit=null, n=null;
+  if(amt){n=mbNum(amt[1]); unit=(amt[2]||"").toLowerCase()||null; if(unit&&MB_UNITS[unit]!=null)g=n*MB_UNITS[unit];}
+  if(/\b(pot|whole dish|dish weigh|cooked weight|total weight|weighed)\b/.test(lo)&&g>0&&unit&&/^(g|gr|grams?|kg)$/.test(unit))return {dw:g};
+  if(/\b(portion|i ate|ate|my plate|dished)\b/.test(lo)&&g>0)return {por:g};
+  const wt=/\b(raw|uncooked|dry|dried)\b/.test(lo)?"raw":/\bcooked\b/.test(lo)?"cooked":null;
+  let name=(amt?line.replace(amt[0]," "):line).replace(/\b(raw|uncooked|dry|dried|cooked)\b/ig," ").replace(/[()]/g," ").replace(/\s+/g," ").trim().replace(/^(of|x)\s+/i,"").replace(/[.:,-]+$/,"").trim();
+  name=name.charAt(0).toUpperCase()+name.slice(1);
+  const words=fcFold(name).split(" ").filter(w=>w&&!MB_FILLER.has(w)).join(" ");
+  const f=words?fcMatches(words).filter(x=>!x.meal)[0]:null;
+  return {line,name,g,n,unit,wt,f};
+}
+// A parsed line with a known food becomes an ingredient; otherwise it waits for numbers
+function mbFromParsed(x){
+  const f=x.f;
+  if(f){
+    let g=x.g;
+    if(g==null&&x.n!=null){ if(f.each)g=x.n; else {const u=fcUnitOf(f); g=u?x.n*u[0]:null;} }
+    if(g!=null&&g>0){
+      const wt=fcYield(f)?(x.wt||fcNative(f)):null, r=fcCalc(f,g,wt);
+      const b={n:f.n,g:f.each?g:Math.round(g),k:r2(r.k),p:r1(r.p),f:r1(r.f)};
+      if(wt)b.wt=wt; if(f.ml)b.ml=true; if(f.each)b.each=true;
+      return {row:{b,g:b.g,wt:b.wt||null}};
+    }
+  }
+  return {pend:{name:x.name,line:x.line,g:x.g!=null?Math.round(x.g):(x.n!=null&&!x.unit?null:null),wt:x.wt,kj:"",p:"",f:"",hint:x.n!=null&&x.g==null?`${x.n}${x.unit?" "+x.unit:""}`:""}};
+}
+function mbReadList(){
+  if(!mb)return;
+  const t=(document.getElementById("mbPaste")?.value||mb.paste||"").trim();
+  if(!t){toast("Paste or type the ingredients first");document.getElementById("mbPaste")?.focus();return;}
+  const lines=mbSplit(t); let added=0, pend=0;
+  // a first line without an amount that reads like a title names the dish
+  if(!mb.name&&lines.length>1&&!/\d/.test(lines[0])&&!mbParseLine(lines[0]).f){mb.name=lines.shift();}
+  lines.forEach(l=>{
+    const x=mbParseLine(l);
+    if(x.dw){mb.dw=x.dw;return;} if(x.por){mb.por=x.por;return;}
+    const o=mbFromParsed(x); if(o.row){mb.rows.push(o.row);added++;} else {mb.pend.push(o.pend);pend++;}
+  });
+  mb.paste=""; mb.err="";
+  mbRender();
+  toast(pend?`${added} found, ${pend} need numbers`:`${added} ingredient${added>1?"s":""} added`);
+}
+function mbPendHtml(q,j){
+  const inp=(k,ph,w)=>`<input class="calinput" type="text" inputmode="decimal" value="${escH(q[k]??"")}" placeholder="${ph}" style="width:${w};padding:6px 8px;font-size:15px" oninput="mb.pend[${j}].${k}=this.value">`;
+  return `<div class="mbpend">
+    <div class="mbpend1"><span>${escH(q.name)}${q.hint?` <small>(${escH(q.hint)})</small>`:""}</span>
+      <span>${inp("g","g","62px")} g<button class="rm" onclick="mb.pend.splice(${j},1);mbRender()" aria-label="Remove">×</button></span></div>
+    <div class="mbpend2">${inp("kj","kJ /100 g","92px")}${inp("p","protein","70px")}${inp("f","fat","58px")}<button class="btn primary" style="padding:6px 12px" onclick="mbPendUse(${j})">Use</button></div>
+  </div>`;
+}
+function mbYieldWt(name,wt){return fcYieldByName(name)>0?(wt||"cooked"):null;}
+// Turn per-100 g numbers into an ingredient, and remember the food for next time
+function mbAddPer100(name,g,kjv,p,f,c,wt,ml){
+  const st=mbYieldWt(name,wt);
+  if(!findFood(name)&&!isBuiltinFood(name)){
+    const food={n:name,c:"My foods",k:r2(toKcal(kjv)),p:r1(p||0),f:r1(f||0)}; if(st)food.st=st; if(ml)food.ml=true;
+    myFoods.unshift(food); saveMyFoods();
+  }
+  const m=g/100, b={n:name,g:Math.round(g),k:r2(toKcal(kjv)*m),p:r1((p||0)*m),f:r1((f||0)*m)};
+  if(c!=null)b.c=r1(c*m); if(st)b.wt=st; if(ml)b.ml=true;
+  mb.rows.push({b,g:b.g,wt:b.wt||null});
+}
+function mbPendUse(j){
+  const q=mb.pend[j]; if(!q)return;
+  const v=x=>{const n=parseFloat(String(x??"").replace(",","."));return isNaN(n)?null:n;};
+  const g=v(q.g), k=v(q.kj);
+  if(!(g>0)){toast("Enter how many grams");return;}
+  if(k==null){toast("Enter the kJ per 100 g, or tap Look up");return;}
+  mbAddPer100(q.name,g,k,v(q.p),v(q.f),null,q.wt,isDrinkName(q.name));
+  mb.pend.splice(j,1); mbRender();
+}
+// Tap an ingredient's name to type its own numbers (per 100 g)
+function mbRowEdit(j){
+  const r=mb?.rows[j]; if(!r||r.b.each||!(r.g>0))return;
+  const o=partAt(r.b,r.g,r.wt), per=x=>r1(x/o.g*100);
+  mb.pend.unshift({name:o.n,line:"",g:o.g,wt:o.wt,kj:String(kj(o.k/o.g*100)),p:String(per(o.p)),f:String(per(o.f)),hint:""});
+  mb.rows.splice(j,1); mbRender();
+}
+const MB_TOOL={name:"save_ingredients",description:"Record the ingredients with their amounts and nutrition per 100 g. Call this once.",strict:true,
+  input_schema:{type:"object",properties:{
+    dish:{type:"string",description:"The dish's name if the recipe or photo names one, else empty"},
+    dish_weight_g:{type:"number",description:"Cooked weight of the whole dish if given, else 0"},
+    portion_g:{type:"number",description:"Weight the user ate if given, else 0"},
+    items:{type:"array",items:{type:"object",properties:{
+      line:{type:"integer",description:"The number of the input line this is for, or -1 for a photo"},
+      name:{type:"string",description:"Short ingredient name, with brand if known"},
+      grams:{type:"number",description:"Amount used in grams (ml for liquids). Convert spoons, cups, tins and pieces with typical weights. If no amount is given, use a typical amount for the recipe"},
+      amount_guessed:{type:"boolean"},
+      state:{type:"string",enum:["raw","cooked","n/a"],description:"For meat, fish, rice, pasta, grains and legumes: whether grams is the raw/dry or cooked weight. n/a for everything else"},
+      kj_per_100:{type:"number",description:"kJ per 100 g in that state"},
+      protein_per_100:{type:"number"},fat_per_100:{type:"number"},carbs_per_100:{type:"number"}},
+      required:["line","name","grams","amount_guessed","state","kj_per_100","protein_per_100","fat_per_100","carbs_per_100"],additionalProperties:false}}},
+    required:["dish","dish_weight_g","portion_g","items"],additionalProperties:false}};
+async function mbAsk(content){
+  const body={model:AI_MODEL,max_tokens:16000,output_config:{effort:"medium"},...(aiNoFallback?{}:{fallbacks:"default"}),
+    system:`You help a food diary app record the ingredients of a home-cooked dish. The user lives in ${aiCountry}; use the brands and products sold there. For each ingredient give the amount in grams and nutrition per 100 g, for the state it is weighed in (raw/dry or cooked). Use the brand's label values when a brand is named (search if it helps), otherwise standard values. Labels there list energy in kJ. Then call save_ingredients once. Don't ask questions; make reasonable assumptions.`,
+    tools:[{type:"web_search_20260209",name:"web_search",max_uses:4},MB_TOOL],tool_choice:{type:"auto"},messages:[{role:"user",content}]};
+  for(let turn=0;turn<6;turn++){
+    let res;
+    try{res=await aiCall(body);}
+    catch(e){
+      if(e.status===400&&/fallback/i.test(e.raw)&&body.fallbacks){delete body.fallbacks;aiNoFallback=true;turn--;continue;}
+      if(e.status===400&&/web_search|web search/i.test(e.raw)&&body.tools.length>1){body.tools=[MB_TOOL];turn--;continue;}
+      throw e;
+    }
+    const call=(res.content||[]).find(x=>x.type==="tool_use"&&x.name==="save_ingredients");
+    if(call)return typeof call.input==="string"?JSON.parse(call.input):call.input;
+    if(res.stop_reason==="pause_turn"){body.messages.push({role:"assistant",content:res.content});continue;}
+    throw new Error("Claude didn't return the ingredients. Try again.");
+  }
+  throw new Error("That took too long. Try again.");
+}
+function mbApplyAi(out,replace){
+  if(out.dish&&!mb.name)mb.name=String(out.dish).slice(0,80);
+  if(out.dish_weight_g>0&&!mb.dw)mb.dw=Math.round(out.dish_weight_g);
+  if(out.portion_g>0&&!mb.por)mb.por=Math.round(out.portion_g);
+  let guessed=0;
+  (out.items||[]).forEach(i=>{
+    if(!i||!i.name||!(i.grams>0))return;
+    const name=String(i.name).slice(0,80), st=i.state==="raw"||i.state==="cooked"?i.state:null;
+    if(i.amount_guessed)guessed++;
+    mbAddPer100(name,i.grams,+i.kj_per_100||0,+i.protein_per_100||0,+i.fat_per_100||0,+i.carbs_per_100||0,st,isDrinkName(name));
+    if(replace&&i.line>=0)replace.add(i.line);
+  });
+  return guessed;
+}
+function mbNeedKey(){if(aiKey)return false;mb.err="Looking things up uses your Claude API key. Add it once in Settings, or type the numbers yourself.";mbRender();return true;}
+async function mbLookup(){
+  if(!mb||mb.busy||!mb.pend.length||mbNeedKey())return;
+  const list=mb.pend.map((q,j)=>`${j}: ${q.g>0?q.g+" g ":""}${q.hint?q.hint+" ":""}${q.name}${q.wt?" ("+q.wt+")":""}`).join("\n");
+  mb.busy=`Claude is looking up ${mb.pend.length>1?mb.pend.length+" ingredients":"it"}…`; mb.err=""; mbRender();
+  try{
+    const out=await mbAsk(`Ingredients of "${mb.name||"a dish"}", one per line, numbered:\n${list}\nUse the given amounts; where only a count is given, convert it to grams.`);
+    const done=new Set(); mbApplyAi({...out,dish:"",dish_weight_g:0,portion_g:0},done);
+    mb.pend=mb.pend.filter((q,j)=>!done.has(j));
+  }catch(e){mb.err=e.message||"Something went wrong.";}
+  mb.busy=""; mbRender();
+}
+function mbPhoto(){if(!mb||mb.busy||mbNeedKey())return;const f=document.getElementById("mbFile");f.value="";f.click();}
+async function mbPhotoPicked(inp){
+  const file=inp.files&&inp.files[0]; if(!file||!mb)return;
+  mb.busy="Claude is reading the photo…"; mb.err=""; mbRender();
+  try{
+    const b64=(await lblShrink(file)).split(",")[1];
+    const out=await mbAsk([{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}},
+      {type:"text",text:`This is a recipe, an ingredient list or the ingredients of ${mb.name?`"${mb.name}"`:"a dish"}. List every ingredient with its amount (estimate typical amounts where none is shown and set amount_guessed), and call save_ingredients.`}]);
+    const n=(out.items||[]).length, guessed=mbApplyAi(out);
+    if(!n)mb.err="Claude couldn't find ingredients in that photo. Try another one, or paste the list.";
+    else if(guessed)mb.err=`${guessed} amount${guessed>1?"s were":" was"} guessed. Check them below.`;
+  }catch(e){mb.err=e.message||"Something went wrong.";}
+  mb.busy=""; mbRender();
+}
 function mbSave(log){
   if(!mb)return;
   const name=(document.getElementById("mbName")?.value||mb.name||"").trim();
   if(!name){toast("Give the meal a name");document.getElementById("mbName")?.focus();return;}
   if(isBuiltinFood(name)){toast("That's a built-in food's name. Pick another name");return;}
+  if(mb.pend?.length){toast(`${mb.pend.length} ingredient${mb.pend.length>1?"s still need":" still needs"} numbers. Type them, look them up or tap ×`);return;}
   const parts=mb.rows.filter(r=>r.g>0||!(r.b.g>0)).map(r=>partAt(r.b,r.g,r.wt));
   if(!parts.length){toast("Add at least one ingredient");return;}
   const t=sumParts(parts), dw=mb.dw>0?mb.dw:0;
@@ -6601,7 +6786,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v87"]};
+ data:["Save & Settings","Backup your data · v88"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
