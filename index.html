@@ -297,7 +297,7 @@
   .pwleg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-top:8px}
   .pwleg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
   .pwbtns{display:flex;gap:8px;margin-top:14px}
-  .pwback{background:none;border:none;color:var(--accent2);font-weight:700;font-size:15px;padding:2px 0 8px;cursor:pointer}
+  .pwback{display:none!important;background:none;border:none;color:var(--accent2);font-weight:700;font-size:15px;padding:2px 0 8px;cursor:pointer}
   .pdhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
   .pdtitle{background:none;border:none;color:var(--txt);text-align:left;font-size:22px;font-weight:800;letter-spacing:-.3px;padding:0;cursor:pointer;min-width:0}
   .pdtitle small{display:block;font-size:11.5px;font-weight:700;color:var(--accent2);letter-spacing:1px;text-transform:uppercase}
@@ -650,6 +650,24 @@
   .mbpend1 .rm{width:26px;height:26px;font-size:15px}
   .mbpend2{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
   .mblink{background:none;border:none;color:var(--accent2);font-size:12.5px;font-weight:600;padding:4px 0;cursor:pointer}
+  .gytoday{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 16px 14px;margin-bottom:12px}
+  .gytoday.live{border-color:var(--accent)}
+  .gytoday.done{background:rgba(62,192,122,.08);border-color:rgba(62,192,122,.55)}
+  .gytlab{font-size:11px;letter-spacing:1.5px;color:var(--dim);font-weight:700;text-transform:uppercase}
+  .gytoday.done .gytlab{color:var(--good)}
+  .gytday{font-size:21px;font-weight:800;line-height:1.25;margin-top:2px}
+  .gytmeta{color:var(--dim);font-size:13px;margin-top:2px}
+  .gychips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}
+  .gychips span{font-size:11.5px;padding:3px 9px;border-radius:20px;background:rgba(232,80,46,.13);color:var(--accent2);font-weight:600}
+  .gygo{width:100%;margin-top:12px;padding:15px;font-size:17px;font-weight:800;border-radius:13px}
+  .gylink{display:block;width:100%;background:none;border:none;color:var(--accent2);font:inherit;font-size:13.5px;font-weight:600;margin-top:10px;cursor:pointer}
+  .gytoday.done .gylink{color:var(--good)}
+  .gypp{display:inline-block;font-size:11px;font-weight:800;letter-spacing:1px;color:#fff;background:var(--accent);border-radius:8px;padding:2px 8px;margin-bottom:6px}
+  .gyic svg{width:28px;height:28px;fill:var(--accent2)}
+  .fdtile .gyic{margin-bottom:8px}
+  .gyall{grid-column:span 2}
+  .gyweek .pwday{margin-bottom:8px}
+  .gyweek .pwday.rest{cursor:default}
   .fdbar{display:flex;align-items:center;gap:12px;margin:-14px -14px 8px;padding:10px 14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);border-bottom:1px solid transparent;transition:transform .22s ease}
   .fdbar.hide{transform:translateY(calc(-100% - env(safe-area-inset-top,0px) - 4px))}
   .fdbar .eqback{padding:9px 16px 9px 12px;font-size:16px;font-weight:700;background:var(--card2);border:1px solid var(--line);border-radius:12px;color:var(--accent2);min-height:42px}
@@ -981,6 +999,7 @@
 
   <!-- LIBRARY -->
   <div class="view" id="v-lib">
+    <div class="fdbar" id="gyBar-lib"><button class="eqback" onclick="gyBack('lib')">‹ Back</button><div class="fdttl" id="gyTtl-lib"></div></div>
     <input type="text" id="libSearch" class="libsearch" placeholder="Search exercises, muscles, equipment…" oninput="onLibSearch()" autocomplete="off">
     <div class="filterbar">
       <button class="filtertoggle" id="filterToggle" onclick="toggleFilters()">
@@ -996,13 +1015,15 @@
       <div class="frow" id="fSubRow" style="display:none"><div class="flab">Target</div><div class="fchips" id="fSub"></div></div>
       <div class="frow"><div class="flab">Equipment</div><div class="fchips" id="fEquip"></div></div>
     </div>
+    <div id="libGroups" class="fdtiles" style="margin-top:12px"></div>
     <div class="count" id="libCount"></div>
     <div id="libList"></div>
     <div class="disc">General guidance, not medical advice. On Mounjaro, keep protein up and stay hydrated. Start lighter than you think and prioritise form.</div>
   </div>
 
   <!-- PLAN (Build + My Week combined) -->
-  <div class="view on" id="v-plan">
+  <div class="view" id="v-plan">
+    <div class="fdbar" id="gyBar-plan"><button class="eqback" onclick="gyBack('plan')">‹ Back</button><div class="fdttl" id="gyTtl-plan"></div></div>
 
     <div id="planWeek"></div>
     <div id="planDay" style="display:none"></div>
@@ -1033,19 +1054,22 @@
     </div>
   </div>
 
-  <!-- TRAIN (week selector + workout player) -->
+  <!-- GYM home (v91): today's workout + Train, Plan, Library tiles -->
+  <div class="view" id="v-gym"><div id="gymHome"></div></div>
+
+  <!-- TRAIN (week list -> a day -> workout player) -->
   <div class="view" id="v-train">
-    <!-- when NOT actively training: pick a day -->
+    <div class="fdbar" id="gyBar-train"><button class="eqback" onclick="gyBack('train')">‹ Back</button><div class="fdttl" id="gyTtl-train"></div></div>
+    <div id="trWeekList" class="gyweek"></div>
+    <!-- when NOT actively training: the chosen day -->
     <div id="trainWeek">
-      <div id="programBanner"></div>
-      <div class="dayselect" id="daySelect"></div>
+      <div id="programBanner" style="display:none"></div>
+      <div class="dayselect" id="daySelect" style="display:none"></div>
+      <div id="trPill"></div>
       <div class="planhead"><h2 id="planDayName">Monday</h2><span class="n" id="planCount"></span></div>
       <button class="btn primary trainstart" id="trainDayBtn" style="display:none" onclick="startTrainingFromDay()">▶ Start training</button>
       <div class="summary" id="planSummary" style="display:none"></div>
       <div id="planList"></div>
-      <div class="planactions">
-        <button class="btn ghost" onclick="editDayInPlan()">✎ Change this day in Plan</button>
-      </div>
     </div>
     <!-- when actively training: the player -->
     <div id="trainActive" style="display:none"></div>
@@ -1268,12 +1292,8 @@
 </div>
 
 <div class="nav">
-  <button class="on" id="nav-plan" onclick="switchView('plan')">
-    <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2zm12 8v10H5V10z"/></svg>Plan</button>
-  <button id="nav-train" onclick="switchView('train')">
-    <svg viewBox="0 0 24 24"><path d="M20.6 6.6l-1.2-1.2-2 2-2.8-2.8 1.2-1.2-1.4-1.4-1.2 1.2-1-1-1.4 1.4 1 1L5 9.4l-1-1-1.4 1.4 1 1-1.2 1.2 1.4 1.4 1.2-1.2 2.8 2.8-2 2 1.2 1.2 2-2 2.8 2.8-1.2 1.2 1.4 1.4 1.2-1.2 1 1 1.4-1.4-1-1 4.6-4.6 1 1 1.4-1.4-1-1z"/></svg>Train</button>
-  <button id="nav-lib" onclick="switchView('lib')">
-    <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg>Library</button>
+  <button class="on" id="nav-gym" onclick="switchView('gym')">
+    <svg viewBox="0 0 24 24"><path d="M20.6 6.6l-1.2-1.2-2 2-2.8-2.8 1.2-1.2-1.4-1.4-1.2 1.2-1-1-1.4 1.4 1 1L5 9.4l-1-1-1.4 1.4 1 1-1.2 1.2 1.4 1.4 1.2-1.2 2.8 2.8-2 2 1.2 1.2 2-2 2.8 2.8-1.2 1.2 1.4 1.4 1.2-1.2 1 1 1.4-1.4-1-1 4.6-4.6 1 1 1.4-1.4-1-1z"/></svg>Gym</button>
   <button id="nav-timer" onclick="switchView('timer')">
     <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 109 9 9 9 0 00-9-9zm0 16a7 7 0 110-14 7 7 0 010 14zm-1-11h2v4h3v2h-5z"/></svg>Food</button>
   <button id="nav-history" onclick="switchView('history')">
@@ -2399,6 +2419,13 @@ function renderFilterChips(){
 }
 
 function renderLib(){
+  const home=libIsHome();
+  ["filterbar","filterPanel","libCount","libList"].forEach(id=>{const el=id==="filterbar"?document.querySelector("#v-lib .filterbar"):document.getElementById(id);if(el)el.style.display=home?"none":"";});
+  const gEl=document.getElementById("libGroups");
+  if(gEl){gEl.style.display=home?"":"none";if(home)gEl.innerHTML=libGroupsHTML();}
+  if(!home){const fp=document.getElementById("filterPanel");if(fp)fp.style.display=filtersOpen?"block":"none";}
+  gySync();
+  if(home)return;
   const countEl=document.getElementById("libCount");
   const listEl=document.getElementById("libList");
   const clearBtn=document.getElementById("filterClear");
@@ -2748,6 +2775,8 @@ function renderTrainDayRaw(){
   const arr0=plans[curDay]||[];
   const dayName = arr0.length ? `${DAYNAMES[curDay]} · ${dayTitle(curDay)}` : DAYNAMES[curDay];
   nameEl.textContent=dayName;
+  const pill=document.getElementById("trPill");
+  if(pill){const k=dayKind(curDay);pill.innerHTML=k?`<span class="gypp">${k}</span>`:"";}
   const arr=plans[curDay]||[];
   document.getElementById("planCount").textContent=arr.length?`${arr.length} exercise${arr.length!==1?"s":""}`:"empty";
   const listEl=document.getElementById("planList");
@@ -2943,6 +2972,7 @@ function renderPlanTab(){
   document.getElementById("planBuild").style.display=planView==="build"?"block":"none";
   const gb=document.getElementById("goalBar");
   if(gb&&document.getElementById("v-plan").classList.contains("on"))gb.style.display=planView==="build"?"block":"none";
+  gySync();
   if(planView==="week")renderPlanWeek();
   else if(planView==="day")renderPlanDay();
 }
@@ -4145,13 +4175,17 @@ function startTrainingFromSession(){
 function renderTrain(){
   const week=document.getElementById("trainWeek");
   const act=document.getElementById("trainActive");
+  const wl=document.getElementById("trWeekList");
   if(!train.active || !train.list.length){
-    // show the weekday selector + day view
-    week.style.display="block"; act.style.display="none";
-    renderDaySelect(); renderPlan();
+    // v91: the week as day cards, or one day with its muscles, exercises and Start
+    act.style.display="none";
+    week.style.display=trainSub==="day"?"block":"none";
+    if(wl){wl.style.display=trainSub==="week"?"block":"none";if(trainSub==="week")renderTrWeek();}
+    renderDaySelect(); renderPlan(); gySync();
     return;
   }
-  week.style.display="none"; act.style.display="block";
+  if(wl)wl.style.display="none";
+  week.style.display="none"; act.style.display="block"; gySync();
 
   const cur=train.list[train.idx];
   const e=exByName(cur.n);
@@ -4334,7 +4368,8 @@ function endTraining(finished){
   if(finished||nDone>0){
     toast(nDone>=total ? "Workout complete 💪" : `Ended · ${nDone} of ${total} done`);
   }
-  renderTrain();
+  if(document.getElementById("v-train").classList.contains("on"))switchView("gym");
+  else renderTrain();
 }
 
 /* ---------------- NUTRITION (strict carnivore) ---------------- */
@@ -6818,18 +6853,17 @@ function loadFood(){try{
 }
 
 /* ---------------- NAV ---------------- */
-const TITLES={plan:["Plan","Your week at a glance"],
- train:["Train","Pick a day, then start your workout"],
- lib:["Exercise Library","Browse, filter, and add to a day plan"],
+const GYM_VIEWS=["gym","plan","train","lib"];
+const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v90"]};
-let lastView="plan";
+ data:["Save & Settings","Backup your data · v91"]};
+let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
   if(onSettings){switchView(lastView||"plan");}
   else{
-    ["plan","train","lib","timer","history"].forEach(x=>{
+    ["gym","plan","train","lib","timer","history"].forEach(x=>{
       if(document.getElementById("v-"+x).classList.contains("on"))lastView=x;
     });
     switchView("data");
@@ -6838,9 +6872,9 @@ function toggleSettings(){
 /* ---- v89: Food tab dashboard. Home shows today's numbers and tiles; each tile opens its own screen ---- */
 let fdPanel="home", fdMacOpen=false;
 // the ‹ Back bar sticks to the top: it slides away while scrolling down and comes back on any scroll up
-(function(){let lastY=0;window.addEventListener("scroll",()=>{const b=document.getElementById("fdBar"), y=window.scrollY;
-  if(!b){lastY=y;return;}
-  if(y>lastY+6&&y>160)b.classList.add("hide"); else if(y<lastY-6||y<160)b.classList.remove("hide");
+(function(){let lastY=0;window.addEventListener("scroll",()=>{const y=window.scrollY;
+  document.querySelectorAll(".fdbar").forEach(b=>{
+  if(y>lastY+6&&y>160)b.classList.add("hide"); else if(y<lastY-6||y<160)b.classList.remove("hide");});
   if(Math.abs(y-lastY)>6)lastY=y;},{passive:true});})();
 const FD_TTL={log:"Log food",scan:"Scan a label",meals:"Meals & dishes",mine:"My foods",weigh:"Weigh in",target:"Target & goal",reports:"Reports"};
 function fdOpen(p){
@@ -6922,24 +6956,142 @@ function fdRenderWeigh(){
     return `<div class="fitem"><div class="fi-info"><div class="fi-n">${w.kg} kg</div><div class="fi-m2">${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}</div></div>${df!==null?`<div style="font-weight:700;font-size:13px;color:${df<=0?"var(--good)":"var(--amber)"}">${df>0?"+":""}${df.toFixed(1)}</div>`:""}</div>`;}).join("");
 }
 function switchView(v){
-  ["plan","train","lib","timer","history","data"].forEach(x=>{
+  ["gym","plan","train","lib","timer","history","data"].forEach(x=>{
     const view=document.getElementById("v-"+x);
     if(view)view.classList.toggle("on",x===v);
     const btn=document.getElementById("nav-"+x);
-    if(btn)btn.classList.toggle("on",x===v);
+    if(btn)btn.classList.toggle("on",x===v||(x==="gym"&&GYM_VIEWS.includes(v)));
   });
   const gear=document.querySelector(".gearbtn");
   if(gear)gear.classList.toggle("on",v==="data");
   const gb=document.getElementById("goalBar");
-  if(gb)gb.style.display = ((v==="plan"&&planView==="build")||v==="train"||v==="lib") ? "block" : "none";
+  if(gb)gb.style.display = (v==="plan"&&planView==="build") ? "block" : "none";
   document.getElementById("hTitle").textContent=TITLES[v][0];
-  document.getElementById("hSub").textContent=TITLES[v][1];
+  document.getElementById("hSub").textContent=GYM_VIEWS.includes(v)?"Training: "+planName(trainingId()):TITLES[v][1];
+  document.querySelectorAll(".fdbar").forEach(x=>x.classList.remove("hide"));
+  if(v==="gym")renderGym();
+  if(v==="lib")renderLib();
   window.scrollTo({top:0,behavior:"smooth"});
   if(v==="train"){renderTrain();}
   if(v==="data"){initMwUI();initAiUI();}
   if(v==="history"){setHistSub(histSub);renderHistory();}
   if(v==="timer"){if(!(mb||lblRes||lblBusy))fdPanel="home";renderCal();fdOpen(fdPanel);}
 }
+
+/* ---- v91: Gym tab. Plan, Train and Library live behind one dashboard; each opens with a big ‹ Back ---- */
+let trainSub="week", libAll=false;
+function gyOpen(v){
+  if(v==="train"){trainSub="week";}
+  if(v==="plan"){planView="week";}
+  if(v==="lib"){libAll=false;clearLibAll();}
+  switchView(v);
+  if(v==="plan")renderPlanTab();
+}
+function gyBack(v){
+  window.scrollTo(0,0);
+  if(v==="train"&&trainSub==="day"){trainSub="week";renderTrain();return;}
+  if(v==="plan"&&planView!=="week"){setPlanView("week");return;}
+  if(v==="lib"&&!libIsHome()){libAll=false;clearLibAll();return;}
+  switchView("gym");
+}
+function libIsHome(){return !libAll&&!libQuery&&activeFilterCount()===0;}
+function gySync(){
+  const set=(v,show,t)=>{const b=document.getElementById("gyBar-"+v);if(b)b.style.display=show?"":"none";const e=document.getElementById("gyTtl-"+v);if(e)e.textContent=t;};
+  set("train",!(train.active&&train.list.length),trainSub==="day"?DAYNAMES[curDay]:"Train");
+  set("plan",true,planView==="build"?"One-off workout":planView==="day"?DAYNAMES[curDay]:"Plan");
+  let lt="Library";
+  if(!libIsHome()){const g=GROUPS.find(x=>x.id===libFilters.muscle);lt=libQuery?"Search":(g&&g.id!=="all"&&activeFilterCount()===1)?g.name:"Exercises";}
+  set("lib",true,lt);
+}
+// Push / Pull / Legs / Upper / Core / Cardio, from the day's exercises
+function dayKind(d){
+  const arr=plans[d]||[];if(!arr.length)return"";
+  const c={};arr.forEach(x=>{const p=EX_PAT[x.n]||"";if(p)c[p]=(c[p]||0)+1;});
+  const n=arr.length, top=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];
+  if(!top)return"";
+  if(c[top]/n>=0.6&&top!=="core")return top.toUpperCase();
+  if((c.push||0)+(c.pull||0)>=n*0.6)return"UPPER BODY";
+  if((c.legs||0)>=n*0.5)return"LEGS";
+  return"FULL BODY";
+}
+function dayMusChips(d){const ds=daySets(d);return Object.keys(ds).sort((a,b)=>ds[b]-ds[a]).slice(0,4).map(m=>`<span>${escH(m)}</span>`).join("");}
+// How many exercises of this plan day were logged today
+function doneToday(d){
+  const t=dayTitle(d),k=todayKey();let n=0;
+  for(const name in logs)(logs[name]||[]).forEach(en=>{
+    const dt=new Date(en.date);const key=dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
+    if(key===k&&en.pday===t&&(!en.planId||en.planId===trainingId()))n++;});
+  return n;
+}
+function gyStartDay(d){curDay=d;startTrainingFromDay();}
+function gyOpenDay(d){curDay=d;trainSub="day";switchView("train");}
+function renderGym(){
+  const el=document.getElementById("gymHome");if(!el)return;
+  let card="";
+  if(train.active&&train.list.length){
+    const cur=train.list[train.idx]||{};
+    card=`<div class="gytoday live"><div class="gytlab">Workout in progress</div><div class="gytday">${escH(train.title)}</div>
+      <div class="gytmeta">Exercise ${train.idx+1} of ${train.list.length} · ${escH(cur.n||"")}</div>
+      <button class="btn primary gygo" onclick="switchView('train');focusTrainCard()">▶ Carry on</button></div>`;
+  }else asPlan(trainingId(),()=>{
+    const order=planMode.mode==="order", ds=planDays();
+    const d=order?nextUpDay():todayIdx();
+    const has=d!=null&&plans[d]&&plans[d].length;
+    if(!ds.length){card=`<div class="gytoday"><div class="gytlab">Today</div><div class="gytday">No workouts yet</div><div class="gytmeta">Open Plan to pick a program or add a workout.</div></div>`;return;}
+    if(has){
+      const n=plans[d].length, done=doneToday(d), k=dayKind(d);
+      const head=`<div class="gytlab">${order?"Next up":"Today"}</div><div class="gytday">${order?"":DAYNAMES[d]+" · "}${escH(dayTitle(d))}</div>`;
+      if(done>0&&!order){
+        card=`<div class="gytoday done"><div class="gytlab">${done>=n?"Today · done ✓":"Trained today"}</div><div class="gytday">${DAYNAMES[d]} · ${escH(dayTitle(d))}</div>
+          <div class="gytmeta">${done} of ${n} exercises logged</div>
+          <button class="gylink" style="text-align:left;padding:0" onclick="histSub='sessions';switchView('history')">See it in History ›</button>
+          <button class="btn ghost gygo" style="font-size:15px;padding:12px" onclick="gyStartDay(${d})">▶ Train it again</button></div>`;
+      }else{
+        card=`<div class="gytoday">${k?`<span class="gypp">${k}</span>`:""}${head}
+          <div class="gytmeta">${n} exercise${n!==1?"s":""} · about ${dayMins(d)} min</div>
+          <div class="gychips">${dayMusChips(d)}</div>
+          <button class="btn primary gygo" onclick="gyStartDay(${d})">▶ Start workout</button>
+          <button class="gylink" onclick="gyOpenDay(${d})">See the exercises ›</button></div>`;
+      }
+    }else{
+      let nx=null;for(let i=1;i<=7;i++){const j=(todayIdx()+i)%7;if(plans[j]&&plans[j].length){nx=j;break;}}
+      card=`<div class="gytoday"><div class="gytlab">Today</div><div class="gytday">${DAYNAMES[todayIdx()]} · Rest day 😌</div>
+        ${nx!=null?`<div class="gytmeta">Next up: ${DAYNAMES[nx]} · ${escH(dayTitle(nx))}</div>
+        <button class="btn ghost gygo" style="font-size:15px;padding:12px" onclick="gyStartDay(${nx})">▶ Train ${DAYNAMES[nx]}'s workout anyway</button>`:""}</div>`;
+    }
+  });
+  const tile=(ic,b,sub,on)=>`<button class="fdtile wide" onclick="${on}"><i>${ic}</i><div><b>${b}</b><span>${sub}</span></div></button>`;
+  el.innerHTML=card+`<div class="fdtiles">
+    ${tile("🏋️","Train","Your week: pick a day and start","gyOpen('train')")}
+    ${tile("📅","Plan","Your plans, change a day, one-off workout","gyOpen('plan')")}
+    ${tile("📚","Library",`All ${LIB.length} exercises by muscle`,"gyOpen('lib')")}
+  </div>`;
+}
+function renderTrWeek(){
+  const el=document.getElementById("trWeekList");if(!el)return;
+  asPlan(trainingId(),()=>{
+    const order=planMode.mode==="order", ds=planDays(), nd=nextUpDay(), td=todayIdx();
+    const row=(d,lab,hl)=>{
+      const arr=plans[d]||[];
+      if(!arr.length)return `<div class="pwday rest"><span class="pwdl">${lab}</span><span class="pwdt"><span class="pwdn">Rest</span></span><span></span></div>`;
+      const ch=Object.keys(daySets(d)).sort((a,b)=>daySets(d)[b]-daySets(d)[a]).slice(0,4).map(m=>`<span class="pwmc">${escH(m)}</span>`).join("");
+      return `<button class="pwday ${hl?"today":""}" onclick="gyOpenDay(${d})"><span class="pwdl">${lab}</span>
+        <span class="pwdt"><span class="pwdn">${escH(dayTitle(d))}</span><span class="pwdm">${arr.length} exercise${arr.length!==1?"s":""} · about ${dayMins(d)} min</span><span class="pwchips">${ch}</span></span><span class="pwchev">›</span></button>`;
+    };
+    let h="";
+    if(order){ds.forEach((d,i)=>{h+=row(d,String(i+1),d===nd);});if(!ds.length)h=`<div class="addhint">No workouts yet. Add them in Plan.</div>`;}
+    else for(let d=0;d<7;d++)h+=row(d,DAYNAMES[d].slice(0,3).toUpperCase(),d===td);
+    el.innerHTML=h;
+  });
+}
+function libGroupsHTML(){
+  const c={};LIB.forEach(e=>c[e.grp]=(c[e.grp]||0)+1);
+  const NM={glutes:"Glutes & hams"};
+  return GROUPS.filter(g=>g.id!=="all").map(g=>`<button class="fdtile" onclick="libGroup('${g.id}')"><span class="gyic">${I[g.id]||I.fullbody}</span><b>${NM[g.id]||g.name}</b><span>${c[g.id]||0} exercises</span></button>`).join("")
+    +`<button class="fdtile wide" onclick="openMusclePicker()"><i>🧍</i><div><b>Muscle map</b><span>Tap a muscle to see what trains it</span></div></button>`
+    +`<button class="fdtile wide" onclick="libAll=true;renderLib();window.scrollTo(0,0)"><i>📚</i><div><b>All exercises</b><span>The full list, with filters</span></div></button>`;
+}
+function libGroup(id){libFilters.muscle=id;libFilters.sub="all";renderFilterChips();renderLib();window.scrollTo(0,0);}
 
 /* ---------------- WORKOUT HISTORY ---------------- */
 // Group all logged entries by calendar day
@@ -7203,7 +7355,7 @@ renderGoals();renderBuildControls();renderMoveChips();renderFilterChips();render
 <script>
 // Start on Train from 05:00 to 07:59 (phone's local time), otherwise on Calories.
 // Kept in its own script so a hiccup while the app loads can't leave it stuck on Plan.
-function startTab(){const h=new Date().getHours();return h>=5&&h<8?"train":"timer";}
+function startTab(){const h=new Date().getHours();return h>=5&&h<8?"gym":"timer";}
 function openStartTab(){
   const v=startTab();
   try{switchView(v);}catch(e){
