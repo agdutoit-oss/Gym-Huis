@@ -1049,6 +1049,7 @@
       <div id="fcUnits" class="fcunits"></div>
       <div id="fcParts" class="fcparts"></div>
       <div id="fcPreview" class="fcprev"></div>
+      <div id="fcEdit"></div>
       <button class="btn primary" id="fcAddBtn" style="width:100%" onclick="fcAdd()">Add</button>
       <div id="fcRecent" class="fcrecent"></div>
       <div id="fcMeals" class="fcrecent"></div>
@@ -5706,7 +5707,7 @@ const FC_YIELD_WORDS=[
 const FC_YIELD_NOT=/\b(tinned|canned|tin|can|instant|cakes?|crackers?|milk|sauce|soup|sandwich|burger|wrap|pie|pizza|curry|stew|roll|nuggets?|biltong|dro[eë]wors|polony|salami|viennas?|deli|cold ?meat|smoked|pat[eé]|kfc|nando'?s|steers|spur|wimpy|mcdonald'?s|debonairs|chicken licken|fried rice|stock|broth|powder|protein)\b/;
 function fcYieldByName(n){n=fcFold(n);if(FC_YIELD_NOT.test(n))return 0;const h=FC_YIELD_WORDS.find(([re])=>re.test(n));return h?h[1]:0;}
 function fcYield(f){if(!f||f.each||f.parts?.length)return 0;return FC_YIELD[f.n]||(f.c==="My foods"?fcYieldByName(f.n):0);}
-function fcNative(f){return /\(raw|\b(raw|uncooked|dried|dry(?!-aged))\b/i.test(f?.n||"")?"raw":"cooked";}
+function fcNative(f){if(f?.st)return f.st;return /\(raw|\b(raw|uncooked|dried|dry(?!-aged))\b/i.test(f?.n||"")?"raw":"cooked";}
 // grams of the food as its numbers are given, from grams weighed raw or cooked
 function fcAsListed(f,g,wt){const y=fcYield(f);if(!y||!wt||wt===fcNative(f))return g;return wt==="raw"?g*y:g/y;}
 // raw or cooked you weighed it last time, else the food's own state
@@ -5777,7 +5778,7 @@ function fcEnter(){
 }
 function fcPick(name){
   const f=findFood(name); if(!f)return;
-  fcSel=f; fcWt=fcYield(f)?(fcLastWt(f.n)||fcNative(f)):null; fpInit(f);
+  fcSel=f; fcWt=fcYield(f)?(fcLastWt(f.n)||fcNative(f)):null; fpInit(f); fcEditOpen=false;
   const el=document.getElementById("fcFood"); el.value=f.n;
   document.getElementById("fcSuggest").innerHTML="";
   const g=document.getElementById("fcGrams");
@@ -5815,6 +5816,7 @@ function fcGramsTyped(){fcGramsManual=true;fcRender();fpRender();}
 function fcSetGrams(v){document.getElementById("fcGrams").value=v;fcGramsManual=true;fcRender();fpRender();}
 function fcCalc(f,g,wt){if(!f.each)g=fcAsListed(f,g,wt);if(f.each)return {k:r2(f.k*g),p:f.p*g,f:f.f*g};return {k:r2(f.k*g/100),p:f.p*g/100,f:f.f*g/100};}
 function fcRender(){
+  fcEditSync();
   const gEl=document.getElementById("fcGrams");
   const g=parseFloat(gEl?.value);
   const prev=document.getElementById("fcPreview"), units=document.getElementById("fcUnits");
@@ -5944,6 +5946,65 @@ function saveMyFood(){
   renderFoodCalc();
 }
 
+
+/* ---- v86: ✎ Edit a saved food's numbers right from the food box ---- */
+let fcEditOpen=false, fcEditSt=null;
+function fcEditSync(){
+  const box=document.getElementById("fcEdit"); if(!box)return;
+  if(!fcSel||fcSel.c!=="My foods"){fcEditOpen=false;box.innerHTML="";return;}
+  if(fcEditOpen)return;
+  box.innerHTML=fcSel.meal?"":`<button class="mblink" style="margin:-4px 0 8px" onclick="fcEditStart()">✎ Edit this food's numbers</button>`;
+}
+function fcEditStart(){
+  const f=fcSel; if(!f)return; fcEditOpen=true; fcEditSt=fcNative(f);
+  fcEditDraw();
+  document.getElementById("feK")?.focus();
+}
+function fcEditDraw(){
+  const f=fcSel, box=document.getElementById("fcEdit"); if(!f||!box)return;
+  const per=f.each?"one serving":`100 ${f.ml?"ml":"g"}`;
+  box.innerHTML=`<div class="mbbox">
+    <div class="fdhead">Edit ${escH(f.n)}</div>
+    <input id="feName" class="calinput" style="width:100%" value="${escH(f.n)}" placeholder="Name" oninput="fcEditWt()">
+    <div id="feWt"><div class="fcwt" style="margin:10px 0 0"><span>Numbers are for it</span>${["cooked","raw"].map(w=>`<button id="feWt_${w}" onclick="fcEditSt='${w}';fcEditWt()">${w==="raw"?"Raw":"Cooked"}</button>`).join("")}</div>
+    <div class="cehint" style="margin-top:4px">A packet label "as packed" is raw (dry).</div></div>
+    <div class="cehint" style="margin:10px 0 4px">Per ${per}:</div>
+    <div class="cerow">
+      <label>kJ<input id="feK" class="calinput" type="text" inputmode="decimal" value="${kj(f.k)}"></label>
+      <label>Protein g<input id="feP" class="calinput" type="text" inputmode="decimal" value="${f.p}"></label>
+      <label>Fat g<input id="feF" class="calinput" type="text" inputmode="decimal" value="${f.f}"></label>
+    </div>
+    <div class="cehint">What you already logged stays as it was. Only new entries use these numbers.</div>
+    <div class="aibtns"><button class="btn primary" onclick="fcEditSave()">Save</button><button class="btn ghost" onclick="fcEditOpen=false;fcRender()">Cancel</button></div>
+  </div>`;
+  fcEditWt();
+}
+function fcEditWt(){
+  const f=fcSel, w=document.getElementById("feWt"); if(!f||!w)return;
+  const nm=document.getElementById("feName")?.value||f.n;
+  w.style.display=!f.each&&!f.parts?.length&&fcYieldByName(nm)>0?"":"none";
+  ["cooked","raw"].forEach(x=>document.getElementById("feWt_"+x)?.classList.toggle("on",fcEditSt===x));
+}
+function fcEditSave(){
+  const f=fcSel; if(!f)return;
+  const num=id=>{const v=parseFloat(String(document.getElementById(id)?.value||"").replace(",","."));return isNaN(v)||v<0?null:v;};
+  const name=(document.getElementById("feName")?.value||"").trim(), kJin=num("feK"), p=num("feP"), fat=num("feF");
+  if(!name){toast("Give it a name");return;}
+  if(kJin==null){toast("Enter the kJ");return;}
+  if(name!==f.n){
+    if(isBuiltinFood(name)){toast("That's a built-in food's name. Pick another name");return;}
+    if(myFoods.some(x=>x!==f&&x.n.toLowerCase()===name.toLowerCase())){toast("You already have a food with that name");return;}
+    const old=f.n;
+    Object.values(calLog).forEach(d=>(d.eat||[]).forEach(x=>{if(x.food===old)x.food=name;}));
+    myFoods.forEach(m=>(m.parts||[]).forEach(o=>{if(o.n===old)o.n=name;}));
+    f.n=name; saveCal();
+  }
+  f.k=toKcal(kJin); f.p=r1(p||0); f.f=r1(fat||0);
+  if(!f.each&&fcYieldByName(name)>0)f.st=fcEditSt; else delete f.st;
+  saveMyFoods(); fcEditOpen=false;
+  fcGramsManual=true; fcSel=null; fcPick(name); renderFoodCalc();
+  toast(`Saved ${name}`);
+}
 /* ---- v82: meals made of ingredients (a sandwich: bread, ham, cheese, butter) ----
    A meal is a saved food {n, c:"My foods", each:true, meal:true, k,p,f for one, parts, partsQ:1}.
    Each part: {n:food name, g (count when each), k,p,f[,c], wt:"raw"/"cooked", ml, each}.
@@ -6511,7 +6572,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v85"]};
+ data:["Save & Settings","Backup your data · v86"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
