@@ -650,8 +650,15 @@
   .mbpend1 .rm{width:26px;height:26px;font-size:15px}
   .mbpend2{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
   .mblink{background:none;border:none;color:var(--accent2);font-size:12.5px;font-weight:600;padding:4px 0;cursor:pointer}
-  .fdbar{display:flex;align-items:center;gap:10px;margin:-4px 0 8px}
-  .fdbar .eqback{padding:4px 0}
+  .fdbar{display:flex;align-items:center;gap:12px;margin:-14px -14px 8px;padding:10px 14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);border-bottom:1px solid transparent;transition:transform .22s ease}
+  .fdbar.hide{transform:translateY(calc(-100% - env(safe-area-inset-top,0px) - 4px))}
+  .fdbar .eqback{padding:9px 16px 9px 12px;font-size:16px;font-weight:700;background:var(--card2);border:1px solid var(--line);border-radius:12px;color:var(--accent2);min-height:42px}
+  .calmacd{margin-top:10px;text-align:left}
+  .calmacd summary{cursor:pointer;color:var(--accent2);font-size:12.5px;font-weight:600;list-style:none;text-align:center}
+  .calmacd summary::-webkit-details-marker{display:none}
+  .calmacd summary::after{content:" ▾"}
+  .calmacd[open] summary::after{content:" ▴"}
+  .calmacd .calmacs{margin-top:10px}
   .fdttl{font-size:17px;font-weight:800}
   .fdtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
   .fdtile{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 12px;text-align:left;color:var(--txt);cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:2px;min-height:104px}
@@ -4573,7 +4580,7 @@ function renderCal(){
       ${(()=>{const e=calLog[key]?.eat||[], mt=calMacroTargets(key);
         const p=e.reduce((t,x)=>t+(+x.p||0),0), f=e.reduce((t,x)=>t+(+x.f||0),0), c=e.reduce((t,x)=>t+entryCarbs(x),0);
         const bar=(lab,v,t,cls)=>`<div><div class="ml"><span>${lab}</span><span><b>${Math.round(v)}</b> / ${t} g</span></div><div class="calbar"><div class="calbarfill ${cls}" style="width:${t>0?Math.min(100,v/t*100):0}%"></div></div></div>`;
-        return `<div class="calmacs">${bar("Protein",p,mt.p,"mfp")}${bar("Fat",f,mt.f,"mff")}${mt.c?bar("Carbs",c,mt.c,"mfc"):""}</div>`;})()}
+        return `<details class="calmacd"${fdMacOpen?" open":""} ontoggle="fdMacOpen=this.open"><summary>Protein, fat &amp; carbs</summary><div class="calmacs">${bar("Protein",p,mt.p,"mfp")}${bar("Fat",f,mt.f,"mff")}${mt.c?bar("Carbs",c,mt.c,"mfc"):""}</div></details>`;})()}
     </div>`;
 
   // warning
@@ -4581,12 +4588,6 @@ function renderCal(){
   const isFuture=dateOf(key)>dateOf(todayKey());
   if(!isFuture){
     if(over)warn=`<div class="fwarn warn"><b>Over target.</b> You're ${kj(-remaining)} kJ above today's goal. One day won't undo progress — just get back on target tomorrow.</div>`;
-    else if(profile.glp1&&key===todayKey()&&new Date().getHours()>=17&&tgtEntry(key)){
-      const pe=(calLog[key]?.eat||[]).reduce((t,x)=>t+(+x.p||0),0), pt=calMacroTargets(key).p;
-      if(eaten>0&&pe<pt*0.6)warn=`<div class="fwarn warn"><b>Protein is behind.</b> You're at ${Math.round(pe)} of ${pt} g. On Mounjaro it's easy to undereat, and protein is what protects your muscle, so have that first.</div>`;
-      else if(eaten>0 && eaten<1200)warn=`<div class="fwarn warn"><b>Very low so far.</b> Eating too little backfires — it costs muscle and tanks energy. Make sure you hit enough protein.</div>`;
-    }
-    else if(eaten>0 && eaten<1200)warn=`<div class="fwarn warn"><b>Very low so far.</b> Eating too little backfires — it costs muscle and tanks energy. Make sure you hit enough protein.</div>`;
   }
   document.getElementById("calWarn").innerHTML=warn;
 
@@ -6822,7 +6823,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v89"]};
+ data:["Save & Settings","Backup your data · v90"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -6835,10 +6836,15 @@ function toggleSettings(){
   }
 }
 /* ---- v89: Food tab dashboard. Home shows today's numbers and tiles; each tile opens its own screen ---- */
-let fdPanel="home";
+let fdPanel="home", fdMacOpen=false;
+// the ‹ Back bar sticks to the top: it slides away while scrolling down and comes back on any scroll up
+(function(){let lastY=0;window.addEventListener("scroll",()=>{const b=document.getElementById("fdBar"), y=window.scrollY;
+  if(!b){lastY=y;return;}
+  if(y>lastY+6&&y>160)b.classList.add("hide"); else if(y<lastY-6||y<160)b.classList.remove("hide");
+  if(Math.abs(y-lastY)>6)lastY=y;},{passive:true});})();
 const FD_TTL={log:"Log food",scan:"Scan a label",meals:"Meals & dishes",mine:"My foods",weigh:"Weigh in",target:"Target & goal",reports:"Reports"};
 function fdOpen(p){
-  fdPanel=p||"home";
+  fdPanel=p||"home"; document.getElementById("fdBar")?.classList.remove("hide");
   if(p!=="meals"&&mb){mb=null;fcSel=null;fpRows=null;}
   const lb=document.getElementById("lblBox"), slot=document.getElementById(p==="scan"?"fdScanSlot":"lblHome");
   if(lb&&slot&&lb.parentNode!==slot){if(lblRes||lblBusy)lblClose();slot.appendChild(lb);}
