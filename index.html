@@ -1034,9 +1034,10 @@
         <button class="fcplus" id="fcPlusBtn" aria-label="Add a food from its label" onclick="fcPlusToggle()">+</button>
       </div>
       <div id="fcPlusMenu" class="fcplusmenu" style="display:none">
-        <div class="fcplushd">Add a food from its nutrition label</div>
+        <div class="fcplushd">Scan a nutrition label, or build a meal</div>
         <button class="btn primary" onclick="lblStart(true)">📷 Take photo</button>
         <button class="btn ghost" onclick="lblStart(false)">🖼 Upload photo</button>
+        <button class="btn ghost" onclick="fcPlusToggle(false);mbStart()">🥪 Make a meal from ingredients</button>
         <button class="fcplustype" onclick="lblManual()">No photo? Type the label numbers</button>
       </div>
       <input type="file" id="lblCam" accept="image/*" capture="environment" style="display:none" onchange="lblPicked(this)">
@@ -1051,7 +1052,6 @@
       <button class="btn primary" id="fcAddBtn" style="width:100%" onclick="fcAdd()">Add</button>
       <div id="fcRecent" class="fcrecent"></div>
       <div id="fcMeals" class="fcrecent"></div>
-      <button class="btn ghost" id="mbStartBtn" style="width:100%;margin-top:10px" onclick="mbStart()">🥪 Make a meal from ingredients</button>
       <details class="fcmine" id="fcMine">
         <summary>My foods</summary>
         <div id="mfList" style="margin-top:10px"></div>
@@ -6044,6 +6044,7 @@ function fcPickMeal(i){const f=myFoods[i]; if(!f)return; fcSel=null; fcNum=null;
 
 /* Making (or editing) a meal: the food box adds ingredients to it */
 function mbStart(i){
+  fcPlusToggle(false);
   const f=i!=null?myFoods[i]:null;
   mb={name:f?f.n:"",rows:f?.parts?rowsOf(f.parts,f.partsQ):[],edit:f?f.n:null};
   fcSel=null; fpRows=null; fcNum=null; fcGramsManual=false; aiClose();
@@ -6500,7 +6501,7 @@ const TITLES={plan:["Plan","Your week at a glance"],
  lib:["Exercise Library","Browse, filter, and add to a day plan"],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v83"]};
+ data:["Save & Settings","Backup your data · v84"]};
 let lastView="plan";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
