@@ -7219,7 +7219,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v100"]};
+ data:["Save & Settings","Backup your data · v101"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -8223,7 +8223,7 @@ function pg360Build(){
   }
   el.style.cursor="";
   el.innerHTML=PG_G.b.ids.map(id=>`<img src="${pgPhotos[id].url}" alt="" draggable="false">`).join("")
-    +`<div class="pg360lab" id="pg360Lab"></div><div class="pg360dial" id="pg360Dial"></div><div class="pg360hint" id="pg360Hint"></div>`;
+    +"";   // v101: just the image, nothing on top
   pgIdx=-1;pgPaint();
   // v98: it turns by itself. Tap to pause, then swipe left or right to step through the photos; tap again to carry on turning
   el.onpointerdown=e=>{pgDrag={x:e.clientX,a:pgAng,moved:false};try{el.setPointerCapture(e.pointerId);}catch(_){}};
