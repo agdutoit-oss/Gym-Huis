@@ -7220,7 +7220,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v103"]};
+ data:["Save & Settings","Backup your data · v104"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -7901,11 +7901,11 @@ function pgRenderHome(){
   if(full){pgSetDay(full);top=`<div class="pg360" id="pg360"></div><button class="gylink" style="margin:8px 0 12px" onclick="pgOpenDay('${full}')">360º view from ${pgDK(full,1)} · open this check-in ›</button>`;}
   else if(lp){const S=pgShots[lp];top=`<div class="fdhead" style="margin-top:0">Latest photos · ${pgDK(lp,1)}</div><div class="pgstrip">${PG_POSES.filter(P=>S[P.id]).map(P=>`<button onclick="pgSetDay('${lp}');pgSheetOpen('${P.id}')"><img src="${S[P.id].url}" alt=""><small>${P.g==="h"?"Head ":""}${P.s}</small></button>`).join("")}</div>`;}
   el.innerHTML=top+`<div class="fdtiles" style="margin-bottom:6px">
-      <button class="fdtile hero" onclick="pgOpenDay('${td}')"><i>📸</i><div><b>${hasT?"Today's check-in":"Start today's check-in"}</b><span>${hasT?pgSumLine(td):"Photo shoot, weight and measurements"}</span></div></button>
+      <button class="fdtile hero" onclick="pgSetDay('${td}');pgSub='day';pgGoShoot()"><i>📸</i><div><b>New photo shoot</b><span>${(()=>{const n=Object.keys(pgShots[td]||{}).length;return n?`Today: ${n} of 13 photos taken`:"Hands-free with voice · 13 photos · about 10 min";})()}</span></div></button>
       <button class="fdtile wide" onclick="pgOpenCompare()"><i>⚖️</i><div><b>Compare</b><span>${ds.length>=2?"Two dates side by side: photos and numbers":"Needs two check-ins on different dates"}</span></div></button></div>`
     +(ds.length?`<details class="pgtips pgcis"${pgCisOpen?" open":""} ontoggle="pgCisOpen=this.open"><summary>Check-ins · ${ds.length} date${ds.length===1?"":"s"}</summary><div style="margin-top:10px">`+ds.map(d=>`<button class="pgci" onclick="pgOpenDay('${d}')"><span class="pgcith">${pgThumb(d)}</span><span class="pgcitx"><b>${pgDK(d)}${d===td?" · today":""}</b><small>${pgSumLine(d)}</small></span><span class="pwchev">›</span></button>`).join("")+`</div></details>`
-      :`<div class="addhint">No check-ins yet. Start today's: take the photos, then log your weight and measurements.</div>`)
-    +`<div style="margin-top:14px">${pgFile("🖼 Import photos","ghost","multiple","pgImport(this,'')")}</div>`
+      :`<div class="addhint">No check-ins yet. Tap New photo shoot to start your first one.</div>`)
+    +`<div style="margin-top:14px">${pgFile("🖼 Import photos you already took","ghost","multiple","pgImport(this,'')")}</div>`
     +`<div class="pgnote">Photos are saved on this iPhone only.</div>`
     +(Object.values(pgShots).some(S=>Object.keys(S).length)?`<button class="pgdel" onclick="pgDelAllTap(this)">Delete all photos</button>`:"");
   if(full){pg360Key="";pg360Build();}
