@@ -1087,6 +1087,24 @@
   .pgflash.on{opacity:1;transition:none}
   .pgerr{position:absolute;left:20px;right:20px;top:40%;transform:translateY(-50%);background:var(--card);color:var(--txt);border-radius:16px;padding:18px;text-align:center}
   .pgerr p{margin-bottom:12px;font-size:14px}
+  /* v99: your own exercise demos */
+  .mdbtn{border:none;font-family:inherit;cursor:pointer}
+  .mdbtn.has{color:var(--good,#2e9e62)}
+  .mdbox{touch-action:pan-y}
+  .mdbox video,.mdbox img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:50% 50%}
+  .mdbox img.pd1{animation:pdfade 2.4s ease-in-out infinite}
+  .mdtag{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:9px;pointer-events:none}
+  .mdbox.edit{cursor:grab;touch-action:none}
+  .mdbox.edit .mdtag{display:none}
+  .mdhint{font-size:12px;color:var(--dim);text-align:center;margin:6px 0 10px}
+  .mdrow{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .mdrow b{flex:0 0 52px;font-size:12.5px}
+  .mdrow input[type=range]{flex:1;accent-color:var(--accent)}
+  .mdrow span{flex:0 0 46px;text-align:right;font-size:12.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .mdlen{font-size:12.5px;color:var(--dim);text-align:center;margin:2px 0 12px}
+  .pgshut.mdrec{background:#e53935;border-color:#fff}
+  .pgshut.mdrec.on{border-radius:18px;transform:scale(.78);transition:.15s}
+  .mdtip{position:absolute;left:0;right:0;top:calc(84px + env(safe-area-inset-top));text-align:center;font-size:12.5px;color:rgba(255,255,255,.85);pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.8)}
 </style>
 </head>
 <body>
@@ -1437,6 +1455,23 @@
     <button class="btn primary" onclick="pgKeep()">Keep</button>
   </div>
   <div class="pgerr" id="pgErr" style="display:none"></div>
+</div>
+
+<div class="msheet" id="mdSheet" onclick="if(event.target===this)mdSheetClose()"><div class="msbox" id="mdSheetBox"></div></div>
+<div class="pgcam" id="mdCam">
+  <video id="mdVid" playsinline muted autoplay></video>
+  <div class="pgcount" id="mdCount"></div>
+  <div class="pgstat" id="mdStat"></div>
+  <div class="pgtop"><button class="pgcb" onclick="mdCamClose()">Close</button>
+    <div class="pgtx"><small>Record my demo</small><b id="mdCName"></b><span>Film one or two slow reps</span></div>
+    <button class="pgcb" id="mdFlipB" onclick="mdFlip()">Flip</button></div>
+  <div class="mdtip" id="mdTip">Tip: turn the phone sideways to fill the demo box</div>
+  <div class="pgbot" id="mdBot">
+    <button class="pgcb" id="mdTimerB" onclick="mdCycleTimer()">Timer 10s</button>
+    <button class="pgshut mdrec" id="mdShut" aria-label="Start recording" onclick="mdShutter()"></button>
+    <button class="pgcb" id="mdVoiceB" onclick="mdToggleVoice()">Voice on</button>
+  </div>
+  <div class="pgerr" id="mdErr" style="display:none"></div>
 </div>
 
 <div class="utoast" id="utoast" role="status"></div>
@@ -2615,7 +2650,7 @@ function pdFail(img){
 function libVisual(e,map,slot,musclesFirst){
   if(map===undefined) map=musclePane(e);
   if(slot===undefined) slot=`<div class="mediaslot"></div>`;
-  if(!(mwKey||hasPhotoDemo(e.n))) return map;   // no demo available: just the muscles
+  if(!(mwKey||hasPhotoDemo(e.n)||mdShows(e.n))) return map;   // no demo available: just the muscles
   if(!map) return slot;
   if(musclesFirst)return `<div class="vtog"><button class="on" onclick="libPane(this,0)">Muscles worked</button><button onclick="libPane(this,1)">▶ How to</button></div>
     <div class="vpane">${map}</div><div class="vpane" hidden>${slot}</div>`;
@@ -2646,6 +2681,9 @@ function togPhotoDemo(btn,name){
 async function loadExerciseMedia(name,slotId){
   const slot=(slotId&&slotId.nodeType)?slotId:document.getElementById(slotId||("media-"+cssId(name)));
   if(!slot) return;
+  slot.dataset.md=name;
+  if(mdShows(name)){if(slot.dataset.loaded!=="m")mdFill(slot,name);return;}   // v99: your own demo comes first
+  if(slot.dataset.loaded==="m")slot.dataset.loaded="";
   if(!mwKey){if(slot.dataset.loaded!=="p"){slot.innerHTML=photoDemo(name);slot.dataset.loaded="p";}return;}
   if(slot.dataset.loaded==="1") return;
   slot.dataset.loaded="1";
@@ -2825,7 +2863,7 @@ function ytLink(term){return `https://www.youtube.com/results?search_query=${enc
 function demoLinks(e,shown){
   const inline = (!shown && hasPhotoDemo(e.n))
     ? `<button class="pdtoggle" onclick="togPhotoDemo(this,'${enc(e.n)}')">▶ Show me how</button><div class="pdinline"></div>` : "";
-  return inline + ytLinks(e);
+  return inline + ytLinks(e).replace('<div class="demorow">','<div class="demorow">'+mdBtn(e));
 }
 function ytLinks(e){
   const tags=(EX_EQ[e.n]||[]);
@@ -7181,7 +7219,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v98"]};
+ data:["Save & Settings","Backup your data · v99"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -8214,6 +8252,264 @@ function pgPaint(){
 function pgJump(a){pgSpinSet(false);pgAng=a;pgPaint();}
 function pgSpinSet(on){pgSpin=on;const h=$pg("pg360Hint");if(h)h.textContent=on?"Tap to pause":"Paused · swipe to turn, tap to play";
   if(on&&!pgRAF){pgT0=0;pgRAF=requestAnimationFrame(pgTick);}}
+
+/* ---------------- v99: MY OWN EXERCISE DEMOS ----------------
+   Record (guided camera), film with the iPhone camera, or import a video / 1–2 photos from the library.
+   Saved on this phone only: IndexedDB "gymhuis-demos", store "clips", key = exercise name,
+   value {kind:"video"|"photos", blob | blobs[], t0, t1, dur, z, x, y, stock, ts}.
+   Trim (t0..t1) and framing (zoom z, pan x/y in %) are applied on playback, so the file itself is never re-encoded.
+   Never uploaded, never in the backup text, never cached by sw.js (blob: URLs don't reach it). */
+const MD_MAX=30;                     // seconds a recording can run
+let mdDB=null, mdData={}, mdURL={};
+function mdOpenDB(){return new Promise((res,rej)=>{if(mdDB)return res(mdDB);if(!window.indexedDB)return rej(new Error("no idb"));
+  const r=indexedDB.open("gymhuis-demos",1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains("clips"))r.result.createObjectStore("clips");};
+  r.onsuccess=()=>{mdDB=r.result;res(mdDB);};r.onerror=()=>rej(r.error);});}
+function mdTx(mode,fn){return mdOpenDB().then(db=>new Promise((res,rej)=>{const t=db.transaction("clips",mode),s=t.objectStore("clips");const q=fn(s);
+  t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);}));}
+async function mdLoad(){
+  try{const db=await mdOpenDB();
+    await new Promise((res,rej)=>{const t=db.transaction("clips","readonly"),c=t.objectStore("clips").openCursor();
+      c.onsuccess=()=>{const k=c.result;if(!k)return;mdData[k.key]=k.value;k.continue();};t.oncomplete=res;t.onerror=()=>rej(t.error);});
+  }catch(e){}
+  Object.keys(mdData).forEach(mdRefresh);
+}
+async function mdPut(name,rec){
+  try{await mdTx("readwrite",s=>s.put(rec,name));}
+  catch(e){toast(/quota/i.test(String(e&&e.name||e))?"Not enough space on this phone for that clip":"That didn't save. Try again");return false;}
+  mdDropURL(name);mdData[name]=rec;return true;
+}
+async function mdDel(name){try{await mdTx("readwrite",s=>s.delete(name));}catch(e){}mdDropURL(name);delete mdData[name];}
+function mdDropURL(n){const u=mdURL[n];if(u)[].concat(u).forEach(x=>URL.revokeObjectURL(x));delete mdURL[n];}
+function mdUrls(n){const r=mdData[n];if(!r)return null;if(!mdURL[n])mdURL[n]=r.kind==="video"?URL.createObjectURL(r.blob):r.blobs.map(b=>URL.createObjectURL(b));return mdURL[n];}
+function mdShows(n){const r=mdData[n];return !!(r&&!r.stock);}
+
+/* --- the demo box (card, workout player, sheet, editor) --- */
+function mdXf(r){return `transform:scale(${r.z||1}) translate(${r.x||0}%,${r.y||0}%)`;}
+function mdBoxHTML(r,urls,edit){
+  const xf=mdXf(r);
+  const inner=r.kind==="video"
+    ?`<video class="mdv" src="${urls}" muted playsinline autoplay preload="auto" data-t0="${r.t0||0}" data-t1="${r.t1||0}" style="${xf}"></video>`
+    :`<img class="pd0" src="${urls[0]}" alt="" style="${xf}" draggable="false">${urls[1]?`<img class="pd1" src="${urls[1]}" alt="" style="${xf}" draggable="false">`:""}`;
+  return `<div class="pdemo mdbox${edit?" edit":""}"${edit?"":` onclick="mdTapBox(this)"`}>${inner}<span class="mdtag">Your demo</span></div>`;
+}
+function mdTapBox(b){const v=b.querySelector("video");if(v){if(v.paused)v.play().catch(()=>{});else v.pause();}else b.classList.toggle("paused");}
+// loop a video between its start and end marks
+function mdWire(root){
+  (root||document).querySelectorAll("video.mdv").forEach(v=>{
+    if(v._md)return;v._md=1;
+    const t0=()=>+v.dataset.t0||0, t1=()=>{const e=+v.dataset.t1;return e>0?e:(isFinite(v.duration)?v.duration:1e9);};
+    const chk=()=>{if(v.currentTime>=t1()-0.04||v.currentTime<t0()-0.3){v.currentTime=t0();if(v.paused&&!v._hold)v.play().catch(()=>{});}};
+    v.addEventListener("loadedmetadata",()=>{try{v.currentTime=t0();}catch(e){}});
+    v.addEventListener("timeupdate",chk);
+    v.addEventListener("ended",()=>{if(v._hold)return;v.currentTime=t0();v.play().catch(()=>{});});
+    if(v.requestVideoFrameCallback){const f=()=>{if(!v.isConnected)return;if(!v._hold)chk();v.requestVideoFrameCallback(f);};v.requestVideoFrameCallback(f);}
+    v.play().catch(()=>{});
+  });
+}
+function mdFill(slot,n){
+  const r=mdData[n];slot.innerHTML=mdBoxHTML(r,mdUrls(n));slot.dataset.loaded="m";mdWire(slot);
+}
+// redraw every place that shows this exercise: demo slots and the Record button
+function mdRefresh(n){
+  document.querySelectorAll(".mediaslot").forEach(s=>{if(s.dataset.md===n&&s.dataset.loaded){s.dataset.loaded="";loadExerciseMedia(n,s);}});
+  document.querySelectorAll(".mdbtn").forEach(b=>{if(b.dataset.md===n){b.textContent=mdBtnText(n);b.classList.toggle("has",!!mdData[n]);}});
+}
+function mdBtnText(n){return mdData[n]?"✓ Your demo":"● Record my demo";}
+function mdBtn(e){return `<button class="demo mdbtn${mdData[e.n]?" has":""}" data-md="${escH(e.n)}" onclick="mdOpen('${enc(e.n)}')">${mdBtnText(e.n)}</button>`;}
+
+/* --- bottom sheet: what you can do with your demo --- */
+let mdName="", mdPend=null, mdDelArm=0;
+const $md=id=>document.getElementById(id);
+function mdSheetShow(html){$md("mdSheetBox").innerHTML=html;$md("mdSheet").classList.add("on");document.body.classList.add("sheetopen");$md("mdSheetBox").scrollTop=0;mdWire($md("mdSheetBox"));}
+function mdSheetClose(){$md("mdSheet")?.classList.remove("on");document.body.classList.remove("sheetopen");if(mdPend){mdPendFree();}if($md("mdSheetBox"))$md("mdSheetBox").innerHTML="";}
+function mdPendFree(){if(mdPend&&mdPend.urls)[].concat(mdPend.urls).forEach(u=>URL.revokeObjectURL(u));mdPend=null;}
+function mdFileBtn(label,cls,accept,attrs){return `<label class="btn ${cls} pgfile">${label}<input type="file" accept="${accept}" ${attrs} onchange="mdImport(this)"></label>`;}
+function mdOpen(n){
+  mdName=n;mdPendFree();mdDelArm=0;const r=mdData[n];
+  const head=`<div class="mshead"><div><div class="msarea">${r?"Your demo":"Record my demo"}</div><h2>${escH(n)}</h2></div><button class="msx" onclick="mdSheetClose()">✕</button></div>`;
+  if(!r){
+    mdSheetShow(head+`<div class="mdhint" style="margin-top:-4px">Film one or two slow reps, then trim it to just the movement. It shows on this exercise instead of the stock demo, and is saved on this iPhone only.</div>
+      <div class="pgbtns"><button class="btn primary" onclick="mdCamOpen()">● Record with guided camera</button>
+      ${mdFileBtn("iPhone camera","ghost","video/*",`capture="environment"`)}
+      ${mdFileBtn("From library (a video, or 1–2 photos)","ghost","video/*,image/*","multiple")}</div>`);
+    return;
+  }
+  mdSheetShow(head+mdBoxHTML(r,mdUrls(n))
+    +`<div class="mdhint">${r.stock?"Not showing: the stock demo is on for now.":r.kind==="video"?`Your clip, ${mdSec((r.t1||r.dur)-(r.t0||0))} long. Tap it to pause.`:"Your photos. Tap to pause."}</div>
+    <div class="pgbtns">
+      <button class="btn ${r.stock?"primary":"ghost"}" onclick="mdStock(${r.stock?0:1})">${r.stock?"Show my demo again":"Show the stock demo instead"}</button>
+      <button class="btn ghost" onclick="mdEditSaved()">${r.kind==="video"?"Trim and frame":"Frame"}</button>
+      <button class="btn ghost" onclick="mdCamOpen()">● Record again</button>
+      ${mdFileBtn("Replace from library","ghost","video/*,image/*","multiple")}
+      <button class="btn ghost" style="color:var(--accent2)" onclick="mdDelTap()">Delete my demo</button></div>`);
+}
+async function mdStock(on){const n=mdName,r=Object.assign({},mdData[n],{stock:!!on});if(await mdPut(n,r)){mdRefresh(n);mdOpen(n);toast(on?"Showing the stock demo":"Showing your demo");}}
+async function mdDelTap(){
+  const n=mdName,r=mdData[n];if(!r)return;
+  await mdDel(n);mdSheetClose();mdRefresh(n);
+  undoToast("Your demo deleted",async()=>{$md("utoast").classList.remove("show");if(await mdPut(n,r)){mdRefresh(n);toast("Your demo is back");}});
+}
+function mdSec(s){return (Math.round((s||0)*10)/10).toFixed(1)+" s";}
+
+/* --- import: a video from the camera / library, or 1–2 photos --- */
+async function mdImport(inp){
+  const fs=[...(inp.files||[])];inp.value="";if(!fs.length)return;
+  const v=fs.find(f=>/^video\//.test(f.type)||/\.(mov|mp4|m4v|webm)$/i.test(f.name));
+  if(v){
+    if(v.size>300e6){toast("That video is too big. Trim it in Photos first");return;}
+    mdEditNew({kind:"video",blob:v,t0:0,t1:0,dur:0,z:1,x:0,y:0});return;
+  }
+  const ims=fs.filter(f=>/^image\//.test(f.type)).slice(0,2);if(!ims.length){toast("Pick a video or photos");return;}
+  const bl=[];for(const f of ims){const b=await pgPrep(f);if(b)bl.push(b);}
+  if(!bl.length){toast("Those photos couldn't be read");return;}
+  if(fs.length>2)toast("Using the first 2 photos");
+  mdEditNew({kind:"photos",blobs:bl,z:1,x:0,y:0});
+}
+
+/* --- editor: trim (video) and frame (zoom + drag) --- */
+function mdEditNew(p){mdPendFree();mdPend=Object.assign({fresh:true},p);mdEdit();}
+function mdEditSaved(){const r=mdData[mdName];if(!r)return;mdPendFree();mdPend=Object.assign({},r,{fresh:false});mdEdit();}
+async function mdEdit(){
+  const p=mdPend;p.urls=p.kind==="video"?URL.createObjectURL(p.blob):p.blobs.map(b=>URL.createObjectURL(b));
+  const head=`<div class="mshead"><div><div class="msarea">${p.kind==="video"?"Trim and frame":"Frame"}</div><h2>${escH(mdName)}</h2></div><button class="msx" onclick="mdSheetClose()">✕</button></div>`;
+  const vid=p.kind==="video";
+  mdSheetShow(head+mdBoxHTML(p,p.urls,true)
+    +`<div class="mdhint">${vid?"Drag the Start and End sliders to keep just the reps. ":""}Zoom in and drag the picture to frame yourself.</div>
+    ${vid?`<div class="mdrow"><b>Start</b><input type="range" id="mdT0" min="0" max="1" step="0.05" value="0"><span id="mdT0v"></span></div>
+    <div class="mdrow"><b>End</b><input type="range" id="mdT1" min="0" max="1" step="0.05" value="1"><span id="mdT1v"></span></div>
+    <div class="mdlen" id="mdLen"></div>`:""}
+    <div class="mdrow"><b>Zoom</b><input type="range" id="mdZ" min="1" max="3" step="0.05" value="${p.z||1}"><span id="mdZv"></span></div>
+    <div class="pgbtns" style="margin-top:12px"><button class="btn primary" onclick="mdSave()">Save my demo</button>
+      ${p.fresh?`<button class="btn ghost" onclick="mdOpen(mdName)">Start again</button>`:`<button class="btn ghost" onclick="mdOpen(mdName)">Cancel</button>`}</div>`);
+  const box=$md("mdSheetBox").querySelector(".mdbox"), z=$md("mdZ");
+  const paint=()=>{box.querySelectorAll("video,img").forEach(el=>el.style.transform=mdXf(p).slice(10));$md("mdZv").textContent=(+p.z).toFixed(1)+"×";};
+  const clampXY=()=>{const m=(p.z-1)/(2*p.z)*100;p.x=Math.max(-m,Math.min(m,p.x||0));p.y=Math.max(-m,Math.min(m,p.y||0));};
+  z.oninput=()=>{p.z=+z.value;clampXY();paint();};paint();
+  // drag to move the picture inside the box
+  let dr=null;
+  box.onpointerdown=e=>{dr={x:e.clientX,y:e.clientY,px:p.x||0,py:p.y||0,w:box.clientWidth,h:box.clientHeight};try{box.setPointerCapture(e.pointerId);}catch(_){}};
+  box.onpointermove=e=>{if(!dr)return;p.x=dr.px+(e.clientX-dr.x)/(dr.w*p.z)*100;p.y=dr.py+(e.clientY-dr.y)/(dr.h*p.z)*100;clampXY();paint();};
+  box.onpointerup=box.onpointercancel=()=>{dr=null;};
+  if(!vid)return;
+  const v=box.querySelector("video"), a=$md("mdT0"), b=$md("mdT1");
+  const dur=await mdDuration(v,p.dur);
+  if(!dur){toast("That video can't be played here");return;}
+  p.dur=dur;a.max=b.max=dur.toFixed(2);a.value=p.t0||0;b.value=p.t1>0?p.t1:dur;
+  const lab=()=>{p.t0=+a.value;p.t1=+b.value;$md("mdT0v").textContent=mdSec(p.t0);$md("mdT1v").textContent=mdSec(p.t1);$md("mdLen").textContent=`Clip: ${mdSec(p.t1-p.t0)} of ${mdSec(dur)}`;v.dataset.t0=p.t0;v.dataset.t1=p.t1;};
+  lab();
+  const scrub=(el,other,sign)=>{
+    el.oninput=()=>{if(sign*(+el.value-+other.value)>=-0.3)el.value=(+other.value-sign*0.3).toFixed(2);lab();v._hold=1;v.pause();try{v.currentTime=+el.value;}catch(e){}};
+    el.onchange=()=>{v._hold=0;try{v.currentTime=p.t0;}catch(e){}v.play().catch(()=>{});};
+  };
+  scrub(a,b,1);scrub(b,a,-1);
+}
+// a recorded WebM can report an endless duration until it has been read once
+function mdDuration(v,fallback){
+  return new Promise(res=>{
+    let done=false;const fin=d=>{if(done)return;done=true;res(d);};
+    const ok=()=>isFinite(v.duration)&&v.duration>0;
+    const go=()=>{
+      if(ok())return fin(v.duration);
+      const tu=()=>{if(ok()){v.removeEventListener("durationchange",tu);try{v.currentTime=0;}catch(e){}fin(v.duration);}};
+      v.addEventListener("durationchange",tu);try{v.currentTime=1e7;}catch(e){}
+    };
+    if(v.readyState>=1)go();else v.addEventListener("loadedmetadata",go,{once:true});
+    v.addEventListener("error",()=>fin(fallback||0),{once:true});
+    setTimeout(()=>fin(ok()?v.duration:(fallback||0)),6000);
+  });
+}
+async function mdSave(){
+  const p=mdPend,n=mdName;if(!p)return;
+  const r={kind:p.kind,z:+p.z||1,x:+p.x||0,y:+p.y||0,stock:false,ts:Date.now()};
+  if(p.kind==="video"){Object.assign(r,{blob:p.blob,t0:+p.t0||0,t1:+p.t1||0,dur:+p.dur||0});if(r.t1&&r.dur&&r.t1>=r.dur-0.05)r.t1=0;}
+  else r.blobs=p.blobs;
+  if(!await mdPut(n,r))return;
+  mdSheetClose();mdRefresh(n);toast("Your demo is saved");
+}
+
+/* --- guided camera: timer + voice (shared with Progress), Flip, record up to 30 s --- */
+let mdRun=0, mdC={stream:null,facing:"environment",rec:null,chunks:[],t0:0,tick:0,busy:false};
+function mdMime(){if(!window.MediaRecorder)return null;const c=["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"];
+  for(const m of c)try{if(!MediaRecorder.isTypeSupported||MediaRecorder.isTypeSupported(m))return m;}catch(e){}return "";}
+function mdLabels(){$md("mdTimerB").textContent=pgPrefs.timer?`Timer ${pgPrefs.timer}s`:"Timer off";$md("mdVoiceB").textContent=pgPrefs.voice?"Voice on":"Voice off";}
+function mdCycleTimer(){if(mdC.rec)return;const o=[0,3,5,10];pgPrefs.timer=o[(o.indexOf(pgPrefs.timer)+1)%o.length];pgSavePrefs();mdLabels();}
+function mdToggleVoice(){pgPrefs.voice=!pgPrefs.voice;pgSavePrefs();mdLabels();if(!pgPrefs.voice)try{speechSynthesis.cancel();}catch(e){}else pgUnlockSpeech();}
+function mdStat(t){$md("mdStat").textContent=t||"";}
+async function mdCamOpen(){
+  pgUnlockSpeech();
+  const n=mdName;mdSheetClose();mdName=n;
+  const run=++mdRun;mdC.busy=false;
+  $md("mdCam").classList.add("on");document.body.classList.add("sheetopen");
+  $md("mdErr").style.display="none";$md("mdBot").style.display="";$md("mdTip").style.display="";
+  $md("mdCName").textContent=n;$md("mdCount").textContent="";mdStat("");mdLabels();mdShutUI(false);
+  await mdStream(run);
+}
+async function mdStream(run){
+  mdStopTracks();
+  const v=$md("mdVid");
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||mdMime()===null)throw new Error("none");
+    const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:mdC.facing,width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}},audio:false});
+    if(run!==mdRun){st.getTracks().forEach(t=>t.stop());return false;}
+    mdC.stream=st;v.srcObject=st;v.classList.toggle("mir",mdC.facing==="user");
+    try{await v.play();}catch(e){}
+    return true;
+  }catch(e){
+    if(run!==mdRun)return false;
+    $md("mdErr").innerHTML=`<p>The camera can't record here (access was refused, or this phone can't record in the app). Use the iPhone camera instead.</p>
+      <label class="btn primary pgfile" style="width:100%">Use iPhone camera<input type="file" accept="video/*" capture="environment" onchange="mdCamClose(true);mdImport(this)"></label>
+      <button class="btn ghost" style="width:100%;margin-top:8px" onclick="mdCamClose()">Close</button>`;
+    $md("mdErr").style.display="";$md("mdBot").style.display="none";$md("mdTip").style.display="none";
+    return false;
+  }
+}
+function mdStopTracks(){if(mdC.stream){mdC.stream.getTracks().forEach(t=>t.stop());mdC.stream=null;}const v=$md("mdVid");if(v)v.srcObject=null;}
+function mdShutUI(on){const b=$md("mdShut");b.classList.toggle("on",on);b.setAttribute("aria-label",on?"Stop recording":"Start recording");$md("mdFlipB").style.visibility=on?"hidden":"";}
+async function mdShutter(){
+  if(mdC.rec){mdStopRec();return;}
+  if(mdC.busy){mdC.skip=true;return;}             // tap during the countdown: start now
+  if(!mdC.stream)return;
+  mdC.busy=true;mdC.skip=false;const run=mdRun;$md("mdTip").style.display="none";
+  if(pgPrefs.timer){
+    pgUnlockSpeech();
+    await pgSpeak("Get into position",pgRun);
+    for(let s=pgPrefs.timer;s>0;s--){
+      if(run!==mdRun||mdC.skip)break;
+      $md("mdCount").textContent=s;if(s<=3)pgSay(String(s));
+      for(let k=0;k<10;k++){await pgSleep(100);if(run!==mdRun||mdC.skip)break;}
+    }
+    $md("mdCount").textContent="";
+  }
+  mdC.busy=false;if(run!==mdRun||!mdC.stream)return;
+  const mime=mdMime();let rec;
+  try{rec=new MediaRecorder(mdC.stream,Object.assign({videoBitsPerSecond:2500000},mime?{mimeType:mime}:{}));}
+  catch(e){try{rec=new MediaRecorder(mdC.stream);}catch(e2){toast("This phone can't record in the app. Use the iPhone camera");return;}}
+  mdC.chunks=[];mdC.rec=rec;
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)mdC.chunks.push(e.data);};
+  rec.onstop=()=>{
+    const dur=(Date.now()-mdC.t0)/1000, type=(rec.mimeType||mime||"video/mp4").split(";")[0];
+    const blob=new Blob(mdC.chunks,{type});mdC.chunks=[];mdC.rec=null;
+    if(run!==mdRun||!blob.size)return;
+    const n=mdName;mdCamClose();mdName=n;
+    mdEditNew({kind:"video",blob,t0:0,t1:0,dur,z:1,x:0,y:0});
+  };
+  pgSay("Go");
+  rec.start(250);mdC.t0=Date.now();mdShutUI(true);
+  const tick=()=>{if(!mdC.rec||run!==mdRun)return;const s=(Date.now()-mdC.t0)/1000;mdStat(`● ${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}  ·  tap to stop`);
+    if(s>=MD_MAX){mdStopRec();return;}mdC.tick=setTimeout(tick,250);};
+  tick();
+}
+function mdStopRec(){clearTimeout(mdC.tick);const r=mdC.rec;if(!r)return;mdShutUI(false);mdStat("");pgSay("Done");try{r.stop();}catch(e){mdC.rec=null;}}
+async function mdFlip(){if(mdC.rec||mdC.busy)return;mdC.facing=mdC.facing==="environment"?"user":"environment";await mdStream(mdRun);}
+function mdCamClose(keep){
+  mdRun++;mdC.busy=false;clearTimeout(mdC.tick);
+  if(mdC.rec){const r=mdC.rec;r.onstop=null;try{r.stop();}catch(e){}mdC.rec=null;mdC.chunks=[];}
+  try{speechSynthesis.cancel();}catch(e){}
+  mdStopTracks();mdShutUI(false);
+  $md("mdCam").classList.remove("on");document.body.classList.remove("sheetopen");$md("mdCount").textContent="";mdStat("");
+}
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&$md("mdCam")?.classList.contains("on"))mdCamClose();});
+mdLoad();
 
 /* --- start: ask iOS to keep the photos, then load them --- */
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}catch(e){}
