@@ -7219,7 +7219,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v101"]};
+ data:["Save & Settings","Backup your data · v102"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -7914,7 +7914,7 @@ function pgRenderDay(){
   const el=document.getElementById("pgHome"), d=pgDay, all=pgCount("b")===8, n=pgCount("b")+pgCount("h"), w=pgWeightOn(d,0);
   const ds=pgDates(), prev=ds.find(x=>x<d);
   el.innerHTML=`<div class="pg360" id="pg360"></div>`
-    +(all?`<div class="pgquick" id="pgQuick">${[["Front",0],["¾",45],["Side",90],["Back",180]].map(([l,a])=>`<button data-a="${a}" onclick="pgJump(${a})">${l}</button>`).join("")}</div>`:`<div style="height:12px"></div>`)
+    +`<div style="height:12px"></div>`
     +`<div class="fdtiles" style="margin-bottom:6px"><button class="fdtile wide" onclick="pgGoShoot()"><i>📸</i><div><b>Photo shoot</b><span>${n?`${n} of 13 photos taken`:"13 photos · about 10 min"}</span></div></button>
       ${prev?`<button class="fdtile wide" onclick="pgOpenCompare('${prev}','${d}')"><i>⚖️</i><div><b>Compare with ${pgDK(prev,1)}</b><span>Your check-in before this one</span></div></button>`:""}</div>`
     +`<div class="fdhead">Weight</div><div class="setcard" style="margin-bottom:10px">
