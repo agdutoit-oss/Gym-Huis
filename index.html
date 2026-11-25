@@ -7181,7 +7181,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v97"]};
+ data:["Save & Settings","Backup your data · v98"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -8185,12 +8185,17 @@ function pg360Build(){
   }
   el.style.cursor="";
   el.innerHTML=PG_G.b.ids.map(id=>`<img src="${pgPhotos[id].url}" alt="" draggable="false">`).join("")
-    +`<div class="pg360lab" id="pg360Lab"></div><div class="pg360dial" id="pg360Dial"></div><div class="pg360hint">Drag sideways to turn</div>`;
+    +`<div class="pg360lab" id="pg360Lab"></div><div class="pg360dial" id="pg360Dial"></div><div class="pg360hint" id="pg360Hint"></div>`;
   pgIdx=-1;pgPaint();
-  el.onpointerdown=e=>{pgDrag={x:e.clientX,a:pgAng,id:e.pointerId,moved:false};try{el.setPointerCapture(e.pointerId);}catch(_){}};
-  el.onpointermove=e=>{if(!pgDrag)return;const dx=e.clientX-pgDrag.x;if(Math.abs(dx)>3){pgDrag.moved=true;pgSpin=false;}pgAng=pgDrag.a+dx*1.1;pgPaint();};
-  el.onpointerup=el.onpointercancel=()=>{pgDrag=null;};
-  if(pgSpin&&!pgRAF){pgT0=0;pgRAF=requestAnimationFrame(pgTick);}
+  // v98: it turns by itself. Tap to pause, then swipe left or right to step through the photos; tap again to carry on turning
+  el.onpointerdown=e=>{pgDrag={x:e.clientX,a:pgAng,moved:false};try{el.setPointerCapture(e.pointerId);}catch(_){}};
+  el.onpointermove=e=>{if(!pgDrag)return;const dx=e.clientX-pgDrag.x;if(!pgDrag.moved&&Math.abs(dx)>8){pgDrag.moved=true;pgDrag.x=e.clientX;pgDrag.a=pgAng;pgSpinSet(false);return;}
+    if(pgDrag.moved){pgAng=pgDrag.a+(e.clientX-pgDrag.x)*1.1;pgPaint();}};
+  el.onpointerup=()=>{const d=pgDrag;pgDrag=null;if(!d)return;
+    if(d.moved){pgAng=Math.round(pgAng/45)*45;pgPaint();}       // land on a photo
+    else pgSpinSet(!pgSpin);};                                   // a tap: pause or carry on
+  el.onpointercancel=()=>{if(pgDrag&&pgDrag.moved){pgAng=Math.round(pgAng/45)*45;pgPaint();}pgDrag=null;};
+  pgSpinSet(pgSpin);
 }
 function pgTick(t){
   const el=$pg("pg360");
@@ -8206,7 +8211,9 @@ function pgPaint(){
   const a=PG_BY[id].a, near={0:0,45:45,315:45,90:90,270:90,135:180,180:180,225:180}[a];
   document.querySelectorAll("#pgQuick button").forEach(b=>b.classList.toggle("on",+b.dataset.a===near));
 }
-function pgJump(a){pgSpin=false;pgAng=a;pgPaint();}
+function pgJump(a){pgSpinSet(false);pgAng=a;pgPaint();}
+function pgSpinSet(on){pgSpin=on;const h=$pg("pg360Hint");if(h)h.textContent=on?"Tap to pause":"Paused · swipe to turn, tap to play";
+  if(on&&!pgRAF){pgT0=0;pgRAF=requestAnimationFrame(pgTick);}}
 
 /* --- start: ask iOS to keep the photos, then load them --- */
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}catch(e){}
