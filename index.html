@@ -1041,6 +1041,7 @@
   .pgstrip button{flex:0 0 74px;height:98px;border-radius:10px;overflow:hidden;position:relative;border:none;padding:0;background:var(--card2);cursor:pointer}
   .pgstrip img{width:100%;height:100%;object-fit:cover}
   .pgstrip small{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px #000}
+  .pgcis .pgci{background:var(--card2)}
   .pgci{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px 9px 9px;margin-bottom:8px;color:var(--txt);font:inherit;text-align:left;cursor:pointer}
   .pgci:active{background:var(--card2)}
   .pgcith{flex:0 0 auto;width:52px;height:66px;border-radius:9px;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center}
@@ -7219,7 +7220,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v102"]};
+ data:["Save & Settings","Backup your data · v103"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -7869,7 +7870,7 @@ async function pgPrep(file){
 }
 
 /* --- screens: home (dashboard of dates) · day (one date) · shoot · compare --- */
-let pgSub="home", pgCmpFrom="home", pgCmp={a:"",b:"",pose:"b0"};
+let pgCisOpen=false, pgSub="home", pgCmpFrom="home", pgCmp={a:"",b:"",pose:"b0"};
 function pgOpenView(sub){pgSub=sub||"home";switchView("prog");}
 function pgOpenDay(d){pgSetDay(d);pgSub="day";renderProg();window.scrollTo(0,0);}
 function pgGoShoot(){pgSub="shoot";renderProg();window.scrollTo(0,0);}
@@ -7902,8 +7903,7 @@ function pgRenderHome(){
   el.innerHTML=top+`<div class="fdtiles" style="margin-bottom:6px">
       <button class="fdtile hero" onclick="pgOpenDay('${td}')"><i>📸</i><div><b>${hasT?"Today's check-in":"Start today's check-in"}</b><span>${hasT?pgSumLine(td):"Photo shoot, weight and measurements"}</span></div></button>
       <button class="fdtile wide" onclick="pgOpenCompare()"><i>⚖️</i><div><b>Compare</b><span>${ds.length>=2?"Two dates side by side: photos and numbers":"Needs two check-ins on different dates"}</span></div></button></div>`
-    +`<div class="fdhead">Check-ins</div>`
-    +(ds.length?ds.map(d=>`<button class="pgci" onclick="pgOpenDay('${d}')"><span class="pgcith">${pgThumb(d)}</span><span class="pgcitx"><b>${pgDK(d)}${d===td?" · today":""}</b><small>${pgSumLine(d)}</small></span><span class="pwchev">›</span></button>`).join("")
+    +(ds.length?`<details class="pgtips pgcis"${pgCisOpen?" open":""} ontoggle="pgCisOpen=this.open"><summary>Check-ins · ${ds.length} date${ds.length===1?"":"s"}</summary><div style="margin-top:10px">`+ds.map(d=>`<button class="pgci" onclick="pgOpenDay('${d}')"><span class="pgcith">${pgThumb(d)}</span><span class="pgcitx"><b>${pgDK(d)}${d===td?" · today":""}</b><small>${pgSumLine(d)}</small></span><span class="pwchev">›</span></button>`).join("")+`</div></details>`
       :`<div class="addhint">No check-ins yet. Start today's: take the photos, then log your weight and measurements.</div>`)
     +`<div style="margin-top:14px">${pgFile("🖼 Import photos","ghost","multiple","pgImport(this,'')")}</div>`
     +`<div class="pgnote">Photos are saved on this iPhone only.</div>`
