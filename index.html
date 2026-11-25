@@ -979,6 +979,91 @@
   .dpbtn{padding:12px 4px;border-radius:10px;background:var(--card2);border:none;color:var(--txt);font-size:13px;font-weight:700;cursor:pointer}
   .dpbtn:active{background:var(--accent);color:#fff}
   .dpcancel{width:100%;padding:9px;border-radius:10px;background:none;border:1px solid var(--line);color:var(--dim);font-size:12.5px;cursor:pointer}
+  /* ---- v95: Progress (photo shoot, 360º view, weight and measurements) ---- */
+  .pg360{position:relative;width:100%;aspect-ratio:4/5;border-radius:18px;overflow:hidden;background:var(--card);border:1px solid var(--line);touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+  .pg360 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none;-webkit-user-drag:none}
+  .pg360 img.on{opacity:1}
+  .pg360lab{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.55);color:#fff;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:20px}
+  .pg360dial{position:absolute;right:10px;top:10px;width:40px;height:40px}
+  .pg360hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:11.5px;color:rgba(255,255,255,.85);text-shadow:0 1px 3px #000}
+  .pg360ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center;cursor:default}
+  .pg360ph svg{height:58%;opacity:.5}
+  .pg360ph b{font-size:15px}.pg360ph span{font-size:12.5px;color:var(--dim)}
+  .pgquick{display:flex;gap:6px;margin:8px 0 14px}
+  .pgquick button{flex:1;padding:9px 4px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-weight:700;font-size:13px;cursor:pointer}
+  .pgquick button.on{border-color:var(--accent);color:var(--accent2)}
+  .pgdate{font-size:12px;color:var(--dim);margin:-6px 0 12px;text-align:center}
+  .pgpanel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+  .pgph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .pgph b{font-size:16px}.pgph span{font-size:12.5px;color:var(--dim);font-weight:700}
+  .pgdialw{position:relative;width:min(250px,72vw);aspect-ratio:1;margin:4px auto 14px}
+  .pgdialw svg{width:100%;height:100%;display:block}
+  .pgdialw path{cursor:pointer}
+  .pgdialc{position:absolute;left:21%;top:21%;width:58%;height:58%;border-radius:50%;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card2);pointer-events:none}
+  .pgdialc img{width:100%;height:100%;object-fit:cover}
+  .pgdialc b{font-size:22px;line-height:1}.pgdialc span{font-size:11px;color:var(--dim)}
+  .pgheads{display:flex;gap:6px;margin-bottom:14px}
+  .pghead{flex:1;min-width:0;aspect-ratio:3/4;border-radius:10px;position:relative;overflow:hidden;background:var(--card2);border:1.5px dashed var(--line);cursor:pointer;padding:0;color:var(--dim);font:inherit}
+  .pghead.has{border:1.5px solid var(--good)}
+  .pghead img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pghead small{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 1px 2px #000}
+  .pghead:not(.has) small{color:var(--dim);text-shadow:none}
+  .pghead i{position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--good);color:#fff;font-size:10px;font-style:normal;display:flex;align-items:center;justify-content:center}
+  .pgtips{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+  .pgtips summary{cursor:pointer;font-weight:700;color:var(--accent2);list-style:none}
+  .pgtips summary::-webkit-details-marker{display:none}
+  .pgtips summary::after{content:" ▾"}.pgtips[open] summary::after{content:" ▴"}
+  .pgtips ol{margin:10px 0 2px 18px;font-size:13.5px;color:var(--txt)}
+  .pgtips li{margin-bottom:6px}
+  .pgnote{font-size:12.5px;color:var(--dim);text-align:center;margin:14px 0 4px}
+  .pgdel{display:block;margin:6px auto 0;background:none;border:none;color:var(--dim);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:6px}
+  .pgdel.arm{color:var(--accent2);font-weight:700}
+  .pgfile{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center}
+  .pgfile input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+  .pgsimg{width:min(220px,60vw);aspect-ratio:3/4;margin:0 auto 12px;border-radius:12px;overflow:hidden;background:var(--card2);border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center}
+  .pgsimg.has{border:none}
+  .pgsimg img{width:100%;height:100%;object-fit:cover}
+  .pgsimg svg{height:80%;opacity:.55}
+  .pgsay{background:var(--card2);border-radius:11px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+  .pgbtns{display:flex;flex-direction:column;gap:8px}
+  .pgbtns .btn{flex:none;width:100%;padding:13px}
+  .pgasgn{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .pgasgn img{width:54px;height:68px;object-fit:cover;border-radius:8px;flex:0 0 auto}
+  .pgasgn select{appearance:auto}
+  .pgmeas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pgmeas label{font-size:12px;color:var(--dim);display:flex;flex-direction:column;gap:3px}
+  .pgmeas .calinput{width:100%;padding:10px;font-size:15px}
+  .pgmrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .pgmrow:last-child{border-bottom:none}
+  .pgmrow small{font-weight:700;font-size:12.5px}
+  /* camera */
+  .pgcam{position:fixed;inset:0;z-index:1000;background:#000;color:#fff;display:none;overflow:hidden;touch-action:none}
+  .pgcam.on{display:block}
+  .pgcam video,.pgcam .pgrev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pgcam video.mir{transform:scaleX(-1)}
+  .pgghost{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);pointer-events:none;filter:drop-shadow(0 0 3px rgba(0,0,0,.7))}
+  .pgghost.body{height:78%}.pgghost.head{height:62%}
+  .pgghost.mir{transform:translate(-50%,-50%) scaleX(-1)}
+  .pgghost svg{height:100%;width:auto;display:block}
+  .pgtop{position:absolute;left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top)) 12px 18px;display:flex;gap:10px;align-items:flex-start;background:linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,0))}
+  .pgtop .pgtx{flex:1;min-width:0;text-align:center}
+  .pgtop small{display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent2);font-weight:800}
+  .pgtop b{display:block;font-size:17px}
+  .pgtop span{display:block;font-size:13px;color:rgba(255,255,255,.85);line-height:1.35}
+  .pgcb{flex:0 0 auto;min-width:56px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.45);color:#fff;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 10px}
+  .pgbot{position:absolute;left:0;right:0;bottom:0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.75))}
+  .pgbot .pgcb{min-width:86px}
+  .pgshut{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer;padding:0}
+  .pgshut:active{background:#fff}
+  .pgbot.rev{justify-content:center;gap:12px}
+  .pgbot.rev .btn{flex:1;max-width:180px;padding:15px;font-size:16px}
+  .pgcount{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:150px;font-weight:800;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,.6);pointer-events:none}
+  .pgstat{position:absolute;left:50%;bottom:calc(130px + env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(0,0,0,.6);padding:7px 16px;border-radius:20px;font-weight:700;font-size:15px;white-space:nowrap;pointer-events:none}
+  .pgstat:empty{display:none}
+  .pgflash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
+  .pgflash.on{opacity:1;transition:none}
+  .pgerr{position:absolute;left:20px;right:20px;top:40%;transform:translateY(-50%);background:var(--card);color:var(--txt);border-radius:16px;padding:18px;text-align:center}
+  .pgerr p{margin-bottom:12px;font-size:14px}
 </style>
 </head>
 <body>
@@ -1056,6 +1141,13 @@
 
   <!-- GYM home (v91): today's workout + Train, Plan, Library tiles -->
   <div class="view" id="v-gym"><div id="gymHome"></div></div>
+
+  <!-- PROGRESS (v95): 360º view, photo shoot, weight and measurements. Photos stay on this phone (IndexedDB) -->
+  <div class="view" id="v-prog">
+    <div class="fdbar" id="gyBar-prog"><button class="eqback" onclick="gyBack('prog')">‹ Back</button><div class="fdttl" id="gyTtl-prog">Progress</div></div>
+    <div id="pgHome"></div>
+    <div id="pgShoot" style="display:none"></div>
+  </div>
 
   <!-- TRAIN (week list -> a day -> workout player) -->
   <div class="view" id="v-train">
@@ -1301,6 +1393,29 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="msheet" id="pgSheet" onclick="if(event.target===this)pgSheetClose()"><div class="msbox" id="pgSheetBox"></div></div>
+<div class="pgcam" id="pgCam">
+  <video id="pgVid" playsinline muted autoplay></video>
+  <img class="pgrev" id="pgRev" alt="" style="display:none">
+  <div class="pgghost" id="pgGhost"></div>
+  <div class="pgcount" id="pgCount"></div>
+  <div class="pgstat" id="pgStat"></div>
+  <div class="pgflash" id="pgFlash"></div>
+  <div class="pgtop"><button class="pgcb" onclick="pgCamClose()">Close</button>
+    <div class="pgtx"><small id="pgStep"></small><b id="pgPName"></b><span id="pgPSay"></span></div>
+    <button class="pgcb" onclick="pgFlip()">Flip</button></div>
+  <div class="pgbot" id="pgBot">
+    <button class="pgcb" id="pgTimerB" onclick="pgCycleTimer()">Timer 10s</button>
+    <button class="pgshut" id="pgShut" aria-label="Take photo" onclick="pgShutter()"></button>
+    <button class="pgcb" id="pgVoiceB" onclick="pgToggleVoice()">Voice on</button>
+  </div>
+  <div class="pgbot rev" id="pgRevBar" style="display:none">
+    <button class="btn ghost" onclick="pgRetake()">Retake</button>
+    <button class="btn primary" onclick="pgKeep()">Keep</button>
+  </div>
+  <div class="pgerr" id="pgErr" style="display:none"></div>
+</div>
+
 <div class="utoast" id="utoast" role="status"></div>
 
 <script>
@@ -3607,7 +3722,7 @@ function planStopProgram(){program={active:false,startDate:null};saveProgram();p
 
 /* ---------------- DATA (export/import) ---------------- */
 function exportPlans(){
-  const data=JSON.stringify({goal,plans,dayNames,planMode,planLib,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods});
+  const data=JSON.stringify({goal,plans,dayNames,planMode,planLib,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods,measLog});
   const ta=document.createElement("textarea");
   ta.value=data;document.body.appendChild(ta);ta.select();
   try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
@@ -3642,6 +3757,7 @@ function doImport(){
     if(d.calLog){calLog=d.calLog;}
     if(d.calCfg){calCfg=Object.assign(calCfg,d.calCfg);}
     if(Array.isArray(d.myFoods)){myFoods=d.myFoods;saveMyFoods();}
+    if(Array.isArray(d.measLog)){measLog=d.measLog;saveMeas();}
     saveCal();
     save();saveFood();
     renderGoals();renderLib();renderPlan();renderDaySelect();
@@ -7038,17 +7154,17 @@ function loadFood(){try{
 }
 
 /* ---------------- NAV ---------------- */
-const GYM_VIEWS=["gym","plan","train","lib"];
-const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],
+const GYM_VIEWS=["gym","plan","train","lib","prog"];
+const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v94"]};
+ data:["Save & Settings","Backup your data · v95"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
   if(onSettings){switchView(lastView||"plan");}
   else{
-    ["gym","plan","train","lib","timer","history"].forEach(x=>{
+    ["gym","plan","train","lib","prog","timer","history"].forEach(x=>{
       if(document.getElementById("v-"+x).classList.contains("on"))lastView=x;
     });
     switchView("data");
@@ -7141,7 +7257,7 @@ function fdRenderWeigh(){
     return `<div class="fitem"><div class="fi-info"><div class="fi-n">${w.kg} kg</div><div class="fi-m2">${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}</div></div>${df!==null?`<div style="font-weight:700;font-size:13px;color:${df<=0?"var(--good)":"var(--amber)"}">${df>0?"+":""}${df.toFixed(1)}</div>`:""}</div>`;}).join("");
 }
 function switchView(v){
-  ["gym","plan","train","lib","timer","history","data"].forEach(x=>{
+  ["gym","plan","train","lib","prog","timer","history","data"].forEach(x=>{
     const view=document.getElementById("v-"+x);
     if(view)view.classList.toggle("on",x===v);
     const btn=document.getElementById("nav-"+x);
@@ -7155,6 +7271,7 @@ function switchView(v){
   document.getElementById("hSub").textContent=GYM_VIEWS.includes(v)?"Training: "+planName(trainingId()):TITLES[v][1];
   document.querySelectorAll(".fdbar").forEach(x=>x.classList.remove("hide"));
   if(v==="gym")renderGym();
+  if(v==="prog")renderProg();
   if(v==="lib")renderLib();
   window.scrollTo({top:0,behavior:"smooth"});
   if(v==="train"){renderTrain();}
@@ -7177,6 +7294,7 @@ function gyBack(v){
   if(v==="train"&&trainSub==="day"){trainSub="week";renderTrain();return;}
   if(v==="plan"&&planView!=="week"){setPlanView("week");return;}
   if(v==="lib"&&!libIsHome()){libAll=false;clearLibAll();return;}
+  if(v==="prog"&&pgSub!=="home"){pgSub="home";renderProg();return;}
   switchView("gym");
 }
 function libIsHome(){return !libAll&&!libQuery&&activeFilterCount()===0;}
@@ -7250,6 +7368,7 @@ function renderGym(){
     ${tile("🏋️","Train","Your week: pick a day and start","gyOpen('train')")}
     ${tile("📅","Plan","Your plans, change a day, one-off workout","gyOpen('plan')")}
     ${tile("📚","Library",`All ${LIB.length} exercises by muscle`,"gyOpen('lib')")}
+    ${tile("📸","Progress",pgTileSub(),"pgOpenView('home')")}
   </div>`;
 }
 function renderTrWeek(){
@@ -7580,6 +7699,397 @@ document.addEventListener("focusin",e=>{
 });
 // iOS can place the cursor where you tapped once the tap ends, so fix it again on that first tap
 document.addEventListener("click",e=>{const el=e.target;if(el._caretAt&&Date.now()-el._caretAt<600&&document.activeElement===el){el._caretAt=0;caretToEnd(el);}},true);
+/* ---- v95: Progress. Guided photo shoot (13 poses), 360º view, weight and body measurements.
+   Photos live in IndexedDB on this phone only (db "gymhuis-photos", store "photos", key = pose id,
+   value {blob, ts}). They are never uploaded, never in the backup text, and sw.js never sees them. ---- */
+const PG_POSES=[
+ {id:"b0",g:"b",n:"Front",s:"Front",a:0,sh:"front",say:"Face the camera. Arms slightly away from your body, feet hip-width apart."},
+ {id:"b45",g:"b",n:"Front-left",s:"F·L",a:45,sh:"tq",m:1,say:"Turn an eighth to your right, so your left shoulder comes towards the camera."},
+ {id:"b90",g:"b",n:"Left side",s:"Left",a:90,sh:"side",m:1,say:"Turn a quarter to your right. Your left side faces the camera."},
+ {id:"b135",g:"b",n:"Back-left",s:"B·L",a:135,sh:"tqb",m:1,say:"Keep turning right until your back-left faces the camera."},
+ {id:"b180",g:"b",n:"Back",s:"Back",a:180,sh:"back",say:"Turn right until your back faces the camera."},
+ {id:"b225",g:"b",n:"Back-right",s:"B·R",a:225,sh:"tqb",say:"Keep turning right until your back-right faces the camera."},
+ {id:"b270",g:"b",n:"Right side",s:"Right",a:270,sh:"side",say:"Keep turning right. Your right side faces the camera."},
+ {id:"b315",g:"b",n:"Front-right",s:"F·R",a:315,sh:"tq",say:"One more eighth to the right, so your right shoulder comes towards the camera."},
+ {id:"h0",g:"h",n:"Front",s:"Front",a:0,sh:"hfront",say:"Look straight into the camera, chin level."},
+ {id:"hl45",g:"h",n:"Left ¾",s:"L ¾",a:45,sh:"htq",m:1,say:"Turn your head a little to the right, so your left cheek faces the camera."},
+ {id:"hl90",g:"h",n:"Left profile",s:"L side",a:90,sh:"hside",m:1,say:"Turn your head fully to the right. The camera sees your left profile."},
+ {id:"hr45",g:"h",n:"Right ¾",s:"R ¾",a:45,sh:"htq",say:"Now turn your head a little to the left, so your right cheek faces the camera."},
+ {id:"hr90",g:"h",n:"Right profile",s:"R side",a:90,sh:"hside",say:"Turn your head fully to the left. The camera sees your right profile."}];
+const PG_BY={};PG_POSES.forEach(p=>PG_BY[p.id]=p);
+const PG_G={b:{n:"Full length",ids:PG_POSES.filter(p=>p.g==="b").map(p=>p.id)},h:{n:"Head close-ups",ids:PG_POSES.filter(p=>p.g==="h").map(p=>p.id)}};
+const PG_MEAS=[["chest","Chest"],["shoulders","Shoulders"],["waist","Waist"],["hips","Hips"],["arm","Arms"],["thigh","Thighs"],["calf","Calves"],["neck","Neck"]];
+const MEAS_KEY="hgt_meas_v1", PG_PREF_KEY="hgt_pg_prefs_v1";
+let measLog=[]; try{measLog=JSON.parse(localStorage.getItem(MEAS_KEY)||"[]")||[];}catch(e){measLog=[];}
+function saveMeas(){try{localStorage.setItem(MEAS_KEY,JSON.stringify(measLog));}catch(e){}}
+let pgPrefs={timer:10,voice:true}; try{Object.assign(pgPrefs,JSON.parse(localStorage.getItem(PG_PREF_KEY)||"{}"));}catch(e){}
+function pgSavePrefs(){try{localStorage.setItem(PG_PREF_KEY,JSON.stringify(pgPrefs));}catch(e){}}
+const PG_M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function pgDate(ts){const d=new Date(ts);return `${d.getDate()} ${PG_M[d.getMonth()]} ${d.getFullYear()}`;}
+
+/* --- outlines (dashed ghost). Drawn facing the camera's right; left-side poses are mirrored --- */
+function pgSmooth(pts){
+  const n=pts.length,f=v=>v.toFixed(1);let d=`M${f(pts[0][0])},${f(pts[0][1])}`;
+  for(let i=0;i<n;i++){const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
+    d+=` C${f(p1[0]+(p2[0]-p0[0])/6)},${f(p1[1]+(p2[1]-p0[1])/6)} ${f(p2[0]-(p3[0]-p1[0])/6)},${f(p2[1]-(p3[1]-p1[1])/6)} ${f(p2[0])},${f(p2[1])}`;}
+  return d+"Z";
+}
+const PG_RB=[[65,36],[66,46],[80,51],[90,56],[96,66],[99,96],[104,126],[108,156],[111,170],[108,178],[103,174],[100,158],[95,128],[90,100],[85,84],[82,108],[78,138],[83,160],[82,206],[78,240],[78,262],[74,282],[80,292],[66,294],[64,282],[65,250],[66,230],[63,190],[60,176]];
+function pgBodyPts(sx1,sx2){const R=PG_RB.map(([x,y])=>[60+(x-60)*sx1,y]);return R.concat(PG_RB.slice(0,-1).reverse().map(([x,y])=>[60-(x-60)*sx2,y]));}
+function pgShapeSVG(sh,col){
+  const g=(inner,vb)=>`<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="${col||"#fff"}" stroke-width="${vb.endsWith("300")?1.7:1.4}" stroke-dasharray="5 4" stroke-linecap="round" stroke-linejoin="round">${inner}</g></svg>`;
+  const B="0 0 120 300", H="0 0 100 130";
+  if(sh==="front"||sh==="back")return g(`<ellipse cx="60" cy="21" rx="12" ry="15"/><path d="${pgSmooth(pgBodyPts(1,1))}"/>${sh==="front"?`<path d="M60,17 L59,25 L61.5,25.5"/>`:""}`,B);
+  if(sh==="tq"||sh==="tqb")return g(`<ellipse cx="61" cy="21" rx="11" ry="15"/><path d="${pgSmooth(pgBodyPts(.72,.9))}"/>${sh==="tq"?`<path d="M67,17 L70,24 L67,25.5"/>`:""}`,B);
+  if(sh==="side")return g(`<ellipse cx="60" cy="21" rx="12.5" ry="15"/><path d="M72,17 L76.5,24 L72,26"/>`
+    +`<path d="${pgSmooth([[56,36],[54,46],[50,56],[47,80],[48,110],[52,134],[47,150],[46,166],[51,200],[55,236],[52,258],[54,284],[57,292],[78,294],[76,286],[66,282],[65,256],[69,234],[72,196],[72,166],[74,140],[76,112],[77,86],[74,62],[66,50],[66,38]])}"/>`
+    +`<path d="${pgSmooth([[60,58],[56,90],[56,124],[60,160],[63,168],[68,162],[66,124],[66,90],[67,62]])}"/>`,B);
+  const sh2=`<path d="M37,104 C27,110 12,114 3,128"/><path d="M63,104 C73,110 88,114 97,128"/>`;
+  if(sh==="hfront")return g(`<ellipse cx="50" cy="50" rx="26" ry="35"/><ellipse cx="22" cy="54" rx="4" ry="8"/><ellipse cx="78" cy="54" rx="4" ry="8"/><path d="M50,44 L47.5,60 L52,61"/><path d="M39,83 L37,104"/><path d="M61,83 L63,104"/>${sh2}`,H);
+  if(sh==="htq")return g(`<ellipse cx="52" cy="50" rx="24" ry="35"/><ellipse cx="31" cy="54" rx="4" ry="8"/><path d="M66,44 L71,60 L65.5,61.5"/><path d="M40,82 L38,104"/><path d="M62,84 L65,104"/>${sh2}`,H);
+  return g(`<path d="${pgSmooth([[44,14],[62,14],[74,26],[78,40],[80,48],[86,58],[80,62],[81,70],[78,74],[78,80],[72,86],[64,90],[62,104],[38,104],[36,88],[26,76],[20,58],[22,32],[30,20]])}"/><ellipse cx="44" cy="54" rx="5" ry="9"/>${sh2}`,H);
+}
+
+/* --- IndexedDB --- */
+let pgDB=null, pgPhotos={}, pgLoaded=false;
+function pgOpenDB(){return new Promise((res,rej)=>{if(pgDB)return res(pgDB);if(!window.indexedDB)return rej(new Error("no idb"));
+  const r=indexedDB.open("gymhuis-photos",1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains("photos"))r.result.createObjectStore("photos");};
+  r.onsuccess=()=>{pgDB=r.result;res(pgDB);};r.onerror=()=>rej(r.error);});}
+function pgStore(mode){return pgOpenDB().then(db=>db.transaction("photos",mode).objectStore("photos"));}
+function pgReq(r){return new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function pgLoad(){
+  try{const st=await pgStore("readonly");
+    await new Promise((res,rej)=>{const c=st.openCursor();c.onsuccess=()=>{const cur=c.result;if(!cur)return res();const v=cur.value;
+      if(v&&v.blob&&PG_BY[cur.key]){if(pgPhotos[cur.key])URL.revokeObjectURL(pgPhotos[cur.key].url);pgPhotos[cur.key]={url:URL.createObjectURL(v.blob),ts:v.ts};}cur.continue();};c.onerror=()=>rej(c.error);});
+  }catch(e){}
+  pgLoaded=true;
+}
+async function pgPut(id,blob){
+  const ts=Date.now();
+  try{const st=await pgStore("readwrite");await pgReq(st.put({blob,ts},id));}catch(e){toast("Couldn't save the photo on this phone");return false;}
+  if(pgPhotos[id])URL.revokeObjectURL(pgPhotos[id].url);
+  pgPhotos[id]={url:URL.createObjectURL(blob),ts};pg360Key="";return true;
+}
+async function pgDel(id){try{const st=await pgStore("readwrite");await pgReq(st.delete(id));}catch(e){}
+  if(pgPhotos[id])URL.revokeObjectURL(pgPhotos[id].url);delete pgPhotos[id];pg360Key="";}
+async function pgDelAll(){try{const st=await pgStore("readwrite");await pgReq(st.clear());}catch(e){}
+  Object.values(pgPhotos).forEach(p=>URL.revokeObjectURL(p.url));pgPhotos={};pg360Key="";}
+function pgCount(g){return PG_G[g].ids.filter(id=>pgPhotos[id]).length;}
+function pgMissing(g){return PG_G[g].ids.filter(id=>!pgPhotos[id]);}
+
+/* --- resize to 1600 px longest side, JPEG 0.88 --- */
+function pgEncode(src,w,h){
+  const s=Math.min(1,1600/Math.max(w,h)), c=document.createElement("canvas");
+  c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext("2d").drawImage(src,0,0,c.width,c.height);
+  return new Promise(res=>c.toBlob(b=>res(b),"image/jpeg",0.88));
+}
+async function pgPrep(file){
+  const url=URL.createObjectURL(file);
+  try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+    return await pgEncode(img,img.naturalWidth,img.naturalHeight);}
+  catch(e){return null;}finally{URL.revokeObjectURL(url);}
+}
+
+/* --- screens --- */
+let pgSub="home";
+function pgOpenView(sub){pgSub=sub||"home";switchView("prog");}
+function renderProg(){
+  const h=document.getElementById("pgHome"), s=document.getElementById("pgShoot");if(!h||!s)return;
+  h.style.display=pgSub==="home"?"":"none"; s.style.display=pgSub==="shoot"?"":"none";
+  const t=document.getElementById("gyTtl-prog"); if(t)t.textContent=pgSub==="shoot"?"Photo shoot":"Progress";
+  if(!pgLoaded){h.innerHTML=s.innerHTML=`<div class="addhint">Loading your photos…</div>`;return;}
+  if(pgSub==="shoot")pgRenderShoot(); else pgRenderHome();
+}
+function pgTileSub(){const n=pgLoaded?pgCount("b")+pgCount("h"):0;return n?`${n} of 13 photos · 360º view, weight, measurements`:"Photo shoot, 360º view, weight and measurements";}
+function pgFile(label,cls,attrs,on){return `<label class="btn ${cls} pgfile">${label}<input type="file" accept="image/*" ${attrs} onchange="${on}"></label>`;}
+
+function pgRenderHome(){
+  const el=document.getElementById("pgHome"), all=pgCount("b")===8, n=pgCount("b")+pgCount("h");
+  let dt="";
+  if(all){const ts=PG_G.b.ids.map(id=>pgPhotos[id].ts), a=pgDate(Math.min(...ts)), b=pgDate(Math.max(...ts));dt=`<div class="pgdate">Photos from ${a===b?a:a+" to "+b}</div>`;}
+  el.innerHTML=`<div class="pg360" id="pg360"></div>`
+    +(all?`<div class="pgquick" id="pgQuick">${[["Front",0],["¾",45],["Side",90],["Back",180]].map(([l,a])=>`<button data-a="${a}" onclick="pgJump(${a})">${l}</button>`).join("")}</div>${dt}`:`<div style="height:12px"></div>`)
+    +`<div class="fdtiles" style="margin-bottom:6px"><button class="fdtile wide" onclick="pgSub='shoot';renderProg();window.scrollTo(0,0)"><i>📸</i><div><b>Photo shoot</b><span>${n?`${n} of 13 photos taken`:"13 photos · about 10 min"}</span></div></button></div>`
+    +`<div class="fdhead">Weight</div><div class="setcard" style="margin-bottom:10px"><div class="tgtweigh"><input type="text" inputmode="decimal" id="pgW" class="calinput" placeholder="Today's weight (kg)"><button class="btn primary" onclick="pgLogWeight()">Log weight</button></div>
+      <div class="tgtlast" style="margin-top:8px">${tgtLastHtml()}</div><button class="gylink" style="text-align:left;padding:0" onclick="switchView('timer');fdOpen('weigh')">See your weight trend ›</button></div>`
+    +`<div class="fdhead">Measurements (cm)</div><div class="setcard">${pgMeasForm()}</div>${pgMeasList()}`;
+  pg360Key="";pg360Build();
+}
+function pgMeasLast(k){for(let i=measLog.length-1;i>=0;i--)if(+measLog[i][k]>0)return measLog[i];return null;}
+function pgMeasForm(){
+  const td=keyOf(new Date()), cur=measLog.find(m=>m.date===td)||{};
+  return `<div class="pgmeas">${PG_MEAS.map(([k,l])=>{const last=pgMeasLast(k);return `<label>${l}<input type="text" inputmode="decimal" class="calinput" id="pgM-${k}" value="${cur[k]||""}" placeholder="${last?last[k]:"cm"}"></label>`;}).join("")}</div>
+    <button class="btn primary" style="width:100%;margin-top:10px" onclick="pgSaveMeas()">Save measurements</button>
+    <div class="fi-m2" style="margin-top:8px">Measure first thing in the morning, tape snug but not tight. Waist at the belly button, arms and thighs at the widest part. Leave a box empty to skip it.</div>`;
+}
+function pgMeasList(){
+  if(!measLog.length)return "";
+  const rows=PG_MEAS.map(([k,l])=>{const hs=measLog.filter(m=>+m[k]>0);if(!hs.length)return "";const a=+hs[0][k], b=+hs[hs.length-1][k], d=b-a;
+    return `<div class="pgmrow"><span>${l}</span><span><b>${b} cm</b> ${hs.length>1?`<small style="color:var(--dim)">${d<0?"▼":d>0?"▲":""} ${d?Math.abs(d).toFixed(1):"no change"}${d?` since ${pgDate(dateOf(hs[0].date))}`:""}</small>`:""}</span></div>`;}).join("");
+  const past=measLog.slice().reverse().slice(0,12).map((m,i)=>`<div class="pgmrow"><span>${pgDate(dateOf(m.date))}</span><span style="text-align:right;font-size:12.5px;color:var(--dim)">${PG_MEAS.filter(([k])=>+m[k]>0).map(([k,l])=>`${l} ${m[k]}`).join(" · ")}</span><button class="rm" onclick="pgDelMeas('${m.date}')">×</button></div>`).join("");
+  return `<div class="setcard"><div class="fdhead" style="margin-top:0">Latest</div>${rows}<details class="fdact" style="margin-top:10px"><summary>Past entries</summary>${past}</details></div>`;
+}
+function pgSaveMeas(){
+  const td=keyOf(new Date()); let e=measLog.find(m=>m.date===td), any=false; const vals={};
+  for(const [k] of PG_MEAS){const v=parseFloat((document.getElementById("pgM-"+k)?.value||"").replace(",","."));if(v>0){if(v<10||v>300){toast("Check that number (cm)");return;}vals[k]=+v.toFixed(1);any=true;}}
+  if(!any){toast("Fill in at least one measurement");return;}
+  if(!e){e={date:td};measLog.push(e);measLog.sort((a,b)=>a.date<b.date?-1:1);}
+  PG_MEAS.forEach(([k])=>{if(vals[k])e[k]=vals[k];else delete e[k];});
+  saveMeas();toast("Measurements saved");pgRenderHome();
+}
+function pgDelMeas(d){measLog=measLog.filter(m=>m.date!==d);saveMeas();pgRenderHome();}
+function pgLogWeight(){
+  const v=document.getElementById("pgW")?.value||"", tg=document.getElementById("tgWeight");if(!tg)return;
+  const keep=selKey; selKey=todayKey(); tg.value=v; tgtLogWeight(); const ok=!tg.value; tg.value=""; selKey=keep;
+  if(ok)pgRenderHome();
+}
+
+/* --- photo shoot screen --- */
+function pgDialSeg(i,r1,r2,gap){
+  const p=(r,deg)=>{const t=deg*Math.PI/180;return `${(r*Math.sin(t)).toFixed(2)},${(-r*Math.cos(t)).toFixed(2)}`;};
+  const a1=i*45-22.5+gap, a2=i*45+22.5-gap;
+  return `M${p(r2,a1)} A${r2},${r2} 0 0 1 ${p(r2,a2)} L${p(r1,a2)} A${r1},${r1} 0 0 0 ${p(r1,a1)}Z`;
+}
+function pgGroupBtn(g){const c=pgCount(g), tot=PG_G[g].ids.length;
+  return `<button class="btn primary" style="width:100%;padding:14px;font-size:15px" onclick="pgCamStart('hands','${g}')">${c===0?(g==="b"?"Start hands-free shoot":"Start close-ups"):c<tot?`Shoot the remaining ${tot-c}`:`Retake all ${tot}`}</button>`;}
+function pgRenderShoot(){
+  const el=document.getElementById("pgShoot"), cb=pgCount("b"), ch=pgCount("h");
+  const tips=["Phone at waist height, about 2.5 m away, on a tripod or propped on a shelf.","Plain light wall and even daylight, no window behind you.","Fitted clothes in a neutral colour, bare feet, hair tied back.","Same spot, same stance. Arms slightly away from the body, feet hip-width apart. Only turn between shots.","Go hands-free: the timer counts down and a voice says when to turn.","For close-ups, move the phone to face height about an arm's length away."];
+  const segs=PG_G.b.ids.map((id,i)=>{const t=i*45*Math.PI/180, r=78, x=(r*Math.sin(t)).toFixed(1), y=(-r*Math.cos(t)+4).toFixed(1), on=!!pgPhotos[id];
+    return `<path d="${pgDialSeg(i,60,96,1.5)}" fill="${on?"var(--good)":"var(--card2)"}" stroke="var(--line)" onclick="pgSheetOpen('${id}')"/><text x="${x}" y="${y}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${on?"#fff":"var(--dim)"}" pointer-events="none">${PG_BY[id].s}</text>`;}).join("");
+  el.innerHTML=`<div class="fdlead" style="margin-bottom:12px">13 photos · about 10 min</div>`
+    +`<details class="pgtips"${cb+ch===0?" open":""}><summary>Before you start</summary><ol>${tips.map(t=>`<li>${t}</li>`).join("")}</ol></details>`
+    +`<div class="pgpanel"><div class="pgph"><b>Full length</b><span>${cb} of 8</span></div>
+      <div class="pgdialw"><svg viewBox="-100 -100 200 200">${segs}</svg><div class="pgdialc">${cb===8?`<img src="${pgPhotos.b0.url}" alt="">`:`<b>${cb}/8</b><span>angles</span>`}</div></div>
+      ${pgGroupBtn("b")}</div>`
+    +`<div class="pgpanel"><div class="pgph"><b>Head close-ups</b><span>${ch} of 5</span></div>
+      <div class="pgheads">${PG_G.h.ids.map(id=>{const p=pgPhotos[id];return `<button class="pghead${p?" has":""}" onclick="pgSheetOpen('${id}')">${p?`<img src="${p.url}" alt=""><i>✓</i>`:""}<small>${PG_BY[id].s}</small></button>`;}).join("")}</div>
+      ${pgGroupBtn("h")}</div>`
+    +pgFile("🖼 Import photos","ghost",`multiple`,"pgImport(this)")
+    +`<div class="pgnote">Photos are saved on this iPhone only.</div>`
+    +(cb+ch?`<button class="pgdel" id="pgDelAll" onclick="pgDelAllTap(this)">Delete all photos</button>`:"");
+}
+let pgDelArm=0;
+async function pgDelAllTap(b){
+  if(Date.now()-pgDelArm<4000){pgDelArm=0;await pgDelAll();toast("All photos deleted");renderProg();return;}
+  pgDelArm=Date.now();b.classList.add("arm");b.textContent="Tap again to delete all photos";
+  setTimeout(()=>{if(Date.now()-pgDelArm>=3900&&b.isConnected){b.classList.remove("arm");b.textContent="Delete all photos";}},4000);
+}
+
+/* --- one pose (bottom sheet) --- */
+function pgSheetOpen(id){
+  const P=PG_BY[id], ph=pgPhotos[id], s=document.getElementById("pgSheet");
+  document.getElementById("pgSheetBox").innerHTML=`<div class="mshead"><div><div class="msarea">${PG_G[P.g].n} · ${P.a}º</div><h2>${P.n}</h2></div><button class="msx" onclick="pgSheetClose()">✕</button></div>
+    <div class="pgsimg${ph?" has":""}">${ph?`<img src="${ph.url}" alt="">`:`<span style="color:var(--dim);height:100%;display:flex;align-items:center;justify-content:center;${P.m?"transform:scaleX(-1)":""}">${pgShapeSVG(P.sh,"currentColor")}</span>`}</div>
+    ${ph?`<div class="fi-m2" style="text-align:center;margin:-6px 0 10px">Taken ${pgDate(ph.ts)}</div>`:""}
+    <div class="pgsay">${P.say}</div>
+    <div class="pgbtns"><button class="btn primary" onclick="pgCamStart('single','${id}')">${ph?"Retake with guide":"Open camera with guide"}</button>
+      ${pgFile("iPhone camera","ghost",`capture="environment"`,`pgFileFor('${id}',this)`)}
+      ${pgFile("From library","ghost","",`pgFileFor('${id}',this)`)}
+      ${ph?`<button class="btn ghost" style="color:var(--accent2)" onclick="pgDel('${id}').then(()=>{pgSheetClose();renderProg();toast('Photo deleted')})">Delete this photo</button>`:""}</div>`;
+  s.classList.add("on");document.body.classList.add("sheetopen");
+}
+function pgSheetClose(){document.getElementById("pgSheet")?.classList.remove("on");document.body.classList.remove("sheetopen");}
+async function pgFileFor(id,inp){
+  const f=inp.files&&inp.files[0];inp.value="";if(!f)return;
+  const b=await pgPrep(f);if(!b){toast("Couldn't read that image");return;}
+  if(await pgPut(id,b)){toast(`${PG_BY[id].n} saved`);if(document.getElementById("pgSheet").classList.contains("on"))pgSheetOpen(id);renderProg();}
+}
+
+/* --- import many --- */
+const PG_NAME_RE=/(?:^|[^a-z0-9])(b0|b45|b90|b135|b180|b225|b270|b315|h0|hl45|hl90|hr45|hr90)(?![a-z0-9])/;
+let pgPend=[];
+async function pgImport(inp){
+  const files=[...(inp.files||[])];inp.value="";if(!files.length)return;
+  let saved=0;const left=[];
+  for(const f of files){const m=f.name.replace(/\.[^.]+$/,"").toLowerCase().match(PG_NAME_RE);
+    if(m){const b=await pgPrep(f);if(b&&await pgPut(m[1],b))saved++;}else left.push(f);}
+  renderProg();
+  if(!left.length){toast(`${saved} photo${saved===1?"":"s"} saved`);return;}
+  pgPend.forEach(p=>URL.revokeObjectURL(p.url));
+  const taken=new Set(), free=PG_POSES.map(p=>p.id).filter(id=>!pgPhotos[id]);
+  pgPend=left.map(f=>{const id=free.find(x=>!taken.has(x))||"";if(id)taken.add(id);return {f,url:URL.createObjectURL(f),id};});
+  const opts=sel=>`<option value="">Skip</option>`+PG_POSES.map(p=>`<option value="${p.id}"${p.id===sel?" selected":""}>${p.n}${p.g==="h"?" (close-up)":""}${pgPhotos[p.id]?" ✓":""}</option>`).join("");
+  document.getElementById("pgSheetBox").innerHTML=`<div class="mshead"><div><div class="msarea">Import photos</div><h2>Which pose is each?</h2></div><button class="msx" onclick="pgAssignClose()">✕</button></div>
+    ${saved?`<div class="fdlead">${saved} photo${saved===1?" was":"s were"} named after a pose and ${saved===1?"is":"are"} saved.</div>`:""}
+    ${pgPend.map((p,i)=>`<div class="pgasgn"><img src="${p.url}" alt=""><select class="calinput" onchange="pgPend[${i}].id=this.value">${opts(p.id)}</select></div>`).join("")}
+    <div class="fi-m2" style="margin:4px 0 10px">✓ means that pose already has a photo; picking it replaces the old one.</div>
+    <button class="btn primary" style="width:100%" onclick="pgAssignSave()">Save these photos</button>`;
+  document.getElementById("pgSheet").classList.add("on");document.body.classList.add("sheetopen");
+}
+function pgAssignClose(){pgPend.forEach(p=>URL.revokeObjectURL(p.url));pgPend=[];pgSheetClose();}
+async function pgAssignSave(){
+  const ids=pgPend.map(p=>p.id).filter(Boolean);
+  if(new Set(ids).size!==ids.length){toast("Two photos have the same pose");return;}
+  let n=0;for(const p of pgPend)if(p.id){const b=await pgPrep(p.f);if(b&&await pgPut(p.id,b))n++;}
+  pgAssignClose();renderProg();toast(`${n} photo${n===1?"":"s"} saved`);
+}
+
+/* --- camera --- */
+let pgRun=0, pgS={mode:"single",list:[],idx:0,stream:null,facing:"environment",busy:false,pend:null,skip:false,group:"b"};
+const $pg=id=>document.getElementById(id);
+function pgUnlockSpeech(){try{if(pgPrefs.voice&&window.speechSynthesis){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(" ");u.lang="en-GB";speechSynthesis.speak(u);}}catch(e){}}
+let pgVoice=null;
+function pgPickVoice(){try{const vs=speechSynthesis.getVoices();pgVoice=vs.find(v=>v.lang==="en-GB"&&/Daniel|Kate|Serena|Arthur/i.test(v.name))||vs.find(v=>v.lang==="en-GB")||vs.find(v=>/^en/.test(v.lang))||null;}catch(e){}}
+if(window.speechSynthesis){pgPickVoice();try{speechSynthesis.addEventListener("voiceschanged",pgPickVoice);}catch(e){}}
+function pgSpeak(text,run){
+  return new Promise(res=>{
+    if(!pgPrefs.voice||!window.speechSynthesis||run!==pgRun)return res();
+    let done=false;const fin=()=>{if(!done){done=true;clearTimeout(t);res();}};
+    const t=setTimeout(fin,900+75*text.length);
+    try{const u=new SpeechSynthesisUtterance(text);u.lang="en-GB";if(pgVoice)u.voice=pgVoice;u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);}catch(e){fin();}
+  });
+}
+function pgSay(text){if(pgPrefs.voice&&window.speechSynthesis)try{const u=new SpeechSynthesisUtterance(text);u.lang="en-GB";if(pgVoice)u.voice=pgVoice;speechSynthesis.speak(u);}catch(e){}}
+function pgSleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function pgStat(t){$pg("pgStat").textContent=t||"";}
+function pgBtnLabels(){$pg("pgTimerB").textContent=pgPrefs.timer?`Timer ${pgPrefs.timer}s`:"Timer off";$pg("pgVoiceB").textContent=pgPrefs.voice?"Voice on":"Voice off";}
+function pgCycleTimer(){const o=[0,3,5,10];pgPrefs.timer=o[(o.indexOf(pgPrefs.timer)+1)%o.length];pgSavePrefs();pgBtnLabels();}
+function pgToggleVoice(){pgPrefs.voice=!pgPrefs.voice;pgSavePrefs();pgBtnLabels();if(!pgPrefs.voice)try{speechSynthesis.cancel();}catch(e){}else pgUnlockSpeech();}
+async function pgCamStart(mode,arg){
+  pgUnlockSpeech();                       // iOS: speech only works if it starts inside a tap
+  pgSheetClose();
+  const run=++pgRun;
+  pgS.mode=mode;pgS.idx=0;pgS.busy=false;pgS.pend=null;pgS.skip=false;
+  if(mode==="single"){pgS.group=PG_BY[arg].g;pgS.list=[arg];}
+  else{pgS.group=arg;const miss=pgMissing(arg);pgS.list=miss.length&&miss.length<PG_G[arg].ids.length?miss:PG_G[arg].ids.slice();}
+  $pg("pgCam").classList.add("on");document.body.classList.add("sheetopen");
+  $pg("pgErr").style.display="none";$pg("pgRev").style.display="none";$pg("pgRevBar").style.display="none";$pg("pgBot").style.display="";
+  $pg("pgCount").textContent="";pgStat("");pgBtnLabels();
+  pgShowPose(pgS.list[0]);
+  const ok=await pgStream(run);
+  if(run!==pgRun||!ok)return;
+  if(mode==="hands")pgHandsFree(run);
+}
+async function pgStream(run){
+  pgStopTracks();
+  const v=$pg("pgVid");
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error("none");
+    const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:pgS.facing,width:{ideal:1920},height:{ideal:1080}},audio:false});
+    if(run!==pgRun){st.getTracks().forEach(t=>t.stop());return false;}
+    pgS.stream=st;v.srcObject=st;v.classList.toggle("mir",pgS.facing==="user");
+    try{await v.play();}catch(e){}
+    return true;
+  }catch(e){
+    if(run!==pgRun)return false;
+    const id=pgS.list[pgS.idx];
+    $pg("pgErr").innerHTML=`<p>The camera can't be opened here (access was refused, or there's no camera). Use the iPhone camera instead.</p>${pgFile("Use iPhone camera","primary",`capture="environment"`,`pgCamClose();pgFileFor('${id}',this)`)}<button class="btn ghost" style="width:100%;margin-top:8px" onclick="pgCamClose()">Close</button>`;
+    $pg("pgErr").style.display="";$pg("pgBot").style.display="none";
+    try{speechSynthesis.cancel();}catch(e){}
+    pgRun++;               // stop any hands-free run
+    return false;
+  }
+}
+function pgStopTracks(){if(pgS.stream){pgS.stream.getTracks().forEach(t=>t.stop());pgS.stream=null;}const v=$pg("pgVid");if(v)v.srcObject=null;}
+function pgShowPose(id){
+  const P=PG_BY[id], g=$pg("pgGhost");
+  g.className="pgghost "+(P.g==="h"?"head":"body")+(P.m?" mir":"");g.innerHTML=pgShapeSVG(P.sh);
+  const G=PG_G[P.g];
+  $pg("pgStep").textContent=pgS.mode==="hands"?`${pgS.idx+1} of ${pgS.list.length}`:`${G.n} · ${G.ids.indexOf(id)+1} of ${G.ids.length}`;
+  $pg("pgPName").textContent=P.n;$pg("pgPSay").textContent=P.say;
+}
+async function pgCountdown(n,run){
+  pgS.skip=false;
+  for(let s=n;s>0;s--){
+    if(run!==pgRun)return false; if(pgS.skip)break;
+    $pg("pgCount").textContent=s; if(s<=3)pgSay(String(s));
+    for(let k=0;k<10;k++){await pgSleep(100);if(run!==pgRun||pgS.skip)break;}
+  }
+  $pg("pgCount").textContent="";
+  return run===pgRun;
+}
+async function pgCapture(){
+  const v=$pg("pgVid"), w=v.videoWidth, h=v.videoHeight;if(!w||!h)return null;
+  const f=$pg("pgFlash");f.classList.add("on");setTimeout(()=>f.classList.remove("on"),60);
+  return pgEncode(v,w,h);
+}
+async function pgHandsFree(run){
+  const L=pgS.list;
+  for(let i=0;i<L.length;i++){
+    if(run!==pgRun)return;
+    pgS.idx=i;const id=L[i],P=PG_BY[id];pgShowPose(id);pgStat("Get into position");
+    await pgSpeak((i?"Next. ":"")+P.n+". "+P.say,run);
+    if(!await pgCountdown(Math.max(5,pgPrefs.timer),run))return;
+    pgStat("");const b=await pgCapture();if(run!==pgRun)return;
+    if(b&&await pgPut(id,b))pgStat(`${P.n} saved`);else pgStat("That one didn't work, carrying on");
+    renderProg();
+    await pgSleep(1000);
+  }
+  if(run!==pgRun)return;
+  pgStat("");await pgSpeak(pgS.group==="h"?"Close-ups done.":"All done. Well done.",run);
+  if(run===pgRun){pgCamClose();toast(pgS.group==="h"?"Close-ups done":"All done. Well done");}
+}
+async function pgShutter(){
+  if(pgS.mode==="hands"){pgS.skip=true;return;}      // hands-free: tap to take it now
+  if(pgS.busy)return;pgS.busy=true;const run=pgRun;
+  if(pgPrefs.timer)pgUnlockSpeech();
+  const ok=await pgCountdown(pgPrefs.timer,run);
+  if(!ok){pgS.busy=false;return;}
+  const b=await pgCapture();pgS.busy=false;if(run!==pgRun||!b)return;
+  pgS.pend=b;const r=$pg("pgRev");if(r.src)URL.revokeObjectURL(r.src);r.src=URL.createObjectURL(b);r.style.display="";
+  $pg("pgBot").style.display="none";$pg("pgRevBar").style.display="";$pg("pgGhost").style.display="none";
+}
+function pgRetake(){pgS.pend=null;$pg("pgRev").style.display="none";$pg("pgRevBar").style.display="none";$pg("pgBot").style.display="";$pg("pgGhost").style.display="";}
+async function pgKeep(){
+  const id=pgS.list[0], b=pgS.pend;if(!b)return;
+  const ok=await pgPut(id,b);pgRetake();if(!ok)return;
+  toast(`${PG_BY[id].n} saved`);renderProg();
+  const G=PG_G[PG_BY[id].g].ids, i=G.indexOf(id), order=G.slice(i+1).concat(G.slice(0,i)).concat(PG_G[PG_BY[id].g==="b"?"h":"b"].ids);
+  const nx=order.find(x=>!pgPhotos[x]);
+  if(!nx){pgCamClose();return;}
+  pgS.list=[nx];pgShowPose(nx);
+}
+async function pgFlip(){pgS.facing=pgS.facing==="environment"?"user":"environment";await pgStream(pgRun);}
+function pgCamClose(){
+  pgRun++;pgS.busy=false;pgS.skip=false;
+  try{speechSynthesis.cancel();}catch(e){}
+  pgStopTracks();
+  $pg("pgCam").classList.remove("on");document.body.classList.remove("sheetopen");
+  $pg("pgCount").textContent="";pgStat("");$pg("pgRev").style.display="none";$pg("pgGhost").style.display="";
+  renderProg();
+}
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&$pg("pgCam")?.classList.contains("on"))pgCamClose();});
+
+/* --- 360º view --- */
+let pgAng=0, pgSpin=!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches), pgRAF=0, pgT0=0, pgDrag=null, pg360Key="", pgIdx=-1;
+function pgIdxOf(a){const m=((a%360)+360)%360;return Math.round(((360-m)%360)/45)%8;}
+function pgMini(i){return `<svg viewBox="-100 -100 200 200">${[0,1,2,3,4,5,6,7].map(k=>`<path d="${pgDialSeg(k,52,96,3)}" fill="${k===i?"var(--accent)":"rgba(255,255,255,.4)"}"/>`).join("")}</svg>`;}
+function pg360Build(){
+  const el=$pg("pg360");if(!el)return;
+  if(pgCount("b")<8){
+    el.innerHTML=`<div class="pg360ph"><span style="color:var(--dim);height:56%;display:flex">${pgShapeSVG("front","currentColor")}</span><b>Your 360º view</b><span>Take the 8 full-length photos and you can turn yourself all the way round here.</span><button class="btn primary" style="flex:none;padding:11px 18px" onclick="pgSub='shoot';renderProg();window.scrollTo(0,0)">Go to the photo shoot</button></div>`;
+    el.style.cursor="default";el.onpointerdown=null;return;
+  }
+  el.style.cursor="";
+  el.innerHTML=PG_G.b.ids.map(id=>`<img src="${pgPhotos[id].url}" alt="" draggable="false">`).join("")
+    +`<div class="pg360lab" id="pg360Lab"></div><div class="pg360dial" id="pg360Dial"></div><div class="pg360hint">Drag sideways to turn</div>`;
+  pgIdx=-1;pgPaint();
+  el.onpointerdown=e=>{pgDrag={x:e.clientX,a:pgAng,id:e.pointerId,moved:false};try{el.setPointerCapture(e.pointerId);}catch(_){}};
+  el.onpointermove=e=>{if(!pgDrag)return;const dx=e.clientX-pgDrag.x;if(Math.abs(dx)>3){pgDrag.moved=true;pgSpin=false;}pgAng=pgDrag.a+dx*1.1;pgPaint();};
+  el.onpointerup=el.onpointercancel=()=>{pgDrag=null;};
+  if(pgSpin&&!pgRAF){pgT0=0;pgRAF=requestAnimationFrame(pgTick);}
+}
+function pgTick(t){
+  const el=$pg("pg360");
+  if(!pgSpin||!el||!el.offsetParent||pgCount("b")<8){pgRAF=0;return;}
+  if(pgT0&&!pgDrag){pgAng+=18*Math.min(.1,(t-pgT0)/1000);pgPaint();}
+  pgT0=t;pgRAF=requestAnimationFrame(pgTick);
+}
+function pgPaint(){
+  const i=pgIdxOf(pgAng);if(i===pgIdx)return;pgIdx=i;
+  const imgs=document.querySelectorAll("#pg360 img");imgs.forEach((im,k)=>im.classList.toggle("on",k===i));
+  const id=PG_G.b.ids[i];const l=$pg("pg360Lab");if(l)l.textContent=PG_BY[id].n;
+  const d=$pg("pg360Dial");if(d)d.innerHTML=pgMini(i);
+  const a=PG_BY[id].a, near={0:0,45:45,315:45,90:90,270:90,135:180,180:180,225:180}[a];
+  document.querySelectorAll("#pgQuick button").forEach(b=>b.classList.toggle("on",+b.dataset.a===near));
+}
+function pgJump(a){pgSpin=false;pgAng=a;pgPaint();}
+
+/* --- start: ask iOS to keep the photos, then load them --- */
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}catch(e){}
+pgLoad().then(()=>{if($pg("v-gym")?.classList.contains("on"))renderGym();if($pg("v-prog")?.classList.contains("on"))renderProg();});
+
 // Offline: register the service worker (sw.js next to this page on the web host). Does nothing when opened as a file or when sw.js isn't there.
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
   window.addEventListener("load",()=>{
