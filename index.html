@@ -7219,7 +7219,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v99"]};
+ data:["Save & Settings","Backup your data · v100"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -8238,7 +8238,7 @@ function pg360Build(){
 function pgTick(t){
   const el=$pg("pg360");
   if(!pgSpin||!el||!el.offsetParent||pgCount("b")<8){pgRAF=0;return;}
-  if(pgT0&&!pgDrag){pgAng+=18*Math.min(.1,(t-pgT0)/1000);pgPaint();}
+  if(pgT0&&!pgDrag){pgAng+=45*Math.min(.1,(t-pgT0)/1000);pgPaint();}
   pgT0=t;pgRAF=requestAnimationFrame(pgTick);
 }
 function pgPaint(){
