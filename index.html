@@ -1037,6 +1037,10 @@
   .pgmrow:last-child{border-bottom:none}
   .pgmrow small{font-weight:700;font-size:12.5px}
   /* camera */
+  .pgstrip{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .pgstrip button{flex:0 0 74px;height:98px;border-radius:10px;overflow:hidden;position:relative;border:none;padding:0;background:var(--card2);cursor:pointer}
+  .pgstrip img{width:100%;height:100%;object-fit:cover}
+  .pgstrip small{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px #000}
   .pgci{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px 9px 9px;margin-bottom:8px;color:var(--txt);font:inherit;text-align:left;cursor:pointer}
   .pgci:active{background:var(--card2)}
   .pgcith{flex:0 0 auto;width:52px;height:66px;border-radius:9px;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center}
@@ -7177,7 +7181,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v96"]};
+ data:["Save & Settings","Backup your data · v97"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -7852,7 +7856,12 @@ function pgSumLine(d){
 }
 function pgRenderHome(){
   const el=document.getElementById("pgHome"), ds=pgDates(), td=todayKey(), hasT=ds.includes(td);
-  el.innerHTML=`<div class="fdtiles" style="margin-bottom:6px">
+  // v97: show your latest photos straight away: the newest 360º view, else the newest check-in's photos
+  const full=ds.find(d=>pgCount("b",d)===8), lp=ds.find(d=>Object.keys(pgShots[d]||{}).length);
+  let top="";
+  if(full){pgSetDay(full);top=`<div class="pg360" id="pg360"></div><button class="gylink" style="margin:8px 0 12px" onclick="pgOpenDay('${full}')">360º view from ${pgDK(full,1)} · open this check-in ›</button>`;}
+  else if(lp){const S=pgShots[lp];top=`<div class="fdhead" style="margin-top:0">Latest photos · ${pgDK(lp,1)}</div><div class="pgstrip">${PG_POSES.filter(P=>S[P.id]).map(P=>`<button onclick="pgSetDay('${lp}');pgSheetOpen('${P.id}')"><img src="${S[P.id].url}" alt=""><small>${P.g==="h"?"Head ":""}${P.s}</small></button>`).join("")}</div>`;}
+  el.innerHTML=top+`<div class="fdtiles" style="margin-bottom:6px">
       <button class="fdtile hero" onclick="pgOpenDay('${td}')"><i>📸</i><div><b>${hasT?"Today's check-in":"Start today's check-in"}</b><span>${hasT?pgSumLine(td):"Photo shoot, weight and measurements"}</span></div></button>
       <button class="fdtile wide" onclick="pgOpenCompare()"><i>⚖️</i><div><b>Compare</b><span>${ds.length>=2?"Two dates side by side: photos and numbers":"Needs two check-ins on different dates"}</span></div></button></div>`
     +`<div class="fdhead">Check-ins</div>`
@@ -7861,6 +7870,7 @@ function pgRenderHome(){
     +`<div style="margin-top:14px">${pgFile("🖼 Import photos","ghost","multiple","pgImport(this,'')")}</div>`
     +`<div class="pgnote">Photos are saved on this iPhone only.</div>`
     +(Object.values(pgShots).some(S=>Object.keys(S).length)?`<button class="pgdel" onclick="pgDelAllTap(this)">Delete all photos</button>`:"");
+  if(full){pg360Key="";pg360Build();}
 }
 function pgRenderDay(){
   const el=document.getElementById("pgHome"), d=pgDay, all=pgCount("b")===8, n=pgCount("b")+pgCount("h"), w=pgWeightOn(d,0);
