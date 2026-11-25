@@ -1037,6 +1037,25 @@
   .pgmrow:last-child{border-bottom:none}
   .pgmrow small{font-weight:700;font-size:12.5px}
   /* camera */
+  .pgci{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px 9px 9px;margin-bottom:8px;color:var(--txt);font:inherit;text-align:left;cursor:pointer}
+  .pgci:active{background:var(--card2)}
+  .pgcith{flex:0 0 auto;width:52px;height:66px;border-radius:9px;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center}
+  .pgcith img{width:100%;height:100%;object-fit:cover}.pgcith i{font-style:normal;font-size:24px}
+  .pgcitx{flex:1;min-width:0;display:flex;flex-direction:column}.pgcitx b{font-size:15px}.pgcitx small{font-size:12.5px;color:var(--dim)}
+  .pgbig{font-size:30px;font-weight:800;margin-bottom:8px}.pgbig small{font-size:15px;color:var(--dim);font-weight:600}
+  .pgmeas label small{font-weight:700}
+  .pgcmph{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pgcmph label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:700;display:flex;flex-direction:column;gap:4px}
+  .pgcmph select{appearance:auto;width:100%;padding:10px;font-size:15px}
+  .pgcmpg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .pgcmpi{aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:var(--card);border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font-size:12.5px;color:var(--dim)}
+  .pgcmpi.has{border:none;padding:0}.pgcmpi img{width:100%;height:100%;object-fit:cover}
+  .pgchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
+  .pgcr{display:grid;grid-template-columns:1.1fr 1fr 1fr 1.25fr;gap:4px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:center}
+  .pgcr span:nth-child(2),.pgcr span:nth-child(3){text-align:right;font-weight:700}
+  .pgcr .pgcd{text-align:right;font-size:12.5px;color:var(--dim);font-weight:700}
+  .pgcrh{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;padding-top:0}
+  .pgcrh span{font-weight:700!important;text-align:right}
   .pgcam{position:fixed;inset:0;z-index:1000;background:#000;color:#fff;display:none;overflow:hidden;touch-action:none}
   .pgcam.on{display:block}
   .pgcam video,.pgcam .pgrev{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -7158,7 +7177,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v95"]};
+ data:["Save & Settings","Backup your data · v96"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -7271,7 +7290,7 @@ function switchView(v){
   document.getElementById("hSub").textContent=GYM_VIEWS.includes(v)?"Training: "+planName(trainingId()):TITLES[v][1];
   document.querySelectorAll(".fdbar").forEach(x=>x.classList.remove("hide"));
   if(v==="gym")renderGym();
-  if(v==="prog")renderProg();
+  if(v==="prog"){if(pgSub==="home"||!pgDay)pgSub=pgSub||"home";renderProg();}
   if(v==="lib")renderLib();
   window.scrollTo({top:0,behavior:"smooth"});
   if(v==="train"){renderTrain();}
@@ -7294,7 +7313,7 @@ function gyBack(v){
   if(v==="train"&&trainSub==="day"){trainSub="week";renderTrain();return;}
   if(v==="plan"&&planView!=="week"){setPlanView("week");return;}
   if(v==="lib"&&!libIsHome()){libAll=false;clearLibAll();return;}
-  if(v==="prog"&&pgSub!=="home"){pgSub="home";renderProg();return;}
+  if(v==="prog"&&pgSub!=="home"){pgSub=pgSub==="shoot"||(pgSub==="compare"&&pgCmpFrom==="day")?"day":"home";renderProg();window.scrollTo(0,0);return;}
   switchView("gym");
 }
 function libIsHome(){return !libAll&&!libQuery&&activeFilterCount()===0;}
@@ -7699,9 +7718,9 @@ document.addEventListener("focusin",e=>{
 });
 // iOS can place the cursor where you tapped once the tap ends, so fix it again on that first tap
 document.addEventListener("click",e=>{const el=e.target;if(el._caretAt&&Date.now()-el._caretAt<600&&document.activeElement===el){el._caretAt=0;caretToEnd(el);}},true);
-/* ---- v95: Progress. Guided photo shoot (13 poses), 360º view, weight and body measurements.
+/* ---- v95/v96: Progress. Dated check-ins: guided photo shoot (13 poses), 360º view, weight and body measurements; compare two dates.
    Photos live in IndexedDB on this phone only (db "gymhuis-photos", store "photos", key = pose id,
-   value {blob, ts}). They are never uploaded, never in the backup text, and sw.js never sees them. ---- */
+   value {blob, ts}; since v96 the key is "date/poseId"). They are never uploaded, never in the backup text, and sw.js never sees them. ---- */
 const PG_POSES=[
  {id:"b0",g:"b",n:"Front",s:"Front",a:0,sh:"front",say:"Face the camera. Arms slightly away from your body, feet hip-width apart."},
  {id:"b45",g:"b",n:"Front-left",s:"F·L",a:45,sh:"tq",m:1,say:"Turn an eighth to your right, so your left shoulder comes towards the camera."},
@@ -7750,32 +7769,49 @@ function pgShapeSVG(sh,col){
   return g(`<path d="${pgSmooth([[44,14],[62,14],[74,26],[78,40],[80,48],[86,58],[80,62],[81,70],[78,74],[78,80],[72,86],[64,90],[62,104],[38,104],[36,88],[26,76],[20,58],[22,32],[30,20]])}"/><ellipse cx="44" cy="54" rx="5" ry="9"/>${sh2}`,H);
 }
 
-/* --- IndexedDB --- */
-let pgDB=null, pgPhotos={}, pgLoaded=false;
+/* --- IndexedDB. v96: one photo per pose per date. key = "YYYY-MM-DD/poseId", value {blob, ts}.
+   v95 keys (pose id only) are moved to the date they were taken on first load. --- */
+let pgDB=null, pgShots={}, pgDay="", pgPhotos={}, pgLoaded=false;
+function pgSetDay(d){pgDay=d;pgPhotos=pgShots[d]||(pgShots[d]={});pg360Key="";}
 function pgOpenDB(){return new Promise((res,rej)=>{if(pgDB)return res(pgDB);if(!window.indexedDB)return rej(new Error("no idb"));
   const r=indexedDB.open("gymhuis-photos",1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains("photos"))r.result.createObjectStore("photos");};
   r.onsuccess=()=>{pgDB=r.result;res(pgDB);};r.onerror=()=>rej(r.error);});}
 function pgStore(mode){return pgOpenDB().then(db=>db.transaction("photos",mode).objectStore("photos"));}
 function pgReq(r){return new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+function pgAddMem(d,id,blob,ts){const S=pgShots[d]||(pgShots[d]={});if(S[id])URL.revokeObjectURL(S[id].url);S[id]={url:URL.createObjectURL(blob),ts};}
 async function pgLoad(){
+  const old=[];
   try{const st=await pgStore("readonly");
-    await new Promise((res,rej)=>{const c=st.openCursor();c.onsuccess=()=>{const cur=c.result;if(!cur)return res();const v=cur.value;
-      if(v&&v.blob&&PG_BY[cur.key]){if(pgPhotos[cur.key])URL.revokeObjectURL(pgPhotos[cur.key].url);pgPhotos[cur.key]={url:URL.createObjectURL(v.blob),ts:v.ts};}cur.continue();};c.onerror=()=>rej(c.error);});
+    await new Promise((res,rej)=>{const c=st.openCursor();c.onsuccess=()=>{const cur=c.result;if(!cur)return res();const v=cur.value,k=String(cur.key);
+      if(v&&v.blob){if(k.includes("/")){const [d,id]=k.split("/");if(PG_BY[id])pgAddMem(d,id,v.blob,v.ts);}else if(PG_BY[k])old.push([k,v]);}
+      cur.continue();};c.onerror=()=>rej(c.error);});
+    if(old.length){const st2=await pgStore("readwrite");
+      for(const [k,v] of old){const d=keyOf(new Date(v.ts||Date.now()));st2.put(v,d+"/"+k);st2.delete(k);pgAddMem(d,k,v.blob,v.ts);}}
   }catch(e){}
-  pgLoaded=true;
+  pgLoaded=true;pgSetDay(pgDay||todayKey());
 }
-async function pgPut(id,blob){
-  const ts=Date.now();
-  try{const st=await pgStore("readwrite");await pgReq(st.put({blob,ts},id));}catch(e){toast("Couldn't save the photo on this phone");return false;}
-  if(pgPhotos[id])URL.revokeObjectURL(pgPhotos[id].url);
-  pgPhotos[id]={url:URL.createObjectURL(blob),ts};pg360Key="";return true;
+async function pgPut(id,blob,d,ts){
+  d=d||pgDay;ts=ts||Date.now();
+  try{const st=await pgStore("readwrite");await pgReq(st.put({blob,ts},d+"/"+id));}catch(e){toast("Couldn't save the photo on this phone");return false;}
+  pgAddMem(d,id,blob,ts);if(d===pgDay)pgPhotos=pgShots[d];pg360Key="";return true;
 }
-async function pgDel(id){try{const st=await pgStore("readwrite");await pgReq(st.delete(id));}catch(e){}
-  if(pgPhotos[id])URL.revokeObjectURL(pgPhotos[id].url);delete pgPhotos[id];pg360Key="";}
+async function pgDel(id,d){d=d||pgDay;try{const st=await pgStore("readwrite");await pgReq(st.delete(d+"/"+id));}catch(e){}
+  const S=pgShots[d];if(S&&S[id]){URL.revokeObjectURL(S[id].url);delete S[id];}pg360Key="";}
+async function pgDelDay(d){for(const id of Object.keys(pgShots[d]||{}))await pgDel(id,d);}
 async function pgDelAll(){try{const st=await pgStore("readwrite");await pgReq(st.clear());}catch(e){}
-  Object.values(pgPhotos).forEach(p=>URL.revokeObjectURL(p.url));pgPhotos={};pg360Key="";}
-function pgCount(g){return PG_G[g].ids.filter(id=>pgPhotos[id]).length;}
+  Object.values(pgShots).forEach(S=>Object.values(S).forEach(p=>URL.revokeObjectURL(p.url)));pgShots={};pgSetDay(pgDay);}
+function pgCount(g,d){const S=d?(pgShots[d]||{}):pgPhotos;return PG_G[g].ids.filter(id=>S[id]).length;}
 function pgMissing(g){return PG_G[g].ids.filter(id=>!pgPhotos[id]);}
+// check-in dates: any date with photos or measurements, newest first
+function pgDates(){const s=new Set();for(const d in pgShots)if(Object.keys(pgShots[d]).length)s.add(d);measLog.forEach(m=>s.add(m.date));return [...s].sort().reverse();}
+function pgDK(k,short){const d=dateOf(k);return (short?"":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]+" ")+`${d.getDate()} ${PG_M[d.getMonth()]} ${d.getFullYear()}`;}
+// weight on a date: that day's weigh-in, else the nearest within 3 days (marked ≈)
+function pgWeightOn(k,tol=3){let best=null;const t=dateOf(k).getTime();
+  weightLog.forEach(w=>{if(!(+w.kg>0))return;const dd=Math.abs(dateOf(keyOf(new Date(w.date))).getTime()-t)/864e5;if(dd<=tol&&(!best||dd<best.dd))best={kg:+w.kg,dd};});return best;}
+function pgMeasOn(k){return measLog.find(m=>m.date===k)||null;}
+// a measurement on a date, else the nearest entry within 7 days that has it (marked ≈)
+function pgMeasNear(k,f,tol=7){const m=pgMeasOn(k);if(m&&+m[f]>0)return {v:+m[f],dd:0};let best=null;const t=dateOf(k).getTime();
+  measLog.forEach(e=>{if(!(+e[f]>0))return;const dd=Math.abs(dateOf(e.date).getTime()-t)/864e5;if(dd<=tol&&(!best||dd<best.dd))best={v:+e[f],dd};});return best;}
 
 /* --- resize to 1600 px longest side, JPEG 0.88 --- */
 function pgEncode(src,w,h){
@@ -7790,58 +7826,109 @@ async function pgPrep(file){
   catch(e){return null;}finally{URL.revokeObjectURL(url);}
 }
 
-/* --- screens --- */
-let pgSub="home";
+/* --- screens: home (dashboard of dates) · day (one date) · shoot · compare --- */
+let pgSub="home", pgCmpFrom="home", pgCmp={a:"",b:"",pose:"b0"};
 function pgOpenView(sub){pgSub=sub||"home";switchView("prog");}
+function pgOpenDay(d){pgSetDay(d);pgSub="day";renderProg();window.scrollTo(0,0);}
+function pgGoShoot(){pgSub="shoot";renderProg();window.scrollTo(0,0);}
 function renderProg(){
   const h=document.getElementById("pgHome"), s=document.getElementById("pgShoot");if(!h||!s)return;
-  h.style.display=pgSub==="home"?"":"none"; s.style.display=pgSub==="shoot"?"":"none";
-  const t=document.getElementById("gyTtl-prog"); if(t)t.textContent=pgSub==="shoot"?"Photo shoot":"Progress";
+  h.style.display=pgSub==="shoot"?"none":""; s.style.display=pgSub==="shoot"?"":"none";
+  const t=document.getElementById("gyTtl-prog");
+  if(t)t.textContent=pgSub==="shoot"?"Photo shoot":pgSub==="day"?pgDK(pgDay,1)+(pgDay===todayKey()?" · today":""):pgSub==="compare"?"Compare":"Progress";
   if(!pgLoaded){h.innerHTML=s.innerHTML=`<div class="addhint">Loading your photos…</div>`;return;}
-  if(pgSub==="shoot")pgRenderShoot(); else pgRenderHome();
+  if(pgSub==="shoot")pgRenderShoot(); else if(pgSub==="day")pgRenderDay(); else if(pgSub==="compare")pgRenderCompare(); else pgRenderHome();
 }
-function pgTileSub(){const n=pgLoaded?pgCount("b")+pgCount("h"):0;return n?`${n} of 13 photos · 360º view, weight, measurements`:"Photo shoot, 360º view, weight and measurements";}
+function pgTileSub(){if(!pgLoaded)return "Photo shoots, 360º view, weight and measurements";const ds=pgDates();
+  return ds.length?`${ds.length} check-in${ds.length===1?"":"s"} · last ${pgDK(ds[0],1)}`:"Photo shoots, 360º view, weight and measurements";}
 function pgFile(label,cls,attrs,on){return `<label class="btn ${cls} pgfile">${label}<input type="file" accept="image/*" ${attrs} onchange="${on}"></label>`;}
-
+function pgThumb(d){const S=pgShots[d]||{};const id=["b0","h0",...PG_POSES.map(p=>p.id)].find(x=>S[x]);return id?`<img src="${S[id].url}" alt="">`:`<i>📏</i>`;}
+function pgSumLine(d){
+  const n=Object.keys(pgShots[d]||{}).length, w=pgWeightOn(d,0), m=pgMeasOn(d), bits=[];
+  if(n)bits.push(`${n} photo${n===1?"":"s"}`);
+  if(w)bits.push(`${w.kg} kg`);
+  if(m){const k=PG_MEAS.filter(([f])=>+m[f]>0);if(k.length)bits.push(+m.waist>0?`waist ${m.waist} cm`:`${k.length} measurement${k.length===1?"":"s"}`);}
+  return bits.join(" · ")||"Nothing saved yet";
+}
 function pgRenderHome(){
-  const el=document.getElementById("pgHome"), all=pgCount("b")===8, n=pgCount("b")+pgCount("h");
-  let dt="";
-  if(all){const ts=PG_G.b.ids.map(id=>pgPhotos[id].ts), a=pgDate(Math.min(...ts)), b=pgDate(Math.max(...ts));dt=`<div class="pgdate">Photos from ${a===b?a:a+" to "+b}</div>`;}
+  const el=document.getElementById("pgHome"), ds=pgDates(), td=todayKey(), hasT=ds.includes(td);
+  el.innerHTML=`<div class="fdtiles" style="margin-bottom:6px">
+      <button class="fdtile hero" onclick="pgOpenDay('${td}')"><i>📸</i><div><b>${hasT?"Today's check-in":"Start today's check-in"}</b><span>${hasT?pgSumLine(td):"Photo shoot, weight and measurements"}</span></div></button>
+      <button class="fdtile wide" onclick="pgOpenCompare()"><i>⚖️</i><div><b>Compare</b><span>${ds.length>=2?"Two dates side by side: photos and numbers":"Needs two check-ins on different dates"}</span></div></button></div>`
+    +`<div class="fdhead">Check-ins</div>`
+    +(ds.length?ds.map(d=>`<button class="pgci" onclick="pgOpenDay('${d}')"><span class="pgcith">${pgThumb(d)}</span><span class="pgcitx"><b>${pgDK(d)}${d===td?" · today":""}</b><small>${pgSumLine(d)}</small></span><span class="pwchev">›</span></button>`).join("")
+      :`<div class="addhint">No check-ins yet. Start today's: take the photos, then log your weight and measurements.</div>`)
+    +`<div style="margin-top:14px">${pgFile("🖼 Import photos","ghost","multiple","pgImport(this,'')")}</div>`
+    +`<div class="pgnote">Photos are saved on this iPhone only.</div>`
+    +(Object.values(pgShots).some(S=>Object.keys(S).length)?`<button class="pgdel" onclick="pgDelAllTap(this)">Delete all photos</button>`:"");
+}
+function pgRenderDay(){
+  const el=document.getElementById("pgHome"), d=pgDay, all=pgCount("b")===8, n=pgCount("b")+pgCount("h"), w=pgWeightOn(d,0);
+  const ds=pgDates(), prev=ds.find(x=>x<d);
   el.innerHTML=`<div class="pg360" id="pg360"></div>`
-    +(all?`<div class="pgquick" id="pgQuick">${[["Front",0],["¾",45],["Side",90],["Back",180]].map(([l,a])=>`<button data-a="${a}" onclick="pgJump(${a})">${l}</button>`).join("")}</div>${dt}`:`<div style="height:12px"></div>`)
-    +`<div class="fdtiles" style="margin-bottom:6px"><button class="fdtile wide" onclick="pgSub='shoot';renderProg();window.scrollTo(0,0)"><i>📸</i><div><b>Photo shoot</b><span>${n?`${n} of 13 photos taken`:"13 photos · about 10 min"}</span></div></button></div>`
-    +`<div class="fdhead">Weight</div><div class="setcard" style="margin-bottom:10px"><div class="tgtweigh"><input type="text" inputmode="decimal" id="pgW" class="calinput" placeholder="Today's weight (kg)"><button class="btn primary" onclick="pgLogWeight()">Log weight</button></div>
-      <div class="tgtlast" style="margin-top:8px">${tgtLastHtml()}</div><button class="gylink" style="text-align:left;padding:0" onclick="switchView('timer');fdOpen('weigh')">See your weight trend ›</button></div>`
-    +`<div class="fdhead">Measurements (cm)</div><div class="setcard">${pgMeasForm()}</div>${pgMeasList()}`;
+    +(all?`<div class="pgquick" id="pgQuick">${[["Front",0],["¾",45],["Side",90],["Back",180]].map(([l,a])=>`<button data-a="${a}" onclick="pgJump(${a})">${l}</button>`).join("")}</div>`:`<div style="height:12px"></div>`)
+    +`<div class="fdtiles" style="margin-bottom:6px"><button class="fdtile wide" onclick="pgGoShoot()"><i>📸</i><div><b>Photo shoot</b><span>${n?`${n} of 13 photos taken`:"13 photos · about 10 min"}</span></div></button>
+      ${prev?`<button class="fdtile wide" onclick="pgOpenCompare('${prev}','${d}')"><i>⚖️</i><div><b>Compare with ${pgDK(prev,1)}</b><span>Your check-in before this one</span></div></button>`:""}</div>`
+    +`<div class="fdhead">Weight</div><div class="setcard" style="margin-bottom:10px">
+      ${w?`<div class="pgbig">${w.kg}<small> kg</small></div>`:""}
+      <div class="tgtweigh"><input type="text" inputmode="decimal" id="pgW" class="calinput" placeholder="${w?"Change it (kg)":d===todayKey()?"Today's weight (kg)":"Weight on this day (kg)"}"><button class="btn primary" onclick="pgLogWeight()">${w?"Update":"Log weight"}</button></div>
+      <button class="gylink" style="text-align:left;padding:0" onclick="switchView('timer');fdOpen('weigh')">See your weight trend ›</button></div>`
+    +`<div class="fdhead">Measurements (cm)</div><div class="setcard">${pgMeasForm(d,prev)}</div>`
+    +((n||pgMeasOn(d))?`<button class="pgdel" onclick="pgDelDayTap(this)">Delete this check-in</button>`:"");
   pg360Key="";pg360Build();
 }
-function pgMeasLast(k){for(let i=measLog.length-1;i>=0;i--)if(+measLog[i][k]>0)return measLog[i];return null;}
-function pgMeasForm(){
-  const td=keyOf(new Date()), cur=measLog.find(m=>m.date===td)||{};
-  return `<div class="pgmeas">${PG_MEAS.map(([k,l])=>{const last=pgMeasLast(k);return `<label>${l}<input type="text" inputmode="decimal" class="calinput" id="pgM-${k}" value="${cur[k]||""}" placeholder="${last?last[k]:"cm"}"></label>`;}).join("")}</div>
+function pgMeasForm(d,prev){
+  const cur=pgMeasOn(d)||{};
+  return `<div class="pgmeas">${PG_MEAS.map(([k,l])=>{const pm=prev?pgMeasNear(prev,k,0):null, df=pm&&+cur[k]>0?(+cur[k]-pm.v):null;
+      return `<label><span>${l}${df!==null&&df!==0?` <small style="color:var(--dim)">${df<0?"▼":"▲"}${Math.abs(df).toFixed(1)}</small>`:""}</span><input type="text" inputmode="decimal" class="calinput" id="pgM-${k}" value="${cur[k]||""}" placeholder="${pm?pm.v:"cm"}"></label>`;}).join("")}</div>
     <button class="btn primary" style="width:100%;margin-top:10px" onclick="pgSaveMeas()">Save measurements</button>
-    <div class="fi-m2" style="margin-top:8px">Measure first thing in the morning, tape snug but not tight. Waist at the belly button, arms and thighs at the widest part. Leave a box empty to skip it.</div>`;
-}
-function pgMeasList(){
-  if(!measLog.length)return "";
-  const rows=PG_MEAS.map(([k,l])=>{const hs=measLog.filter(m=>+m[k]>0);if(!hs.length)return "";const a=+hs[0][k], b=+hs[hs.length-1][k], d=b-a;
-    return `<div class="pgmrow"><span>${l}</span><span><b>${b} cm</b> ${hs.length>1?`<small style="color:var(--dim)">${d<0?"▼":d>0?"▲":""} ${d?Math.abs(d).toFixed(1):"no change"}${d?` since ${pgDate(dateOf(hs[0].date))}`:""}</small>`:""}</span></div>`;}).join("");
-  const past=measLog.slice().reverse().slice(0,12).map((m,i)=>`<div class="pgmrow"><span>${pgDate(dateOf(m.date))}</span><span style="text-align:right;font-size:12.5px;color:var(--dim)">${PG_MEAS.filter(([k])=>+m[k]>0).map(([k,l])=>`${l} ${m[k]}`).join(" · ")}</span><button class="rm" onclick="pgDelMeas('${m.date}')">×</button></div>`).join("");
-  return `<div class="setcard"><div class="fdhead" style="margin-top:0">Latest</div>${rows}<details class="fdact" style="margin-top:10px"><summary>Past entries</summary>${past}</details></div>`;
+    <div class="fi-m2" style="margin-top:8px">${prev?`Grey numbers are from ${pgDK(prev,1)}; ▲▼ is the change since then. `:""}Measure first thing in the morning, tape snug but not tight. Waist at the belly button, arms and thighs at the widest part. Leave a box empty to skip it.</div>`;
 }
 function pgSaveMeas(){
-  const td=keyOf(new Date()); let e=measLog.find(m=>m.date===td), any=false; const vals={};
+  const d=pgDay; let e=pgMeasOn(d), any=false; const vals={};
   for(const [k] of PG_MEAS){const v=parseFloat((document.getElementById("pgM-"+k)?.value||"").replace(",","."));if(v>0){if(v<10||v>300){toast("Check that number (cm)");return;}vals[k]=+v.toFixed(1);any=true;}}
-  if(!any){toast("Fill in at least one measurement");return;}
-  if(!e){e={date:td};measLog.push(e);measLog.sort((a,b)=>a.date<b.date?-1:1);}
+  if(!any&&!e){toast("Fill in at least one measurement");return;}
+  if(!any){measLog=measLog.filter(m=>m.date!==d);saveMeas();toast("Measurements cleared");pgRenderDay();return;}
+  if(!e){e={date:d};measLog.push(e);measLog.sort((a,b)=>a.date<b.date?-1:1);}
   PG_MEAS.forEach(([k])=>{if(vals[k])e[k]=vals[k];else delete e[k];});
-  saveMeas();toast("Measurements saved");pgRenderHome();
+  saveMeas();toast("Measurements saved");pgRenderDay();
 }
-function pgDelMeas(d){measLog=measLog.filter(m=>m.date!==d);saveMeas();pgRenderHome();}
 function pgLogWeight(){
   const v=document.getElementById("pgW")?.value||"", tg=document.getElementById("tgWeight");if(!tg)return;
-  const keep=selKey; selKey=todayKey(); tg.value=v; tgtLogWeight(); const ok=!tg.value; tg.value=""; selKey=keep;
-  if(ok)pgRenderHome();
+  const keep=selKey; selKey=pgDay; tg.value=v; tgtLogWeight(); const ok=!tg.value; tg.value=""; selKey=keep;
+  if(ok)pgRenderDay();
+}
+let pgDayArm=0;
+async function pgDelDayTap(b){
+  if(Date.now()-pgDayArm<4000){pgDayArm=0;const d=pgDay;await pgDelDay(d);measLog=measLog.filter(m=>m.date!==d);saveMeas();toast("Check-in deleted");pgSub="home";renderProg();return;}
+  pgDayArm=Date.now();b.classList.add("arm");b.textContent="Tap again to delete this date's photos and measurements";
+  setTimeout(()=>{if(Date.now()-pgDayArm>=3900&&b.isConnected){b.classList.remove("arm");b.textContent="Delete this check-in";}},4000);
+}
+/* compare two dates */
+function pgOpenCompare(a,b){
+  const ds=pgDates();if(ds.length<2&&!(a&&b)){toast("You need check-ins on two different dates");return;}
+  pgCmp.b=b||ds[0];pgCmp.a=a||ds[ds.length-1];
+  const sa=pgShots[pgCmp.a]||{}, sb=pgShots[pgCmp.b]||{};
+  if(!(sa[pgCmp.pose]&&sb[pgCmp.pose]))pgCmp.pose=PG_POSES.map(p=>p.id).find(id=>sa[id]&&sb[id])||"b0";
+  if(pgSub!=="compare")pgCmpFrom=pgSub;pgSub="compare";renderProg();window.scrollTo(0,0);
+}
+function pgRenderCompare(){
+  const el=document.getElementById("pgHome"), ds=pgDates(), A=pgCmp.a, B=pgCmp.b, sa=pgShots[A]||{}, sb=pgShots[B]||{};
+  const sel=(k,v)=>`<select class="calinput" onchange="pgCmp.${k}=this.value;renderProg()">${ds.map(d=>`<option value="${d}"${d===v?" selected":""}>${pgDK(d,1)}</option>`).join("")}</select>`;
+  const ph=(S,d)=>{const p=S[pgCmp.pose];return `<div class="pgcmpc"><div class="pgcmpi${p?" has":""}">${p?`<img src="${p.url}" alt="">`:`<span>No ${PG_BY[pgCmp.pose].n.toLowerCase()} photo</span>`}</div></div>`;};
+  const chip=id=>{const P=PG_BY[id], both=sa[id]&&sb[id];return `<button class="chip${id===pgCmp.pose?" on":""}" style="${both||id===pgCmp.pose?"":"opacity:.45"}" onclick="pgCmp.pose='${id}';renderProg()">${P.g==="h"?"Head ":""}${P.s}</button>`;};
+  const days=Math.round((dateOf(B)-dateOf(A))/864e5);
+  const row=(l,va,vb,u,approx)=>{const df=va!=null&&vb!=null?vb-va:null;
+    return `<div class="pgcr"><span>${l}</span><span>${va!=null?(approx.a?"≈":"")+va:"—"}</span><span>${vb!=null?(approx.b?"≈":"")+vb:"—"}</span><span class="pgcd">${df===null?"":df===0?"same":(df<0?"▼ ":"▲ ")+Math.abs(df).toFixed(1)+" "+u}</span></div>`;};
+  const wa=pgWeightOn(A), wb=pgWeightOn(B);
+  let rows=row("Weight",wa?wa.kg:null,wb?wb.kg:null,"kg",{a:wa&&wa.dd>0,b:wb&&wb.dd>0});
+  PG_MEAS.forEach(([f,l])=>{const a=pgMeasNear(A,f), b=pgMeasNear(B,f);if(a||b)rows+=row(l,a?a.v:null,b?b.v:null,"cm",{a:a&&a.dd>0,b:b&&b.dd>0});});
+  el.innerHTML=`<div class="pgcmph"><label>Before${sel("a",A)}</label><label>After${sel("b",B)}</label></div>
+    ${A!==B?`<div class="pgdate" style="margin:2px 0 10px">${Math.abs(days)} day${Math.abs(days)===1?"":"s"} apart</div>`:`<div class="pgdate" style="margin:2px 0 10px">Pick two different dates</div>`}
+    <div class="pgcmpg">${ph(sa,A)}${ph(sb,B)}</div>
+    <div class="pgchips">${PG_G.b.ids.map(chip).join("")}</div><div class="pgchips" style="margin-bottom:14px">${PG_G.h.ids.map(chip).join("")}</div>
+    <div class="setcard"><div class="pgcr pgcrh"><span></span><span>${pgDK(A,1).replace(/ \d{4}$/,"")}</span><span>${pgDK(B,1).replace(/ \d{4}$/,"")}</span><span>Change</span></div>${rows}
+    <div class="fi-m2" style="margin-top:8px">≈ means nothing was logged that exact day, so the nearest entry is used (weight within 3 days, measurements within a week).</div></div>`;
 }
 
 /* --- photo shoot screen --- */
@@ -7857,7 +7944,7 @@ function pgRenderShoot(){
   const tips=["Phone at waist height, about 2.5 m away, on a tripod or propped on a shelf.","Plain light wall and even daylight, no window behind you.","Fitted clothes in a neutral colour, bare feet, hair tied back.","Same spot, same stance. Arms slightly away from the body, feet hip-width apart. Only turn between shots.","Go hands-free: the timer counts down and a voice says when to turn.","For close-ups, move the phone to face height about an arm's length away."];
   const segs=PG_G.b.ids.map((id,i)=>{const t=i*45*Math.PI/180, r=78, x=(r*Math.sin(t)).toFixed(1), y=(-r*Math.cos(t)+4).toFixed(1), on=!!pgPhotos[id];
     return `<path d="${pgDialSeg(i,60,96,1.5)}" fill="${on?"var(--good)":"var(--card2)"}" stroke="var(--line)" onclick="pgSheetOpen('${id}')"/><text x="${x}" y="${y}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${on?"#fff":"var(--dim)"}" pointer-events="none">${PG_BY[id].s}</text>`;}).join("");
-  el.innerHTML=`<div class="fdlead" style="margin-bottom:12px">13 photos · about 10 min</div>`
+  el.innerHTML=`<div class="fdlead" style="margin-bottom:12px">${pgDK(pgDay)}${pgDay===todayKey()?" (today)":""} · 13 photos · about 10 min</div>`
     +`<details class="pgtips"${cb+ch===0?" open":""}><summary>Before you start</summary><ol>${tips.map(t=>`<li>${t}</li>`).join("")}</ol></details>`
     +`<div class="pgpanel"><div class="pgph"><b>Full length</b><span>${cb} of 8</span></div>
       <div class="pgdialw"><svg viewBox="-100 -100 200 200">${segs}</svg><div class="pgdialc">${cb===8?`<img src="${pgPhotos.b0.url}" alt="">`:`<b>${cb}/8</b><span>angles</span>`}</div></div>
@@ -7865,13 +7952,13 @@ function pgRenderShoot(){
     +`<div class="pgpanel"><div class="pgph"><b>Head close-ups</b><span>${ch} of 5</span></div>
       <div class="pgheads">${PG_G.h.ids.map(id=>{const p=pgPhotos[id];return `<button class="pghead${p?" has":""}" onclick="pgSheetOpen('${id}')">${p?`<img src="${p.url}" alt=""><i>✓</i>`:""}<small>${PG_BY[id].s}</small></button>`;}).join("")}</div>
       ${pgGroupBtn("h")}</div>`
-    +pgFile("🖼 Import photos","ghost",`multiple`,"pgImport(this)")
-    +`<div class="pgnote">Photos are saved on this iPhone only.</div>`
-    +(cb+ch?`<button class="pgdel" id="pgDelAll" onclick="pgDelAllTap(this)">Delete all photos</button>`:"");
+    +pgFile("🖼 Import photos","ghost",`multiple`,"pgImport(this,pgDay)")
+    +`<div class="pgnote">Photos are saved on this iPhone only.</div>`;
 }
 let pgDelArm=0;
 async function pgDelAllTap(b){
   if(Date.now()-pgDelArm<4000){pgDelArm=0;await pgDelAll();toast("All photos deleted");renderProg();return;}
+  // (on the Progress dashboard)
   pgDelArm=Date.now();b.classList.add("arm");b.textContent="Tap again to delete all photos";
   setTimeout(()=>{if(Date.now()-pgDelArm>=3900&&b.isConnected){b.classList.remove("arm");b.textContent="Delete all photos";}},4000);
 }
@@ -7896,33 +7983,58 @@ async function pgFileFor(id,inp){
   if(await pgPut(id,b)){toast(`${PG_BY[id].n} saved`);if(document.getElementById("pgSheet").classList.contains("on"))pgSheetOpen(id);renderProg();}
 }
 
-/* --- import many --- */
+/* --- import many. Each photo gets a pose and a date: the date the photo was taken (from the photo itself) when it has one --- */
 const PG_NAME_RE=/(?:^|[^a-z0-9])(b0|b45|b90|b135|b180|b225|b270|b315|h0|hl45|hl90|hr45|hr90)(?![a-z0-9])/;
+// read DateTimeOriginal (or DateTime) from a JPEG's EXIF; null if none
+async function pgExifDate(f){
+  try{const buf=await f.slice(0,256*1024).arrayBuffer(), v=new DataView(buf);
+    if(v.getUint16(0)!==0xFFD8)return null;let o=2;
+    while(o+4<v.byteLength){const mk=v.getUint16(o), len=v.getUint16(o+2);
+      if(mk===0xFFE1&&v.getUint32(o+4)===0x45786966){const t=o+10, le=v.getUint16(t)===0x4949;
+        const u16=p=>v.getUint16(p,le), u32=p=>v.getUint32(p,le);
+        const str=(p,n)=>{let s="";for(let i=0;i<n;i++){const c=v.getUint8(p+i);if(!c)break;s+=String.fromCharCode(c);}return s;};
+        const ifd=(p,want)=>{const n=u16(t+p), r={};for(let i=0;i<n;i++){const e=t+p+2+i*12, tag=u16(e);if(want.includes(tag))r[tag]=tag===0x8769?u32(e+8):str(t+u32(e+8),u32(e+4));}return r;};
+        const i0=ifd(u32(t+4),[0x0132,0x8769]);let ds=i0[0x0132];
+        if(i0[0x8769]){const ex=ifd(i0[0x8769],[0x9003]);if(ex[0x9003])ds=ex[0x9003];}
+        const m=ds&&ds.match(/^(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d)/);if(!m)return null;
+        const d=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);return isNaN(d)||m[1]==="0000"?null:d;}
+      if((mk&0xFF00)!==0xFF00)break;o+=2+len;}
+  }catch(e){}
+  return null;
+}
 let pgPend=[];
-async function pgImport(inp){
+async function pgImport(inp,defDay){
   const files=[...(inp.files||[])];inp.value="";if(!files.length)return;
+  toast("Reading photos…");
   let saved=0;const left=[];
-  for(const f of files){const m=f.name.replace(/\.[^.]+$/,"").toLowerCase().match(PG_NAME_RE);
-    if(m){const b=await pgPrep(f);if(b&&await pgPut(m[1],b))saved++;}else left.push(f);}
-  renderProg();
+  for(const f of files){const m=f.name.replace(/\.[^.]+$/,"").toLowerCase().match(PG_NAME_RE), ex=await pgExifDate(f);
+    if(m&&ex){const b=await pgPrep(f);if(b&&await pgPut(m[1],b,keyOf(ex),ex.getTime()))saved++;}   // named after a pose and dated: save straight away
+    else left.push({f,pose:m?m[1]:"",ex});}
+  renderProg();renderGym();
   if(!left.length){toast(`${saved} photo${saved===1?"":"s"} saved`);return;}
   pgPend.forEach(p=>URL.revokeObjectURL(p.url));
-  const taken=new Set(), free=PG_POSES.map(p=>p.id).filter(id=>!pgPhotos[id]);
-  pgPend=left.map(f=>{const id=free.find(x=>!taken.has(x))||"";if(id)taken.add(id);return {f,url:URL.createObjectURL(f),id};});
-  const opts=sel=>`<option value="">Skip</option>`+PG_POSES.map(p=>`<option value="${p.id}"${p.id===sel?" selected":""}>${p.n}${p.g==="h"?" (close-up)":""}${pgPhotos[p.id]?" ✓":""}</option>`).join("");
-  document.getElementById("pgSheetBox").innerHTML=`<div class="mshead"><div><div class="msarea">Import photos</div><h2>Which pose is each?</h2></div><button class="msx" onclick="pgAssignClose()">✕</button></div>
-    ${saved?`<div class="fdlead">${saved} photo${saved===1?" was":"s were"} named after a pose and ${saved===1?"is":"are"} saved.</div>`:""}
-    ${pgPend.map((p,i)=>`<div class="pgasgn"><img src="${p.url}" alt=""><select class="calinput" onchange="pgPend[${i}].id=this.value">${opts(p.id)}</select></div>`).join("")}
-    <div class="fi-m2" style="margin:4px 0 10px">✓ means that pose already has a photo; picking it replaces the old one.</div>
+  const def=defDay||todayKey(), taken=new Set();
+  pgPend=left.map(({f,pose,ex})=>{const d=ex?keyOf(ex):def;
+    if(!pose){const S=pgShots[d]||{};pose=PG_POSES.map(p=>p.id).find(x=>!S[x]&&!taken.has(d+"/"+x))||"";}
+    if(pose)taken.add(d+"/"+pose);return {f,url:URL.createObjectURL(f),id:pose,d,ts:ex?ex.getTime():0,ex:!!ex};});
+  const opts=sel=>`<option value="">Skip</option>`+PG_POSES.map(p=>`<option value="${p.id}"${p.id===sel?" selected":""}>${p.g==="h"?"Head: ":""}${p.n}</option>`).join("");
+  const noDate=pgPend.filter(p=>!p.ex).length;
+  document.getElementById("pgSheetBox").innerHTML=`<div class="mshead"><div><div class="msarea">Import photos</div><h2>Pose and date for each</h2></div><button class="msx" onclick="pgAssignClose()">✕</button></div>
+    ${saved?`<div class="fdlead">${saved} photo${saved===1?" was":"s were"} named after a pose and dated, so ${saved===1?"it's":"they're"} saved already.</div>`:""}
+    ${noDate?`<div class="fdlead">${noDate===pgPend.length?"These photos don't":noDate+" of these photos don't"} say when ${noDate===1?"it was":"they were"} taken. Check the date${noDate===1?"":"s"}, or set them all at once: <input type="date" class="calinput" style="margin-top:6px;width:100%" value="${def}" max="${todayKey()}" onchange="pgPend.forEach((p,i)=>{if(!p.ex&&this.value){p.d=this.value;document.getElementById('pgAD'+i).value=this.value;}})"></div>`:""}
+    ${pgPend.map((p,i)=>`<div class="pgasgn"><img src="${p.url}" alt=""><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><select class="calinput" onchange="pgPend[${i}].id=this.value">${opts(p.id)}</select><input type="date" id="pgAD${i}" class="calinput" value="${p.d}" max="${todayKey()}" onchange="pgPend[${i}].d=this.value"></div></div>`).join("")}
+    <div class="fi-m2" style="margin:4px 0 10px">A pose that already has a photo on that date gets replaced.</div>
     <button class="btn primary" style="width:100%" onclick="pgAssignSave()">Save these photos</button>`;
   document.getElementById("pgSheet").classList.add("on");document.body.classList.add("sheetopen");
 }
 function pgAssignClose(){pgPend.forEach(p=>URL.revokeObjectURL(p.url));pgPend=[];pgSheetClose();}
 async function pgAssignSave(){
-  const ids=pgPend.map(p=>p.id).filter(Boolean);
-  if(new Set(ids).size!==ids.length){toast("Two photos have the same pose");return;}
-  let n=0;for(const p of pgPend)if(p.id){const b=await pgPrep(p.f);if(b&&await pgPut(p.id,b))n++;}
-  pgAssignClose();renderProg();toast(`${n} photo${n===1?"":"s"} saved`);
+  const ks=pgPend.filter(p=>p.id).map(p=>p.d+"/"+p.id);
+  if(pgPend.some(p=>p.id&&!/^\d{4}-\d\d-\d\d$/.test(p.d))){toast("Pick a date for each photo");return;}
+  if(new Set(ks).size!==ks.length){toast("Two photos have the same pose and date");return;}
+  let n=0;for(const p of pgPend)if(p.id){const b=await pgPrep(p.f);if(b&&await pgPut(p.id,b,p.d,p.ts||dateOf(p.d).getTime()+12*36e5))n++;}
+  pgAssignClose();
+  renderProg();renderGym();toast(`${n} photo${n===1?"":"s"} saved`);
 }
 
 /* --- camera --- */
