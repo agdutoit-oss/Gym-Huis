@@ -1279,7 +1279,7 @@
 
     <div id="fdMine" class="fdpanel" style="display:none">
       <input type="text" id="fdMineQ" class="calinput" style="width:100%;margin-bottom:10px" placeholder="Search your foods" autocomplete="off" oninput="fdRenderMine()">
-      <div class="fdlead" style="margin-bottom:8px">Tap a food to log it. To fix its numbers, log it and tap ✎ Edit this food's numbers.</div>
+      <div class="fdlead" style="margin-bottom:8px">Tap a food to log it. To fix its numbers (yours or one that came with the app), tap it, then ✎ Edit this food's numbers.</div>
       <div id="mfList"></div>
     </div>
 
@@ -3784,7 +3784,7 @@ function planStopProgram(){program={active:false,startDate:null};saveProgram();p
 
 /* ---------------- DATA (export/import) ---------------- */
 function exportPlans(){
-  const data=JSON.stringify({goal,plans,dayNames,planMode,planLib,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods,measLog});
+  const data=JSON.stringify({goal,plans,dayNames,planMode,planLib,logs,foodLog,weightLog,profile,program,calLog,calCfg,myFoods,foodFix,measLog});
   const ta=document.createElement("textarea");
   ta.value=data;document.body.appendChild(ta);ta.select();
   try{document.execCommand("copy");toast("Copied to clipboard");}catch(e){toast("Select & copy the text below");}
@@ -3819,6 +3819,7 @@ function doImport(){
     if(d.calLog){calLog=d.calLog;}
     if(d.calCfg){calCfg=Object.assign(calCfg,d.calCfg);}
     if(Array.isArray(d.myFoods)){myFoods=d.myFoods;saveMyFoods();}
+    if(d.foodFix&&typeof d.foodFix==="object"){foodFix=d.foodFix;saveFoodFix();}
     if(Array.isArray(d.measLog)){measLog=d.measLog;saveMeas();}
     saveCal();
     save();saveFood();
@@ -6122,6 +6123,18 @@ function isDrinkName(n){n=String(n||"");if(/\d\s*ml\b/i.test(n))return true;if(/
   return /\b(coffee|tea|rooibos|latte|cappuccino|americano|espresso|flat white|mocha|chai|milk|juice|smoothie|milkshake|shake|soda|coke|cola|cool ?drink|soft drink|energy drink|beer|lager|cider|wine|whisky|whiskey|brandy|vodka|gin|rum|drink|water|kombucha|lemonade|iced tea|kefir|protein shake)\b/i.test(n)
     && !/\b(cake|biscuits?|cookies?|tart|chocolate|muffins?|rusks?|bars?|ice ?cream|pudding|sauce|gravy|braised|marinated|powder|cheese|steak|chicken|beef|pork|lamb)\b/i.test(n);}
 function saveMyFoods(){try{localStorage.setItem(MYFOOD_KEY,JSON.stringify(myFoods));}catch(e){}}
+/* v107: your own numbers for a built-in food (e.g. your brand of tuna). Stored by name as {k,p,f} in
+   hgt_foodfix_v1 and written onto the built-in entry; the app's own numbers stay in f.stock for Reset. */
+const FOODFIX_KEY="hgt_foodfix_v1";
+let foodFix={};
+function builtinOf(n){n=FOOD_RENAMED[n]||n;return FOODS.find(x=>x.n===n)||DRINKS.find(x=>x.n===n)||null;}
+function applyFoodFix(){
+  FOODS.concat(DRINKS).forEach(b=>{if(b.stock){b.k=b.stock.k;b.p=b.stock.p;b.f=b.stock.f;delete b.stock;}});
+  Object.entries(foodFix).forEach(([n,v])=>{const b=builtinOf(n);if(!b||!v)return;
+    b.stock={k:b.k,p:b.p,f:b.f}; b.k=+v.k||0; b.p=+v.p||0; b.f=+v.f||0;});
+}
+function loadFoodFix(){try{foodFix=JSON.parse(localStorage.getItem(FOODFIX_KEY)||"{}")||{};}catch(e){foodFix={};}applyFoodFix();}
+function saveFoodFix(){try{localStorage.setItem(FOODFIX_KEY,JSON.stringify(foodFix));}catch(e){}applyFoodFix();}
 function escH(t){return String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function allFoods(){return myFoods.concat(FOODS,DRINKS);}
 // Built-in foods renamed in v47 (raw/cooked added); older log entries still use the old names
@@ -6399,9 +6412,9 @@ function saveMyFood(){
 let fcEditOpen=false, fcEditSt=null;
 function fcEditSync(){
   const box=document.getElementById("fcEdit"); if(!box)return;
-  if(!fcSel||fcSel.c!=="My foods"){fcEditOpen=false;box.innerHTML="";return;}
+  if(!fcSel||fcSel.c!=="My foods"&&!builtinOf(fcSel.n)){fcEditOpen=false;box.innerHTML="";return;}
   if(fcEditOpen)return;
-  box.innerHTML=fcSel.meal?"":`<button class="mblink" style="margin:-4px 0 8px" onclick="fcEditStart()">✎ Edit this food's numbers</button>`;
+  box.innerHTML=fcSel.meal?"":`<button class="mblink" style="margin:-4px 0 8px" onclick="fcEditStart()">✎ Edit this food's numbers</button>${fcSel.stock?`<span class="cehint" style="margin-left:6px">your numbers</span>`:""}`;
 }
 function fcEditStart(){
   const f=fcSel; if(!f)return; fcEditOpen=true; fcEditSt=fcNative(f);
@@ -6410,10 +6423,11 @@ function fcEditStart(){
 }
 function fcEditDraw(){
   const f=fcSel, box=document.getElementById("fcEdit"); if(!f||!box)return;
-  const per=f.each?"one serving":`100 ${f.ml?"ml":"g"}`;
+  const per=f.each?"one serving":`100 ${f.ml?"ml":"g"}`, bi=f.c!=="My foods";
   box.innerHTML=`<div class="mbbox">
     <div class="fdhead">Edit ${escH(f.n)}</div>
-    <input id="feName" class="calinput" style="width:100%" value="${escH(f.n)}" placeholder="Name" oninput="fcEditWt()">
+    ${bi?`<div class="cehint" style="margin-bottom:4px">This food came with the app. Type the numbers off your packet; they replace the app's numbers on this phone.${f.stock?` The app's own: ${kj(f.stock.k)} kJ, ${f.stock.p} g protein, ${f.stock.f} g fat.`:""}</div>`
+      :`<input id="feName" class="calinput" style="width:100%" value="${escH(f.n)}" placeholder="Name" oninput="fcEditWt()">`}
     <div id="feWt"><div class="fcwt" style="margin:10px 0 0"><span>Numbers are for it</span>${["cooked","raw"].map(w=>`<button id="feWt_${w}" onclick="fcEditSt='${w}';fcEditWt()">${w==="raw"?"Raw":"Cooked"}</button>`).join("")}</div>
     <div class="cehint" style="margin-top:4px">A packet label "as packed" is raw (dry).</div></div>
     <div class="cehint" style="margin:10px 0 4px">Per ${per}:</div>
@@ -6424,19 +6438,28 @@ function fcEditDraw(){
     </div>
     <div class="cehint">What you already logged stays as it was. Only new entries use these numbers.</div>
     <div class="aibtns"><button class="btn primary" onclick="fcEditSave()">Save</button><button class="btn ghost" onclick="fcEditOpen=false;fcRender()">Cancel</button></div>
+    ${bi&&f.stock?`<button class="mblink" style="margin-top:10px" onclick="fcEditReset()">↺ Reset to the app's numbers</button>`:""}
   </div>`;
   fcEditWt();
 }
 function fcEditWt(){
   const f=fcSel, w=document.getElementById("feWt"); if(!f||!w)return;
   const nm=document.getElementById("feName")?.value||f.n;
-  w.style.display=!f.each&&!f.parts?.length&&fcYieldByName(nm)>0?"":"none";
+  w.style.display=f.c==="My foods"&&!f.each&&!f.parts?.length&&fcYieldByName(nm)>0?"":"none";
   ["cooked","raw"].forEach(x=>document.getElementById("feWt_"+x)?.classList.toggle("on",fcEditSt===x));
 }
 function fcEditSave(){
   const f=fcSel; if(!f)return;
   const num=id=>{const v=parseFloat(String(document.getElementById(id)?.value||"").replace(",","."));return isNaN(v)||v<0?null:v;};
   const name=(document.getElementById("feName")?.value||"").trim(), kJin=num("feK"), p=num("feP"), fat=num("feF");
+  if(f.c!=="My foods"){
+    if(kJin==null){toast("Enter the kJ");return;}
+    const st=f.stock||{k:f.k,p:f.p,f:f.f}, nk=toKcal(kJin), np=r1(p||0), nf=r1(fat||0);
+    if(kj(nk)===kj(st.k)&&np===r1(st.p)&&nf===r1(st.f))delete foodFix[f.n]; else foodFix[f.n]={k:nk,p:np,f:nf};
+    saveFoodFix(); fcEditOpen=false;
+    fcGramsManual=true; fcSel=null; fcPick(f.n); renderFoodCalc();
+    toast(`Saved ${f.n}`); return;
+  }
   if(!name){toast("Give it a name");return;}
   if(kJin==null){toast("Enter the kJ");return;}
   if(name!==f.n){
@@ -6452,6 +6475,10 @@ function fcEditSave(){
   saveMyFoods(); fcEditOpen=false;
   fcGramsManual=true; fcSel=null; fcPick(name); renderFoodCalc();
   toast(`Saved ${name}`);
+}
+function fcEditReset(){
+  const f=fcSel; if(!f)return; delete foodFix[f.n]; saveFoodFix(); fcEditOpen=false;
+  fcGramsManual=true; fcSel=null; fcPick(f.n); renderFoodCalc(); toast(`${f.n} is back to the app's numbers`);
 }
 /* ---- v82: meals made of ingredients (a sandwich: bread, ham, cheese, butter) ----
    A meal is a saved food {n, c:"My foods", each:true, meal:true, k,p,f for one, parts, partsQ:1}.
@@ -7229,7 +7256,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v106"]};
+ data:["Save & Settings","Backup your data · v107"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -7307,7 +7334,11 @@ function fdRenderMine(){
   const fs=myFoods.map((f,i)=>[f,i]).filter(([f])=>!f.meal&&(!q||f.n.toLowerCase().includes(q)));
   ml.innerHTML=fs.length?fs.map(([f,i])=>`<div class="fitem"><div class="fi-info" onclick="fdLogFood(${i})" style="cursor:pointer"><div class="fi-n">${escH(f.n)}</div><div class="fi-m2">${f.each?`each · ${kj(f.k)} kJ`:`per 100 ${f.ml?"ml":"g"} · ${kj(f.k)} kJ${f.u?` · 1 = ${f.u[0]} ${f.ml?"ml":"g"}`:""}`} · ${f.p} g protein · ${f.f} g fat</div></div><button class="rm" onclick="rmMyFood(${i})">×</button></div>`).join("")
     :`<div class="addhint">${q?"No food matches that.":"No saved foods yet. Scan a label or look a food up with Claude and it's saved here."}</div>`;
+  const bs=Object.keys(foodFix).map(builtinOf).filter(b=>b&&b.stock&&(!q||b.n.toLowerCase().includes(q)));
+  if(bs.length)ml.innerHTML+=`<div class="fdhead">Built-in foods you changed</div>`+bs.map(b=>`<div class="fitem"><div class="fi-info" onclick="fdLogBuiltin('${escH(b.n.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))}')" style="cursor:pointer"><div class="fi-n">${escH(b.n)}</div><div class="fi-m2">${b.each?"each":`per 100 ${b.ml?"ml":"g"}`} · ${kj(b.k)} kJ · ${b.p} g protein · ${b.f} g fat · app's: ${kj(b.stock.k)} kJ</div></div></div>`).join("");
 }
+function fdLogBuiltin(n){fdOpen("log");fcSel=null;fcNum=null;fcGramsManual=false;document.getElementById("fcGrams").value="";fcPick(n);
+  document.getElementById("fcalcBox")?.scrollIntoView({block:"start"});}
 function fdRenderWeigh(){
   const ch=document.getElementById("fdWChart"), li=document.getElementById("fdWList"); if(!ch||!li)return;
   const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -7718,6 +7749,7 @@ load();
 loadFood();
 loadCal();
 loadMyFoods();
+loadFoodFix();
 loadAi();
 loadProgramState();
 loadPlanMeta();
