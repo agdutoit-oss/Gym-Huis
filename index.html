@@ -6153,7 +6153,17 @@ function fcNative(f){if(f?.st)return f.st;return /\(raw|\b(raw|uncooked|dried|dr
 function fcAsListed(f,g,wt){const y=fcYield(f);if(!y||!wt||wt===fcNative(f))return g;return wt==="raw"?g*y:g/y;}
 // raw or cooked you weighed it last time, else the food's own state
 function fcLastWt(name){
-  for(const k of Object.keys(calLog).sort().reverse()){const e=calLog[k].eat||[];for(let i=e.length-1;i>=0;i--){const x=e[i];if(x.g>0&&findFood(x.food)?.n===name)return x.wt||null;}}
+  const x=fcLastEntry(name);return x?.wt||null;
+}
+// v106: the newest logged entry of this food that has an amount. Also matches items logged without a
+// food link (typed in the kJ box or from Claude) by their name, so a newer one isn't skipped.
+function fcLastEntry(name){
+  const fn=fcFold(name);
+  for(const k of Object.keys(calLog).sort().reverse()){
+    const e=calLog[k].eat||[];
+    for(let i=e.length-1;i>=0;i--){const x=e[i]; if(!(x.g>0))continue;
+      if(x.food?findFood(x.food)?.n===name:fcFold(x.label||"")===fn)return x;}
+  }
   return null;
 }
 let fcWt=null;   // "raw" or "cooked" for foods with a yield
@@ -6245,13 +6255,12 @@ function fcPick(name){
   fcRender(); fpRender();
   if(!g.value)g.focus();
 }
-// The amount (g or ml) you logged last time for this food, newest day first
+// The amount (g or ml) you logged last time for this food, newest day first.
+// v106: a drink stepped up with + (250 ml, then + + = 3 cups, 750 ml) counts as one cup: last time = 250 ml.
 function fcLastAmount(name){
-  for(const k of Object.keys(calLog).sort().reverse()){
-    const e=calLog[k].eat||[];
-    for(let i=e.length-1;i>=0;i--){const x=e[i]; if(x.g>0&&findFood(x.food)?.n===name)return Math.round(x.g);}
-  }
-  return null;
+  const x=fcLastEntry(name); if(!x)return null;
+  const one=x.unit?.g>0&&(x.q||1)>1&&x.ml?x.unit.g:x.g;
+  return Math.round(one);
 }
 function fcGramsTyped(){fcGramsManual=true;fcRender();if(fcSel?.dw)fpShare();else fpRender();}
 function fcSetGrams(v){document.getElementById("fcGrams").value=v;fcGramsManual=true;fcRender();fpRender();}
@@ -7220,7 +7229,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v105"]};
+ data:["Save & Settings","Backup your data · v106"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
