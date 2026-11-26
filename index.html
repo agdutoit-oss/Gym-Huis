@@ -6388,6 +6388,7 @@ function renderFoodCalc(){
   mbRender();
   fdRenderMine();
   fcRender();
+  fpRender();
   fdSync();
 }
 function saveMyFood(){
@@ -7256,7 +7257,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v107"]};
+ data:["Save & Settings","Backup your data · v108"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
