@@ -42,6 +42,7 @@
   .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,26,33,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:100;max-width:600px;margin:0 auto;padding:0 6px env(safe-area-inset-bottom)}
   .nav button{flex:1;max-width:110px;background:none;border:none;color:var(--dim);padding:10px 4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
   .nav button.on{color:var(--accent2)}
+  .nav.kbhide{display:none}
   .nav svg{width:21px;height:21px;fill:currentColor}
 
   .view{display:none;padding:14px}
@@ -7257,7 +7258,7 @@ const GYM_VIEWS=["gym","plan","train","lib","prog"];
 const TITLES={gym:["Gym",""],plan:["Gym",""],train:["Gym",""],lib:["Gym",""],prog:["Gym",""],
  timer:["Food","Track your kJ against a daily target"],
  history:["History","Your sessions, progress & weekly frequency"],
- data:["Save & Settings","Backup your data · v108"]};
+ data:["Save & Settings","Backup your data · v109"]};
 let lastView="gym";
 function toggleSettings(){
   const onSettings=document.getElementById("v-data").classList.contains("on");
@@ -7746,6 +7747,23 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 // measure the bottom bar so pinned controls sit right above it
 function setNavH(){const n=document.querySelector(".nav");if(n)document.documentElement.style.setProperty("--navh",n.offsetHeight+"px");}
 setNavH();window.addEventListener("resize",setNavH);
+// iOS: while the keyboard is up, hide the bottom bar; when it goes away, show it again and nudge the page
+// so the bar snaps back to the bottom of the screen (otherwise it can stay stuck mid-screen over cards).
+(function(){
+  const isTyping=el=>el&&(el.isContentEditable||el.tagName==="TEXTAREA"||(el.tagName==="INPUT"&&!/^(checkbox|radio|button|submit|reset|range|file|color|image|hidden|date|time|datetime-local|month|week)$/i.test(el.type)));
+  const nav=()=>document.querySelector(".nav");
+  let t;
+  function settle(){
+    const n=nav();if(!n)return;
+    const kb=isTyping(document.activeElement);
+    if(n.classList.contains("kbhide")===kb)return;
+    n.classList.toggle("kbhide",kb);setNavH();
+    if(!kb)requestAnimationFrame(()=>{const y=window.scrollY;window.scrollTo(window.scrollX,y+1);window.scrollTo(window.scrollX,y);});
+  }
+  document.addEventListener("focusin",e=>{if(isTyping(e.target)){clearTimeout(t);settle();}});
+  document.addEventListener("focusout",()=>{clearTimeout(t);t=setTimeout(settle,120);});
+  if(window.visualViewport)window.visualViewport.addEventListener("resize",()=>{clearTimeout(t);t=setTimeout(settle,120);});
+})();
 load();
 loadFood();
 loadCal();
